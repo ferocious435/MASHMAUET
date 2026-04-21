@@ -1,0 +1,5 @@
+# Archived Source PRD
+
+Original source file archived to: `docs/archive/source-inputs/PRD.md.txt`
+
+Open it only when reconciling the current living PRD against the original source material.

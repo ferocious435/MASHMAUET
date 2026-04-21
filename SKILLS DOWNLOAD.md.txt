@@ -1,0 +1,5 @@
+# Archived Skills Install Source
+
+Original source file archived to: `docs/archive/source-inputs/SKILLS DOWNLOAD.md.txt`
+
+Open it only when rebuilding or auditing the original project-local skills installation procedure.

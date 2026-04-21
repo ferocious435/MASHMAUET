@@ -1,0 +1,87 @@
+{
+  "manager_skill": "manage-skills",
+  "routing_executor": "antigravity-skill-orchestrator",
+  "long_task_mode": "loki-mode",
+  "registry_owner": "manage-skills",
+  "routing_owner": "antigravity-skill-orchestrator",
+  "integrity_checkers": [
+    "evaluation",
+    "advanced-evaluation",
+    "testing-qa"
+  ],
+  "source_policy": {
+    "canonical_source": "archive: antigravity-awesome-skills-main/skills/<skill>/",
+    "duplicate_policy": "Prefer root skills/<name> as the canonical source. Treat plugin and bundle copies as distribution duplicates and do not install or activate them in parallel inside the project-local layer.",
+    "install_scope": "project-local only"
+  },
+  "supplemental_skill_policy": {
+    "enabled": true,
+    "registry_file": "skill-system/supplemental-skills.json",
+    "allowed_when": [
+      "the skill is declared in the supplemental registry",
+      "the local .codex/skills layer cannot be extended in the current workspace session",
+      "the route output explicitly records the skill source"
+    ],
+    "default_usage": "support-only"
+  },
+  "change_control": [
+    "Any registry change must be recorded in a project file with date and scope.",
+    "Any router rule change must be recorded in a project file with date and scope.",
+    "Any active skill set change must be reflected in the install report and project rules.",
+    "Any conflicting change requires manual review before adoption."
+  ],
+  "health_checks": [
+    "skill installed",
+    "skill enabled",
+    "skill callable",
+    "registry entry exists",
+    "supplemental skill declared when local install is unavailable",
+    "routing rule exists",
+    "no broken dependency",
+    "no critical duplicate"
+  ],
+  "fallback_policy": [
+    "If the primary skill is unavailable, use the secondary skill.",
+    "If the result is weak or ambiguous, escalate to the validation skill.",
+    "If critical uncertainty remains, stop the pipeline and require review instead of continuing blindly."
+  ],
+  "logging_schema": {
+    "required_fields": [
+      "timestamp",
+      "task_id",
+      "route_category",
+      "skill",
+      "invoked_by",
+      "reason",
+      "inputs_summary",
+      "outputs_summary",
+      "decision",
+      "next_skill",
+      "accepted"
+    ],
+    "trace_requirement": "Every complex task must have a full traceable route across the involved skills.",
+    "storage_recommendation": "skill-system/logs/*.jsonl"
+  },
+  "attribution_policy": {
+    "enabled": true,
+    "scope": [
+      "task",
+      "analysis",
+      "planning",
+      "implementation",
+      "status_update",
+      "handoff",
+      "final_report"
+    ],
+    "display_rule": "Every visible response about project work must explicitly name the responsible skill. Use `Skill: <name>`, `Skills: <name1>, <name2>`, or `Skill: base` when no specialized skill is responsible.",
+    "handoff_rule": "When responsibility changes between stages, the handoff must be shown explicitly as `Handoff: <from-skill> -> <to-skill>`.",
+    "log_fields": [
+      "primary_skill",
+      "supporting_skills",
+      "handoff_from",
+      "handoff_to",
+      "reason"
+    ],
+    "blocking_rule": "A task step is not complete until the responsible skill has been recorded."
+  }
+}

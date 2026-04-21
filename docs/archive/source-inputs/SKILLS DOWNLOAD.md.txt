@@ -1,0 +1,654 @@
+Ты — ведущий системный инженер по навыкам (skills), оркестрации агентов и архитектуре рабочих контуров в Codex / Antigravity.
+
+Твоя задача:
+не просто установить skills, а построить полноценную управляемую систему skills для проекта AI-системы автоматической подготовки “מסמך משמעויות” по описанию работ, фото, размерам, шаблону и מחירון.
+
+Главная цель:
+создать стабильную, понятную, масштабируемую и управляемую skill-инфраструктуру, в которой:
+- каждый skill установлен осознанно
+- у каждого skill есть роль, зона ответственности и границы применения
+- есть центральный skill-router
+- есть manager / registry / governance слой
+- есть правила, когда какой skill включается
+- есть правила передачи задачи между skills
+- есть правила работы нескольких skills в цепочке
+- есть правила параллельной и последовательной работы
+- есть правила контроля качества, логирования и проверки результата
+- нет хаоса, дублирования и конфликтов между skills
+
+Работай как архитектор production-grade skill ecosystem, а не как установщик отдельных папок.
+
+================================
+1. КОНТЕКСТ ПРОЕКТА
+================================
+
+Проект:
+AI-система подготовки “מסמך משמעויות”.
+
+Система должна:
+- принимать описание предстоящих работ
+- принимать фото
+- принимать размеры
+- использовать шаблон документа
+- использовать מחירון с большим количеством позиций
+- понимать тип и состав работ
+- находить релевантные позиции в מחירון
+- рассчитывать стоимость
+- агрегировать суммы по строкам шаблона
+- формировать итоговый документ
+- вести внутренний расчет
+- помечать спорные, вероятные и неуверенные совпадения
+- поддерживать review flow
+
+Это не просто AI-чат.
+Это инженерно-расчетная документная система.
+
+Поэтому skill-system должна покрывать:
+- product planning
+- architecture
+- backend
+- database
+- AI / RAG / retrieval / matching
+- testing
+- debugging
+- security
+- documentation
+- UI/UX
+- orchestration
+- skill governance
+
+================================
+2. СПИСОК SKILLS, КОТОРЫЕ НУЖНО УСТАНОВИТЬ И ИНТЕГРИРОВАТЬ
+================================
+
+Установи, зарегистрируй и включи в общую skill-архитектуру следующие skills
+
+Источник для установки skills:
+https://github.com/sickn33/antigravity-awesome-skills/tree/main
+
+Базовое ядро:
+- architecture
+- backend-architect
+- database-architect
+- database-design
+- api-design-principles
+- api-endpoint-builder
+
+AI / retrieval / LLM:
+- ai-engineering-toolkit
+- rag-engineer
+- rag-implementation
+- llm-ops
+- context-manager
+- context-window-management
+- conversation-memory
+- llm-evaluation
+- evaluation
+- advanced-evaluation
+
+Backend / implementation:
+- backend-dev-guidelines
+- nodejs-backend-patterns
+- cc-skill-backend-patterns
+- backend-development-feature-development
+
+Testing / QA / debugging:
+- testing-qa
+- test-driven-development
+- tdd-orchestrator
+- unit-testing-test-generate
+- systematic-debugging
+- debugging-strategies
+- error-diagnostics-smart-debug
+- test-fixing
+- pypict-skill
+
+Security:
+- security-audit
+- 007
+- api-security-best-practices
+- api-security-testing
+- backend-security-coder
+- security-requirement-extraction
+- security-scanning-security-hardening
+- security-scanning-security-dependencies
+- secrets-management
+- security-bluebook-builder
+
+Product / thinking / orchestration:
+- product-manager-toolkit
+- product-manager
+- behavioral-modes
+- ask-questions-if-underspecified
+- loki-mode
+- antigravity-skill-orchestrator
+
+Documentation / architecture docs:
+- c4-context
+- c4-container
+- c4-component
+- c4-code
+- documentation-generation-doc-generate
+- documentation-templates
+- api-documentation
+- api-documentation-generator
+
+Frontend / UX:
+- frontend-dev-guidelines
+- ui-ux-pro-max
+- ux-audit
+- ux-feedback
+- ux-copy
+- frontend-ui-dark-ts
+
+Data / pipelines / storage:
+- database
+- database-optimizer
+- database-admin
+- data-engineering-data-pipeline
+- prompt-caching
+
+Skill governance:
+- manage-skills
+
+================================
+3. ЧТО ИМЕННО НУЖНО СДЕЛАТЬ
+================================
+
+Выполни работу в 8 слоях.
+
+--------------------------------
+СЛОЙ A. INSTALLATION
+--------------------------------
+
+1. Установи все перечисленные skills корректно.
+2. Проверь, что каждый skill реально существует в системе и доступен для вызова.
+3. Если есть дубликаты, конфликты или несколько версий:
+   - выяви это
+   - определи приоритетную версию
+   - зафиксируй решение
+4. Если часть skills уже установлена:
+   - не дублируй без причины
+   - проверь их состояние
+   - нормализуй структуру
+5. Обеспечь чистую и понятную структуру директорий skills.
+6. Убери мусор, дубли и неиспользуемые конфликтующие копии, если они мешают работе.
+
+--------------------------------
+СЛОЙ B. SKILL REGISTRY
+--------------------------------
+
+Создай централизованный реестр skills.
+
+Для каждого skill зафиксируй:
+- имя
+- краткое назначение
+- зону ответственности
+- когда должен вызываться
+- когда не должен вызываться
+- входной тип задачи
+- выходной тип результата
+- кто его активирует
+- какой skill может передать ему задачу
+- какому skill он передает результат дальше
+- можно ли запускать его параллельно
+- можно ли запускать его повторно
+- нужен ли human review после его работы
+- приоритет
+- уровень критичности
+- принадлежность к группе
+
+Сделай это не как хаотичный список, а как нормальный registry / routing manifest.
+
+--------------------------------
+СЛОЙ C. SKILL MANAGER
+--------------------------------
+
+Построй отдельный слой управления skills.
+
+Skill Manager должен отвечать за:
+- discover
+- enable / disable
+- status check
+- dependency awareness
+- conflict detection
+- duplicate detection
+- skill health
+- routing metadata
+- version awareness
+- usage policy
+- logging
+- fallback logic
+
+Skill Manager должен быть “центральным администратором skills”, а не просто папкой с файлами.
+
+Определи:
+- кто управляет Skill Manager
+- какой skill является главным администратором
+- какой skill отвечает за поддержку списка skills
+- какой skill отвечает за проверку целостности skill-system
+- какой skill отвечает за изменение правил роутинга
+
+Ожидаемая логика:
+- manage-skills = главный административный слой
+- antigravity-skill-orchestrator = исполнитель маршрутизации
+- loki-mode = верхнеуровневый операционный режим для длинных комплексных задач
+
+--------------------------------
+СЛОЙ D. SKILL ROUTER
+--------------------------------
+
+Построй полноценный router.
+
+Нужен центральный skill-router, который должен:
+- анализировать тип задачи
+- определять категорию задачи
+- решать, какой skill или группа skills должна работать
+- определять порядок вызовов
+- определять последовательный или параллельный режим
+- определять, нужен ли review / validation перед следующим этапом
+- вести trace маршрута
+
+Router должен уметь обрабатывать минимум следующие категории задач:
+
+1. Product / discovery / brainstorming
+2. PRD / scope / roadmap
+3. Architecture / system design
+4. Database / schema / storage
+5. API / backend design
+6. Backend implementation
+7. AI / RAG / retrieval / matching / evaluation
+8. Document generation / template flow
+9. Frontend / UX / review screens
+10. Testing / QA
+11. Debugging / incident resolution
+12. Security / hardening / audit
+13. Documentation / diagrams / API docs
+14. Data import / normalization / pipelines
+15. Skill governance / self-maintenance
+
+Для каждой категории:
+- определи primary skill
+- secondary skill
+- support skills
+- validation skill
+- fallback skill
+
+--------------------------------
+СЛОЙ E. SKILL GROUPS
+--------------------------------
+
+Сформируй рабочие группы skills.
+
+Нужны как минимум такие группы:
+
+1. Product Group
+Состав:
+- product-manager-toolkit
+- product-manager
+- ask-questions-if-underspecified
+- behavioral-modes
+
+Ответственность:
+- discovery
+- формулировка задач
+- PRD
+- scope
+- prioritization
+- requirements clarification
+
+2. Architecture Group
+Состав:
+- architecture
+- backend-architect
+- database-architect
+- database-design
+- c4-context
+- c4-container
+- c4-component
+- c4-code
+
+Ответственность:
+- system design
+- module boundaries
+- architecture docs
+- data model
+- C4 diagrams
+
+3. AI / Retrieval Group
+Состав:
+- ai-engineering-toolkit
+- rag-engineer
+- rag-implementation
+- llm-ops
+- context-manager
+- context-window-management
+- conversation-memory
+- prompt-caching
+
+Ответственность:
+- retrieval
+- matching
+- semantic search
+- prompt strategy
+- context handling
+- memory policy
+- AI pipeline design
+
+4. Backend Group
+Состав:
+- backend-dev-guidelines
+- nodejs-backend-patterns
+- cc-skill-backend-patterns
+- backend-development-feature-development
+- api-design-principles
+- api-endpoint-builder
+
+Ответственность:
+- backend implementation
+- services
+- modules
+- API
+- endpoint quality
+- feature delivery
+
+5. Data Group
+Состав:
+- database
+- database-optimizer
+- database-admin
+- data-engineering-data-pipeline
+
+Ответственность:
+- import pipelines
+- pricebook normalization
+- storage layer
+- indexing
+- data health
+- performance
+
+6. Testing & Debug Group
+Состав:
+- testing-qa
+- test-driven-development
+- tdd-orchestrator
+- unit-testing-test-generate
+- systematic-debugging
+- debugging-strategies
+- error-diagnostics-smart-debug
+- test-fixing
+- pypict-skill
+
+Ответственность:
+- test strategy
+- test generation
+- bug isolation
+- root cause analysis
+- recovery
+- regression control
+
+7. Security Group
+Состав:
+- security-audit
+- 007
+- api-security-best-practices
+- api-security-testing
+- backend-security-coder
+- security-requirement-extraction
+- security-scanning-security-hardening
+- security-scanning-security-dependencies
+- secrets-management
+- security-bluebook-builder
+
+Ответственность:
+- threat review
+- API security
+- secrets
+- dependency scanning
+- secure coding
+- security requirements
+- hardening
+
+8. Docs Group
+Состав:
+- documentation-generation-doc-generate
+- documentation-templates
+- api-documentation
+- api-documentation-generator
+- c4-context
+- c4-container
+- c4-component
+- c4-code
+
+Ответственность:
+- technical docs
+- API docs
+- architecture docs
+- templates
+- diagrams
+
+9. Frontend / UX Group
+Состав:
+- frontend-dev-guidelines
+- ui-ux-pro-max
+- ux-audit
+- ux-feedback
+- ux-copy
+- frontend-ui-dark-ts
+
+Ответственность:
+- UX flow
+- operator UI
+- reviewer UI
+- warnings / feedback
+- usability
+- copy for states and forms
+
+10. Skill Governance Group
+Состав:
+- manage-skills
+- antigravity-skill-orchestrator
+- loki-mode
+
+Ответственность:
+- registry
+- routing
+- orchestration
+- lifecycle of skills
+- maintenance of skill ecosystem
+
+--------------------------------
+СЛОЙ F. ПРАВИЛА РАБОТЫ SKILLS
+--------------------------------
+
+Для каждого skill и каждой группы определи:
+
+1. Когда skill запускается автоматически
+2. Когда запускается только по условиям
+3. Когда не должен запускаться
+4. Какие входные данные он ожидает
+5. Какой артефакт должен вернуть
+6. Кто проверяет его результат
+7. Куда этот результат передается дальше
+
+Построй правила передачи между skills.
+
+Примеры логики:
+
+- Product Group → передает validated requirements в Architecture Group
+- Architecture Group → передает system/module specs в Backend Group + Data Group + AI Group
+- AI Group → передает retrieval/matching strategy в Backend Group и Testing Group
+- Backend Group → передает реализацию в Testing & Debug Group
+- Testing Group → возвращает bugs / gaps обратно в Backend Group
+- Security Group → проверяет backend и API до выхода в production-like state
+- Docs Group → документирует утвержденные решения, а не черновой хаос
+- Skill Governance Group → контролирует, чтобы маршруты выполнялись корректно
+
+Сделай явные правила:
+- последовательный режим
+- параллельный режим
+- режим с review checkpoint
+- режим rollback / fallback
+- режим повторного запуска после исправлений
+
+--------------------------------
+СЛОЙ G. ПАРАЛЛЕЛЬНАЯ И ПОСЛЕДОВАТЕЛЬНАЯ РАБОТА
+--------------------------------
+
+Определи, какие группы и skills могут работать параллельно, а какие только последовательно.
+
+Обязательные правила:
+
+Параллельно можно:
+- Product Group + preliminary Architecture thinking
+- Backend Group + Data Group после утверждения architecture
+- AI Group + Data Group при проектировании retrieval/matching
+- Docs Group параллельно с утвержденной architecture и approved implementation
+- Security Group частично параллельно с implementation review
+- UX Group параллельно с backend API contract design
+
+Последовательно должны идти:
+- clarification → requirements → architecture
+- architecture → core backend/data design
+- data normalization → reliable retrieval/matching
+- matching logic → evaluation / QA
+- approved aggregation logic → document generation
+- final implementation → security audit → final release readiness
+
+Задай правила блокировок:
+- нельзя финализировать output pipeline без validation aggregation logic
+- нельзя считать skill complete без traceable result
+- нельзя пропускать review после doubtful / high-risk stages
+- нельзя запускать финальный document output, если testing/security gates не пройдены для соответствующего слоя
+
+--------------------------------
+СЛОЙ H. GOVERNANCE, LOGGING, CONTROL
+--------------------------------
+
+Нужна система контроля работы skills.
+
+Обязательно реализуй:
+
+1. Логирование:
+- какой skill был вызван
+- по какой причине
+- кто его вызвал
+- какие входы получил
+- какой результат вернул
+- какой следующий skill получил его результат
+- был ли результат принят или отклонен
+
+2. Traceability:
+- полный маршрут по skills для каждой сложной задачи
+- возможность понять, где был сбой
+
+3. Health checks:
+- skill installed
+- skill enabled
+- skill callable
+- registry entry exists
+- routing rule exists
+- no broken dependency
+- no critical duplicate
+
+4. Fallback rules:
+Если основной skill недоступен или дал слабый результат:
+- использовать secondary skill
+- если нужно, эскалировать в reviewer / human check
+- не продолжать слепо pipeline при критической неопределенности
+
+5. Change control:
+- любые изменения в routing rules должны фиксироваться
+- любые изменения в active skill set должны фиксироваться
+- любые изменения в group structure должны фиксироваться
+
+================================
+4. ЧТО НУЖНО СОЗДАТЬ В РЕЗУЛЬТАТЕ
+================================
+
+Ты должен не просто “поставить skills”.
+
+Ты должен создать полноценный набор артефактов:
+
+1. Skill Registry
+2. Skill Manager configuration
+3. Skill Router rules
+4. Skill Group definitions
+5. Invocation rules
+6. Handoff rules between skills
+7. Parallel / sequential execution policy
+8. Review / validation checkpoints
+9. Logging / audit policy
+10. Fallback policy
+11. Governance policy
+12. Short operating guide for this project
+
+================================
+5. ОБЯЗАТЕЛЬНЫЙ ФОРМАТ РЕЗУЛЬТАТА
+================================
+
+Работай до завершенного результата.
+
+В конце покажи результат в строгой структуре:
+
+A. Installed Skills
+- полный список установленных skills
+- статус каждого
+- замечания по конфликтам / дублям / версиям
+
+B. Skill Registry
+- для каждого skill: роль, ответственность, вход, выход, условия запуска, ограничения
+
+C. Skill Groups
+- группы
+- состав
+- лидер группы
+- зона ответственности
+- зависимые группы
+- параллельность / последовательность
+
+D. Skill Router
+- routing logic по категориям задач
+- primary / secondary / validator / fallback
+- handoff map
+
+E. Governance
+- кто главный skill-manager
+- кто поддерживает registry
+- кто поддерживает routing
+- кто проверяет целостность skill-system
+- кто отвечает за обновления
+
+F. Execution Policy
+- что идет последовательно
+- что идет параллельно
+- где обязательный review
+- где обязательная остановка при неопределенности
+
+G. Logs and Audit
+- как ведется логирование
+- как отслеживается маршрут
+- как выявляются ошибки orchestration
+
+H. Final Recommendation
+- какие skills критичны
+- какие secondary
+- какие стоит отключить по умолчанию
+- какие risks остаются
+
+================================
+6. КРИТИЧЕСКИЕ ПРАВИЛА
+================================
+
+- Не делай поверхностный результат.
+- Не давай абстрактный список.
+- Не ограничивайся установкой.
+- Построй рабочую систему orchestration и governance.
+- Учитывай, что skills должны реально помогать разработке именно этой AI-системы.
+- Не подключай нерелевантные skills просто “на всякий случай”.
+- Делай routing детерминированным и понятным.
+- Убирай хаос и дублирование ответственности.
+- Если видишь, что какой-то skill лишний, конфликтует или должен быть secondary — так и зафиксируй.
+- Сначала думай как системный архитектор skill-ecosystem, потом как установщик.
+
+Начинай.

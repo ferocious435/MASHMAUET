@@ -1,0 +1,5 @@
+# Archived Source TZ
+
+Original source file archived to: `docs/archive/source-inputs/TZ.md.txt`
+
+Open it only when reconciling runtime implementation against the original technical assignment.

@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-04-13T00:00:00.000Z",
+  "skills": [
+    {
+      "name": "brainstorming",
+      "source": "platform-resident",
+      "skill_file": "C:/Users/SergeyRaihshtat/.codex/skills/brainstorming/SKILL.md",
+      "usage": "support-only",
+      "reason": "Workspace-managed project folder .codex/skills rejected creating a new local skill directory on 2026-04-13, so this support skill is declared explicitly as a platform-resident supplement."
+    }
+  ]
+}

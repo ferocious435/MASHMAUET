@@ -1,0 +1,3432 @@
+{
+  "generated_at": "2026-04-13T06:31:06.649Z",
+  "project": "MASHMAUET",
+  "source_repository": "https://github.com/sickn33/antigravity-awesome-skills/tree/main",
+  "install_scope": "project-local",
+  "skills_root": ".codex/skills",
+  "chosen_source_policy": {
+    "canonical_source": "archive: antigravity-awesome-skills-main/skills/<skill>/",
+    "duplicate_policy": "???????????? ???????? skills/<name> ??? ???????????? ????????; plugin/bundle-????? ??????? ??????????????? ??????? ? ?? ????????????? ???????????.",
+    "install_scope": "project-local only"
+  },
+  "skills": [
+    {
+      "name": "architecture",
+      "description": "Architectural decision-making framework. Requirements analysis, trade-off evaluation, ADR documentation. Use when making architecture decisions or analyzing system design.",
+      "group": "Architecture Group",
+      "install_path": ".codex/skills/architecture",
+      "skill_file": ".codex/skills/architecture/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/architecture/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ???????????, ??????? ???????, schema baseline, C4."
+        ],
+        "conditional": [
+          "????????? ??????????????? ???????????? ???????? ? Product Group, ?? ????????? ??????????? ?????? ????? requirements."
+        ],
+        "never": [
+          "????? ?????? ?????? ? ???????? ??? ????????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Validated requirements, ???????????, NFR, ??????-???????.",
+        "output_type": "System/module specs, boundaries, data model, architecture decisions."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Product Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "backend-architect",
+      "description": "Expert backend architect specializing in scalable API design, microservices architecture, and distributed systems.",
+      "group": "Architecture Group",
+      "install_path": ".codex/skills/backend-architect",
+      "skill_file": ".codex/skills/backend-architect/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/backend-architect/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ???????????, ??????? ???????, schema baseline, C4."
+        ],
+        "conditional": [
+          "????????? ??????????????? ???????????? ???????? ? Product Group, ?? ????????? ??????????? ?????? ????? requirements."
+        ],
+        "never": [
+          "????? ?????? ?????? ? ???????? ??? ????????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Validated requirements, ???????????, NFR, ??????-???????.",
+        "output_type": "System/module specs, boundaries, data model, architecture decisions."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Product Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "database-architect",
+      "description": "Expert database architect specializing in data layer design from scratch, technology selection, schema modeling, and scalable database architectures.",
+      "group": "Architecture Group",
+      "install_path": ".codex/skills/database-architect",
+      "skill_file": ".codex/skills/database-architect/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/database-architect/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ???????????, ??????? ???????, schema baseline, C4."
+        ],
+        "conditional": [
+          "????????? ??????????????? ???????????? ???????? ? Product Group, ?? ????????? ??????????? ?????? ????? requirements."
+        ],
+        "never": [
+          "????? ?????? ?????? ? ???????? ??? ????????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Validated requirements, ???????????, NFR, ??????-???????.",
+        "output_type": "System/module specs, boundaries, data model, architecture decisions."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Product Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "database-design",
+      "description": "Database design principles and decision-making. Schema design, indexing strategy, ORM selection, serverless databases.",
+      "group": "Architecture Group",
+      "install_path": ".codex/skills/database-design",
+      "skill_file": ".codex/skills/database-design/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/database-design/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "scripts"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ???????????, ??????? ???????, schema baseline, C4."
+        ],
+        "conditional": [
+          "????????? ??????????????? ???????????? ???????? ? Product Group, ?? ????????? ??????????? ?????? ????? requirements."
+        ],
+        "never": [
+          "????? ?????? ?????? ? ???????? ??? ????????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Validated requirements, ???????????, NFR, ??????-???????.",
+        "output_type": "System/module specs, boundaries, data model, architecture decisions."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Product Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "api-design-principles",
+      "description": "Master REST and GraphQL API design principles to build intuitive, scalable, and maintainable APIs that delight developers and stand the test of time.",
+      "group": "Backend Group",
+      "install_path": ".codex/skills/api-design-principles",
+      "skill_file": ".codex/skills/api-design-principles/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/api-design-principles/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "assets",
+        "references",
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ??????????? backend, service layer ??? API."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Data Group."
+        ],
+        "never": [
+          "?? ?????? raw discovery ??? ???????????? boundaries."
+        ]
+      },
+      "io": {
+        "input_type": "System specs, module boundaries, contracts, retrieval strategy.",
+        "output_type": "Service/API implementation, contracts, endpoint behavior."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "api-endpoint-builder",
+      "description": "Builds production-ready REST API endpoints with validation, error handling, authentication, and documentation. Follows best practices for security and scalability.",
+      "group": "Backend Group",
+      "install_path": ".codex/skills/api-endpoint-builder",
+      "skill_file": ".codex/skills/api-endpoint-builder/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/api-endpoint-builder/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ??????????? backend, service layer ??? API."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Data Group."
+        ],
+        "never": [
+          "?? ?????? raw discovery ??? ???????????? boundaries."
+        ]
+      },
+      "io": {
+        "input_type": "System specs, module boundaries, contracts, retrieval strategy.",
+        "output_type": "Service/API implementation, contracts, endpoint behavior."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "ai-engineering-toolkit",
+      "description": "6 production-ready AI engineering workflows: prompt evaluation (8-dimension scoring), context budget planning, RAG pipeline design, agent security audit (65-point checklist), eval harness building, and product sense coaching.",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/ai-engineering-toolkit",
+      "skill_file": ".codex/skills/ai-engineering-toolkit/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/ai-engineering-toolkit/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "rag-engineer",
+      "description": "Expert in building Retrieval-Augmented Generation systems. Masters",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/rag-engineer",
+      "skill_file": ".codex/skills/rag-engineer/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/rag-engineer/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "rag-implementation",
+      "description": "RAG (Retrieval-Augmented Generation) implementation workflow covering embedding selection, vector database setup, chunking strategies, and retrieval optimization.",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/rag-implementation",
+      "skill_file": ".codex/skills/rag-implementation/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/rag-implementation/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "llm-ops",
+      "description": "LLM Operations -- RAG, embeddings, vector databases, fine-tuning, prompt engineering avancado, custos de LLM, evals de qualidade e arquiteturas de IA para producao.",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/llm-ops",
+      "skill_file": ".codex/skills/llm-ops/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/llm-ops/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "context-manager",
+      "description": "Elite AI context engineering specialist mastering dynamic context management, vector databases, knowledge graphs, and intelligent memory systems.",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/context-manager",
+      "skill_file": ".codex/skills/context-manager/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/context-manager/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "context-window-management",
+      "description": "Strategies for managing LLM context windows including",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/context-window-management",
+      "skill_file": ".codex/skills/context-window-management/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/context-window-management/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "conversation-memory",
+      "description": "Persistent memory systems for LLM conversations including",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/conversation-memory",
+      "skill_file": ".codex/skills/conversation-memory/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/conversation-memory/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "llm-evaluation",
+      "description": "Master comprehensive evaluation strategies for LLM applications, from automated metrics to human evaluation and A/B testing.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/llm-evaluation",
+      "skill_file": ".codex/skills/llm-evaluation/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/llm-evaluation/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "evaluation",
+      "description": "Build evaluation frameworks for agent systems. Use when testing agent performance systematically, validating context engineering choices, or measuring improvements over time.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/evaluation",
+      "skill_file": ".codex/skills/evaluation/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/evaluation/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "advanced-evaluation",
+      "description": "This skill should be used when the user asks to \"implement LLM-as-judge\", \"compare model outputs\", \"create evaluation rubrics\", \"mitigate evaluation bias\", or mentions direct scoring, pairwise comparison, position bias, evaluation pipelines, or automated quality assessment.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/advanced-evaluation",
+      "skill_file": ".codex/skills/advanced-evaluation/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/advanced-evaluation/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "backend-dev-guidelines",
+      "description": "You are a senior backend engineer operating production-grade services under strict architectural and reliability constraints. Use when routes, controllers, services, repositories, express middleware, or prisma database access.",
+      "group": "Backend Group",
+      "install_path": ".codex/skills/backend-dev-guidelines",
+      "skill_file": ".codex/skills/backend-dev-guidelines/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/backend-dev-guidelines/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ??????????? backend, service layer ??? API."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Data Group."
+        ],
+        "never": [
+          "?? ?????? raw discovery ??? ???????????? boundaries."
+        ]
+      },
+      "io": {
+        "input_type": "System specs, module boundaries, contracts, retrieval strategy.",
+        "output_type": "Service/API implementation, contracts, endpoint behavior."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "nodejs-backend-patterns",
+      "description": "Comprehensive guidance for building scalable, maintainable, and production-ready Node.js backend applications with modern frameworks, architectural patterns, and best practices.",
+      "group": "Backend Group",
+      "install_path": ".codex/skills/nodejs-backend-patterns",
+      "skill_file": ".codex/skills/nodejs-backend-patterns/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/nodejs-backend-patterns/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ??????????? backend, service layer ??? API."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Data Group."
+        ],
+        "never": [
+          "?? ?????? raw discovery ??? ???????????? boundaries."
+        ]
+      },
+      "io": {
+        "input_type": "System specs, module boundaries, contracts, retrieval strategy.",
+        "output_type": "Service/API implementation, contracts, endpoint behavior."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "cc-skill-backend-patterns",
+      "description": "Backend architecture patterns, API design, database optimization, and server-side best practices for Node.js, Express, and Next.js API routes.",
+      "group": "Backend Group",
+      "install_path": ".codex/skills/cc-skill-backend-patterns",
+      "skill_file": ".codex/skills/cc-skill-backend-patterns/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/cc-skill-backend-patterns/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ??????????? backend, service layer ??? API."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Data Group."
+        ],
+        "never": [
+          "?? ?????? raw discovery ??? ???????????? boundaries."
+        ]
+      },
+      "io": {
+        "input_type": "System specs, module boundaries, contracts, retrieval strategy.",
+        "output_type": "Service/API implementation, contracts, endpoint behavior."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "backend-development-feature-development",
+      "description": "Orchestrate end-to-end backend feature development from requirements to deployment. Use when coordinating multi-phase feature delivery across teams and services.",
+      "group": "Backend Group",
+      "install_path": ".codex/skills/backend-development-feature-development",
+      "skill_file": ".codex/skills/backend-development-feature-development/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/backend-development-feature-development/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ??????????? backend, service layer ??? API."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Data Group."
+        ],
+        "never": [
+          "?? ?????? raw discovery ??? ???????????? boundaries."
+        ]
+      },
+      "io": {
+        "input_type": "System specs, module boundaries, contracts, retrieval strategy.",
+        "output_type": "Service/API implementation, contracts, endpoint behavior."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "testing-qa",
+      "description": "Comprehensive testing and QA workflow covering unit testing, integration testing, E2E testing, browser automation, and quality assurance.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/testing-qa",
+      "skill_file": ".codex/skills/testing-qa/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/testing-qa/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "test-driven-development",
+      "description": "Use when implementing any feature or bugfix, before writing implementation code",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/test-driven-development",
+      "skill_file": ".codex/skills/test-driven-development/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/test-driven-development/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": true,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "tdd-orchestrator",
+      "description": "Master TDD orchestrator specializing in red-green-refactor discipline, multi-agent workflow coordination, and comprehensive test-driven development practices.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/tdd-orchestrator",
+      "skill_file": ".codex/skills/tdd-orchestrator/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/tdd-orchestrator/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "unit-testing-test-generate",
+      "description": "Generate comprehensive, maintainable unit tests across languages with strong coverage and edge case focus.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/unit-testing-test-generate",
+      "skill_file": ".codex/skills/unit-testing-test-generate/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/unit-testing-test-generate/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "systematic-debugging",
+      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/systematic-debugging",
+      "skill_file": ".codex/skills/systematic-debugging/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/systematic-debugging/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "debugging-strategies",
+      "description": "Transform debugging from frustrating guesswork into systematic problem-solving with proven strategies, powerful tools, and methodical approaches.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/debugging-strategies",
+      "skill_file": ".codex/skills/debugging-strategies/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/debugging-strategies/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "error-diagnostics-smart-debug",
+      "description": "Use when working with error diagnostics smart debug",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/error-diagnostics-smart-debug",
+      "skill_file": ".codex/skills/error-diagnostics-smart-debug/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/error-diagnostics-smart-debug/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "test-fixing",
+      "description": "Systematically identify and fix all failing tests using smart grouping strategies. Use when explicitly asks to fix tests (\\\"fix these tests\\\", \\\"make tests pass\\\"), reports test failures (\\\"tests are failing\\\", \\\"test suite is broken\\\"), or completes implementation and wants tests passing.",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/test-fixing",
+      "skill_file": ".codex/skills/test-fixing/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/test-fixing/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "pypict-skill",
+      "description": "Pairwise test generation",
+      "group": "Testing & Debug Group",
+      "install_path": ".codex/skills/pypict-skill",
+      "skill_file": ".codex/skills/pypict-skill/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/pypict-skill/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? QA, test plan, evaluation, bug triage, debugging."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ????? ??????? ??????????? ????? ????????? output."
+        ],
+        "never": [
+          "??? ???????????? ??? ???????????? ?????????."
+        ]
+      },
+      "io": {
+        "input_type": "Implementation artifacts, logs, failing flows, expected behavior.",
+        "output_type": "Tests, defects, evaluation evidence, debug hypotheses, fix recommendations."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "AI / Retrieval Group",
+          "Data Group",
+          "Frontend / UX Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Security Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "security-audit",
+      "description": "Comprehensive security auditing workflow covering web application testing, API security, penetration testing, vulnerability scanning, and security hardening.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/security-audit",
+      "skill_file": ".codex/skills/security-audit/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/security-audit/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": true,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "007",
+      "description": "Security audit, hardening, threat modeling (STRIDE/PASTA), Red/Blue Team, OWASP checks, code review, incident response, and infrastructure security for any project.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/007",
+      "skill_file": ".codex/skills/007/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/007/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "references",
+        "scripts"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "api-security-best-practices",
+      "description": "Implement secure API design patterns including authentication, authorization, input validation, rate limiting, and protection against common API vulnerabilities",
+      "group": "Security Group",
+      "install_path": ".codex/skills/api-security-best-practices",
+      "skill_file": ".codex/skills/api-security-best-practices/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/api-security-best-practices/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "api-security-testing",
+      "description": "API security testing workflow for REST and GraphQL APIs covering authentication, authorization, rate limiting, input validation, and security best practices.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/api-security-testing",
+      "skill_file": ".codex/skills/api-security-testing/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/api-security-testing/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "backend-security-coder",
+      "description": "Expert in secure backend coding practices specializing in input validation, authentication, and API security. Use PROACTIVELY for backend security implementations or security code reviews.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/backend-security-coder",
+      "skill_file": ".codex/skills/backend-security-coder/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/backend-security-coder/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "security-requirement-extraction",
+      "description": "Derive security requirements from threat models and business context. Use when translating threats into actionable requirements, creating security user stories, or building security test cases.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/security-requirement-extraction",
+      "skill_file": ".codex/skills/security-requirement-extraction/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/security-requirement-extraction/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "security-scanning-security-hardening",
+      "description": "Coordinate multi-layer security scanning and hardening across application, infrastructure, and compliance controls.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/security-scanning-security-hardening",
+      "skill_file": ".codex/skills/security-scanning-security-hardening/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/security-scanning-security-hardening/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "security-scanning-security-dependencies",
+      "description": "You are a security expert specializing in dependency vulnerability analysis, SBOM generation, and supply chain security. Scan project dependencies across multiple ecosystems to identify vulnerabilities, assess risks, and provide automated remediation strategies.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/security-scanning-security-dependencies",
+      "skill_file": ".codex/skills/security-scanning-security-dependencies/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/security-scanning-security-dependencies/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "secrets-management",
+      "description": "Secure secrets management practices for CI/CD pipelines using Vault, AWS Secrets Manager, and other tools.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/secrets-management",
+      "skill_file": ".codex/skills/secrets-management/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/secrets-management/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "security-bluebook-builder",
+      "description": "Build a minimal but real security policy for sensitive apps. The output is a single, coherent Blue Book document using MUST/SHOULD/CAN language, with explicit assumptions, scope, and security gates.",
+      "group": "Security Group",
+      "install_path": ".codex/skills/security-bluebook-builder",
+      "skill_file": ".codex/skills/security-bluebook-builder/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/security-bluebook-builder/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? security review, hardening, dependency/secrets audit."
+        ],
+        "conditional": [
+          "???????? ??????????? ? implementation review, ?? ?????? ??????????? ?? security gate."
+        ],
+        "never": [
+          "??? ???????????? implementation surface ??? meaningful review."
+        ]
+      },
+      "io": {
+        "input_type": "Code, API contracts, dependency list, secrets/config model, threat assumptions.",
+        "output_type": "Security findings, hardening actions, audit status, residual risks."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Backend Group",
+          "Testing & Debug Group"
+        ],
+        "forwards_to": [
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": false,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "product-manager-toolkit",
+      "description": "Essential tools and frameworks for modern product management, from discovery to delivery.",
+      "group": "Product Group",
+      "install_path": ".codex/skills/product-manager-toolkit",
+      "skill_file": ".codex/skills/product-manager-toolkit/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/product-manager-toolkit/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "references",
+        "scripts"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "Discovery, ?????? ????, ??????????? ?????, PRD/MVP."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? preliminary Architecture thinking, ?? ?? ???????? ???? clarification."
+        ],
+        "never": [
+          "?????? low-level ??????? ?????? ????? ???????????? ???????????."
+        ]
+      },
+      "io": {
+        "input_type": "????, ????????, ???????????, ????, ??????? ?? scope.",
+        "output_type": "Validated requirements, scope, PRD-?????????, ??????????."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human"
+        ],
+        "forwards_to": [
+          "Architecture Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "product-manager",
+      "description": "Senior PM agent with 6 knowledge domains, 30+ frameworks, 12 templates, and 32 SaaS metrics with formulas. Pure Markdown, zero scripts.",
+      "group": "Product Group",
+      "install_path": ".codex/skills/product-manager",
+      "skill_file": ".codex/skills/product-manager/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/product-manager/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": true,
+      "invoke": {
+        "automatic": [
+          "Discovery, ?????? ????, ??????????? ?????, PRD/MVP."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? preliminary Architecture thinking, ?? ?? ???????? ???? clarification."
+        ],
+        "never": [
+          "?????? low-level ??????? ?????? ????? ???????????? ???????????."
+        ]
+      },
+      "io": {
+        "input_type": "????, ????????, ???????????, ????, ??????? ?? scope.",
+        "output_type": "Validated requirements, scope, PRD-?????????, ??????????."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human"
+        ],
+        "forwards_to": [
+          "Architecture Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "behavioral-modes",
+      "description": "AI operational modes (brainstorm, implement, debug, review, teach, ship, orchestrate). Use to adapt behavior based on task type.",
+      "group": "Product Group",
+      "install_path": ".codex/skills/behavioral-modes",
+      "skill_file": ".codex/skills/behavioral-modes/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/behavioral-modes/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "Discovery, ?????? ????, ??????????? ?????, PRD/MVP."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? preliminary Architecture thinking, ?? ?? ???????? ???? clarification."
+        ],
+        "never": [
+          "?????? low-level ??????? ?????? ????? ???????????? ???????????."
+        ]
+      },
+      "io": {
+        "input_type": "????, ????????, ???????????, ????, ??????? ?? scope.",
+        "output_type": "Validated requirements, scope, PRD-?????????, ??????????."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human"
+        ],
+        "forwards_to": [
+          "Architecture Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "ask-questions-if-underspecified",
+      "description": "Clarify requirements before implementing. Use when serious doubts arise.",
+      "group": "Product Group",
+      "install_path": ".codex/skills/ask-questions-if-underspecified",
+      "skill_file": ".codex/skills/ask-questions-if-underspecified/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/ask-questions-if-underspecified/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "Discovery, ?????? ????, ??????????? ?????, PRD/MVP."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? preliminary Architecture thinking, ?? ?? ???????? ???? clarification."
+        ],
+        "never": [
+          "?????? low-level ??????? ?????? ????? ???????????? ???????????."
+        ]
+      },
+      "io": {
+        "input_type": "????, ????????, ???????????, ????, ??????? ?? scope.",
+        "output_type": "Validated requirements, scope, PRD-?????????, ??????????."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human"
+        ],
+        "forwards_to": [
+          "Architecture Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "loki-mode",
+      "description": "Version 2.35.0 | PRD to Production | Zero Human Intervention > Research-enhanced: OpenAI SDK, DeepMind, Anthropic, AWS Bedrock, Agent SDK, HN Production (2025)",
+      "group": "Skill Governance Group",
+      "install_path": ".codex/skills/loki-mode",
+      "skill_file": ".codex/skills/loki-mode/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/loki-mode/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        ".github",
+        "autonomy",
+        "benchmarks",
+        "demo",
+        "docs",
+        "examples",
+        "integrations",
+        "references",
+        "scripts",
+        "tests"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? discovery/enable/disable/routing/health checks/change control."
+        ],
+        "conditional": [
+          "????????? ?? ????? ????????; ????? ???????????? ???????????? ? ???????????????? ???????."
+        ],
+        "never": [
+          "??????? ????????? ?????? ???????? ??? skill orchestration."
+        ]
+      },
+      "io": {
+        "input_type": "Task category, active skill set, routing rules, health status, conflicts.",
+        "output_type": "Route decision, governance decision, registry updates, health checks."
+      },
+      "handoff": {
+        "activated_by": [
+          "human",
+          "manage-skills",
+          "antigravity-skill-orchestrator"
+        ],
+        "forwards_to": [
+          "Product Group",
+          "Architecture Group",
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "antigravity-skill-orchestrator",
+      "description": "A meta-skill that understands task requirements, dynamically selects appropriate skills, tracks successful skill combinations using agent-memory-mcp, and prevents skill overuse for simple tasks.",
+      "group": "Skill Governance Group",
+      "install_path": ".codex/skills/antigravity-skill-orchestrator",
+      "skill_file": ".codex/skills/antigravity-skill-orchestrator/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/antigravity-skill-orchestrator/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? discovery/enable/disable/routing/health checks/change control."
+        ],
+        "conditional": [
+          "????????? ?? ????? ????????; ????? ???????????? ???????????? ? ???????????????? ???????."
+        ],
+        "never": [
+          "??????? ????????? ?????? ???????? ??? skill orchestration."
+        ]
+      },
+      "io": {
+        "input_type": "Task category, active skill set, routing rules, health status, conflicts.",
+        "output_type": "Route decision, governance decision, registry updates, health checks."
+      },
+      "handoff": {
+        "activated_by": [
+          "human",
+          "manage-skills",
+          "antigravity-skill-orchestrator"
+        ],
+        "forwards_to": [
+          "Product Group",
+          "Architecture Group",
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    },
+    {
+      "name": "c4-context",
+      "description": "Expert C4 Context-level documentation specialist. Creates high-level system context diagrams, documents personas, user journeys, system features, and external dependencies.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/c4-context",
+      "skill_file": ".codex/skills/c4-context/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/c4-context/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "c4-container",
+      "description": "Expert C4 Container-level documentation specialist.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/c4-container",
+      "skill_file": ".codex/skills/c4-container/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/c4-container/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "c4-component",
+      "description": "Expert C4 Component-level documentation specialist. Synthesizes C4 Code-level documentation into Component-level architecture, defining component boundaries, interfaces, and relationships.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/c4-component",
+      "skill_file": ".codex/skills/c4-component/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/c4-component/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "c4-code",
+      "description": "Expert C4 Code-level documentation specialist. Analyzes code directories to create comprehensive C4 code-level documentation including function signatures, arguments, dependencies, and code structure.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/c4-code",
+      "skill_file": ".codex/skills/c4-code/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/c4-code/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "documentation-generation-doc-generate",
+      "description": "You are a documentation expert specializing in creating comprehensive, maintainable documentation from code. Generate API docs, architecture diagrams, user guides, and technical references using AI-powered analysis and industry best practices.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/documentation-generation-doc-generate",
+      "skill_file": ".codex/skills/documentation-generation-doc-generate/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/documentation-generation-doc-generate/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "documentation-templates",
+      "description": "Documentation templates and structure guidelines. README, API docs, code comments, and AI-friendly documentation.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/documentation-templates",
+      "skill_file": ".codex/skills/documentation-templates/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/documentation-templates/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "api-documentation",
+      "description": "API documentation workflow for generating OpenAPI specs, creating developer guides, and maintaining comprehensive API documentation.",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/api-documentation",
+      "skill_file": ".codex/skills/api-documentation/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/api-documentation/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "api-documentation-generator",
+      "description": "Generate comprehensive, developer-friendly API documentation from code, including endpoints, parameters, examples, and best practices",
+      "group": "Docs Group",
+      "install_path": ".codex/skills/api-documentation-generator",
+      "skill_file": ".codex/skills/api-documentation-generator/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/api-documentation-generator/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? ????????? ?????????, API docs, ?????, guide."
+        ],
+        "conditional": [
+          "????? ????? ??????????? ? ???????????? architecture ? approved implementation."
+        ],
+        "never": [
+          "??????? ??? ?? ?????????? ? ?????? ????????."
+        ]
+      },
+      "io": {
+        "input_type": "Approved decisions, contracts, schemas, flows, review outputs.",
+        "output_type": "Architecture/API docs, diagrams, templates, operating notes."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Backend Group"
+        ],
+        "forwards_to": []
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": false
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "frontend-dev-guidelines",
+      "description": "You are a senior frontend engineer operating under strict architectural and performance standards. Use when creating components or pages, adding new features, or fetching or mutating data.",
+      "group": "Frontend / UX Group",
+      "install_path": ".codex/skills/frontend-dev-guidelines",
+      "skill_file": ".codex/skills/frontend-dev-guidelines/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/frontend-dev-guidelines/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "resources"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? UX ??????, review UI, ?????? ?????????, usability feedback."
+        ],
+        "conditional": [
+          "????? ???? ??????????? ? backend API contract design."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ????????? ??? ???????????? review flow."
+        ]
+      },
+      "io": {
+        "input_type": "Flows, API contracts, states, warnings, review scenarios.",
+        "output_type": "UI flow, screen recommendations, copy, UX audit findings."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "description": "Comprehensive design guide for web and mobile applications. Use when designing new UI components or pages, choosing color palettes and typography, or reviewing code for UX issues.",
+      "group": "Frontend / UX Group",
+      "install_path": ".codex/skills/ui-ux-pro-max",
+      "skill_file": ".codex/skills/ui-ux-pro-max/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/ui-ux-pro-max/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [
+        "data",
+        "scripts"
+      ],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? UX ??????, review UI, ?????? ?????????, usability feedback."
+        ],
+        "conditional": [
+          "????? ???? ??????????? ? backend API contract design."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ????????? ??? ???????????? review flow."
+        ]
+      },
+      "io": {
+        "input_type": "Flows, API contracts, states, warnings, review scenarios.",
+        "output_type": "UI flow, screen recommendations, copy, UX audit findings."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "ux-audit",
+      "description": "Audit screens against Nielsen's heuristics and mobile UX best practices using the StyleSeed Toss design language as the implementation context.",
+      "group": "Frontend / UX Group",
+      "install_path": ".codex/skills/ux-audit",
+      "skill_file": ".codex/skills/ux-audit/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/ux-audit/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? UX ??????, review UI, ?????? ?????????, usability feedback."
+        ],
+        "conditional": [
+          "????? ???? ??????????? ? backend API contract design."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ????????? ??? ???????????? review flow."
+        ]
+      },
+      "io": {
+        "input_type": "Flows, API contracts, states, warnings, review scenarios.",
+        "output_type": "UI flow, screen recommendations, copy, UX audit findings."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "ux-feedback",
+      "description": "Add loading, empty, error, and success feedback states to StyleSeed components and pages with practical mobile-first rules.",
+      "group": "Frontend / UX Group",
+      "install_path": ".codex/skills/ux-feedback",
+      "skill_file": ".codex/skills/ux-feedback/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/ux-feedback/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? UX ??????, review UI, ?????? ?????????, usability feedback."
+        ],
+        "conditional": [
+          "????? ???? ??????????? ? backend API contract design."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ????????? ??? ???????????? review flow."
+        ]
+      },
+      "io": {
+        "input_type": "Flows, API contracts, states, warnings, review scenarios.",
+        "output_type": "UI flow, screen recommendations, copy, UX audit findings."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "ux-copy",
+      "description": "Generate UX microcopy in StyleSeed's Toss-inspired voice for buttons, empty states, errors, toasts, confirmations, and form guidance.",
+      "group": "Frontend / UX Group",
+      "install_path": ".codex/skills/ux-copy",
+      "skill_file": ".codex/skills/ux-copy/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/ux-copy/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? UX ??????, review UI, ?????? ?????????, usability feedback."
+        ],
+        "conditional": [
+          "????? ???? ??????????? ? backend API contract design."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ????????? ??? ???????????? review flow."
+        ]
+      },
+      "io": {
+        "input_type": "Flows, API contracts, states, warnings, review scenarios.",
+        "output_type": "UI flow, screen recommendations, copy, UX audit findings."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "frontend-ui-dark-ts",
+      "description": "A modern dark-themed React UI system using Tailwind CSS and Framer Motion. Designed for dashboards, admin panels, and data-rich applications with glassmorphism effects and tasteful animations.",
+      "group": "Frontend / UX Group",
+      "install_path": ".codex/skills/frontend-ui-dark-ts",
+      "skill_file": ".codex/skills/frontend-ui-dark-ts/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/frontend-ui-dark-ts/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? UX ??????, review UI, ?????? ?????????, usability feedback."
+        ],
+        "conditional": [
+          "????? ???? ??????????? ? backend API contract design."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ????????? ??? ???????????? review flow."
+        ]
+      },
+      "io": {
+        "input_type": "Flows, API contracts, states, warnings, review scenarios.",
+        "output_type": "UI flow, screen recommendations, copy, UX audit findings."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "Testing & Debug Group",
+          "Docs Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "medium",
+        "criticality": "medium"
+      }
+    },
+    {
+      "name": "database",
+      "description": "Database development and operations workflow covering SQL, NoSQL, database design, migrations, optimization, and data engineering.",
+      "group": "Data Group",
+      "install_path": ".codex/skills/database",
+      "skill_file": ".codex/skills/database/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/database/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? schema/storage/pipeline/data health/performance."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Backend Group; ? AI Group ? ??? ?????????????? retrieval."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ?????? ? storage."
+        ]
+      },
+      "io": {
+        "input_type": "Source data, pricebook, schema rules, mapping constraints.",
+        "output_type": "Normalized datasets, storage model, indexes, import pipeline."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "AI / Retrieval Group",
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "database-optimizer",
+      "description": "Expert database optimizer specializing in modern performance tuning, query optimization, and scalable architectures.",
+      "group": "Data Group",
+      "install_path": ".codex/skills/database-optimizer",
+      "skill_file": ".codex/skills/database-optimizer/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/database-optimizer/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? schema/storage/pipeline/data health/performance."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Backend Group; ? AI Group ? ??? ?????????????? retrieval."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ?????? ? storage."
+        ]
+      },
+      "io": {
+        "input_type": "Source data, pricebook, schema rules, mapping constraints.",
+        "output_type": "Normalized datasets, storage model, indexes, import pipeline."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "AI / Retrieval Group",
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "database-admin",
+      "description": "Expert database administrator specializing in modern cloud databases, automation, and reliability engineering.",
+      "group": "Data Group",
+      "install_path": ".codex/skills/database-admin",
+      "skill_file": ".codex/skills/database-admin/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/database-admin/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? schema/storage/pipeline/data health/performance."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Backend Group; ? AI Group ? ??? ?????????????? retrieval."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ?????? ? storage."
+        ]
+      },
+      "io": {
+        "input_type": "Source data, pricebook, schema rules, mapping constraints.",
+        "output_type": "Normalized datasets, storage model, indexes, import pipeline."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "AI / Retrieval Group",
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "data-engineering-data-pipeline",
+      "description": "You are a data pipeline architecture expert specializing in scalable, reliable, and cost-effective data pipelines for batch and streaming data processing.",
+      "group": "Data Group",
+      "install_path": ".codex/skills/data-engineering-data-pipeline",
+      "skill_file": ".codex/skills/data-engineering-data-pipeline/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/data-engineering-data-pipeline/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? schema/storage/pipeline/data health/performance."
+        ],
+        "conditional": [
+          "????? ??????????? architecture ????? ???? ??????????? ? Backend Group; ? AI Group ? ??? ?????????????? retrieval."
+        ],
+        "never": [
+          "????? ?????? ?? ??????????? ?????? ? storage."
+        ]
+      },
+      "io": {
+        "input_type": "Source data, pricebook, schema rules, mapping constraints.",
+        "output_type": "Normalized datasets, storage model, indexes, import pipeline."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group"
+        ],
+        "forwards_to": [
+          "AI / Retrieval Group",
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "prompt-caching",
+      "description": "Caching strategies for LLM prompts including Anthropic prompt",
+      "group": "AI / Retrieval Group",
+      "install_path": ".codex/skills/prompt-caching",
+      "skill_file": ".codex/skills/prompt-caching/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/prompt-caching/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? RAG, retrieval, semantic matching, LLM orchestration."
+        ],
+        "conditional": [
+          "????? ???????? ??????????? ? Data Group ??? ?????????????? retrieval/matching."
+        ],
+        "never": [
+          "????? ?????? ?? ?????????? AI/retrieval ????."
+        ]
+      },
+      "io": {
+        "input_type": "??????????????? ??????, schema, document template, matching goals.",
+        "output_type": "Retrieval strategy, matching logic, prompt/context policy, evaluation plan."
+      },
+      "handoff": {
+        "activated_by": [
+          "antigravity-skill-orchestrator",
+          "human",
+          "Architecture Group",
+          "Data Group"
+        ],
+        "forwards_to": [
+          "Backend Group",
+          "Testing & Debug Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "high",
+        "criticality": "high"
+      }
+    },
+    {
+      "name": "manage-skills",
+      "description": "Discover, list, create, edit, toggle, copy, move, and delete AI agent skills across 11 tools (Cursor, Claude, Agents, Windsurf, Copilot, Codex, Cline, Aider, Continue, Roo Code, Augment)",
+      "group": "Skill Governance Group",
+      "install_path": ".codex/skills/manage-skills",
+      "skill_file": ".codex/skills/manage-skills/SKILL.md",
+      "source_repo_path": "antigravity-awesome-skills-main/skills/manage-skills/",
+      "status": {
+        "installed": true,
+        "enabled": true,
+        "callable": true,
+        "health": "ok"
+      },
+      "assets": [],
+      "global_overlap": false,
+      "invoke": {
+        "automatic": [
+          "????? discovery/enable/disable/routing/health checks/change control."
+        ],
+        "conditional": [
+          "????????? ?? ????? ????????; ????? ???????????? ???????????? ? ???????????????? ???????."
+        ],
+        "never": [
+          "??????? ????????? ?????? ???????? ??? skill orchestration."
+        ]
+      },
+      "io": {
+        "input_type": "Task category, active skill set, routing rules, health status, conflicts.",
+        "output_type": "Route decision, governance decision, registry updates, health checks."
+      },
+      "handoff": {
+        "activated_by": [
+          "human",
+          "manage-skills",
+          "antigravity-skill-orchestrator"
+        ],
+        "forwards_to": [
+          "Product Group",
+          "Architecture Group",
+          "Backend Group",
+          "Data Group",
+          "AI / Retrieval Group",
+          "Testing & Debug Group",
+          "Security Group",
+          "Docs Group",
+          "Frontend / UX Group"
+        ]
+      },
+      "execution": {
+        "parallel_allowed": true,
+        "repeatable": true,
+        "review_required": true
+      },
+      "governance": {
+        "priority": "critical",
+        "criticality": "critical"
+      }
+    }
+  ]
+}

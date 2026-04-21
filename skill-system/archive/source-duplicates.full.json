@@ -1,0 +1,596 @@
+﻿{
+    "generated_at":  "2026-04-13T09:32:04.9372876+03:00",
+    "duplicate_skills":  [
+                             {
+                                 "name":  "007",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/007/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/007/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/007/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "advanced-evaluation",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/advanced-evaluation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/advanced-evaluation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/advanced-evaluation/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "ai-engineering-toolkit",
+                                 "copies":  2,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/ai-engineering-toolkit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/ai-engineering-toolkit/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "antigravity-skill-orchestrator",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/antigravity-skill-orchestrator/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/antigravity-skill-orchestrator/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/antigravity-skill-orchestrator/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "api-design-principles",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/api-design-principles/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/api-design-principles/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/api-design-principles/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "api-documentation",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/api-documentation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/api-documentation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/api-documentation/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "api-documentation-generator",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/api-documentation-generator/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/api-documentation-generator/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/api-documentation-generator/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "api-endpoint-builder",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/api-endpoint-builder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/api-endpoint-builder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/api-endpoint-builder/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "api-security-best-practices",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/api-security-best-practices/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/api-security-best-practices/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-security-developer/skills/api-security-best-practices/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/api-security-best-practices/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "api-security-testing",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/api-security-testing/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/api-security-testing/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/api-security-testing/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "architecture",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/architecture/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/architecture/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/architecture/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "ask-questions-if-underspecified",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/ask-questions-if-underspecified/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/ask-questions-if-underspecified/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/ask-questions-if-underspecified/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "backend-architect",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/backend-architect/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/backend-architect/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/backend-architect/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "backend-development-feature-development",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/backend-development-feature-development/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/backend-development-feature-development/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/backend-development-feature-development/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "backend-dev-guidelines",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/backend-dev-guidelines/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/backend-dev-guidelines/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-full-stack-developer/skills/backend-dev-guidelines/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/backend-dev-guidelines/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "backend-security-coder",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/backend-security-coder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/backend-security-coder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-security-developer/skills/backend-security-coder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/backend-security-coder/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "behavioral-modes",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/behavioral-modes/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/behavioral-modes/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/behavioral-modes/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "c4-code",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/c4-code/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/c4-code/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/c4-code/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "c4-component",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/c4-component/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/c4-component/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/c4-component/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "c4-container",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/c4-container/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/c4-container/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/c4-container/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "c4-context",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/c4-context/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/c4-context/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/c4-context/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "cc-skill-backend-patterns",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/cc-skill-backend-patterns/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/cc-skill-backend-patterns/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/cc-skill-backend-patterns/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "context-manager",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/context-manager/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/context-manager/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/context-manager/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "context-window-management",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/context-window-management/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/context-window-management/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-llm-application-developer/skills/context-window-management/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/context-window-management/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "conversation-memory",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/conversation-memory/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/conversation-memory/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/conversation-memory/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "database",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/database/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/database/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/database/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "database-admin",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/database-admin/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/database-admin/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/database-admin/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "database-architect",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/database-architect/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/database-architect/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-data-analytics/skills/database-architect/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/database-architect/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "database-design",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/database-design/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/database-design/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-full-stack-developer/skills/database-design/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/database-design/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "database-optimizer",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/database-optimizer/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/database-optimizer/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/database-optimizer/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "data-engineering-data-pipeline",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/data-engineering-data-pipeline/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/data-engineering-data-pipeline/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/data-engineering-data-pipeline/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "debugging-strategies",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/debugging-strategies/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/debugging-strategies/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/debugging-strategies/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "documentation-generation-doc-generate",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/documentation-generation-doc-generate/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/documentation-generation-doc-generate/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/documentation-generation-doc-generate/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "documentation-templates",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/documentation-templates/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/documentation-templates/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-oss-maintainer/skills/documentation-templates/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/documentation-templates/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "error-diagnostics-smart-debug",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/error-diagnostics-smart-debug/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/error-diagnostics-smart-debug/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/error-diagnostics-smart-debug/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "evaluation",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/evaluation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/evaluation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/evaluation/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "frontend-dev-guidelines",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/frontend-dev-guidelines/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/frontend-dev-guidelines/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/frontend-dev-guidelines/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "frontend-ui-dark-ts",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/frontend-ui-dark-ts/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/frontend-ui-dark-ts/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/frontend-ui-dark-ts/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "llm-evaluation",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/llm-evaluation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/llm-evaluation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/llm-evaluation/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "llm-ops",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/llm-ops/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/llm-ops/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/llm-ops/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "loki-mode",
+                                 "copies":  2,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/loki-mode/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/loki-mode/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "nodejs-backend-patterns",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/nodejs-backend-patterns/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/nodejs-backend-patterns/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/nodejs-backend-patterns/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "product-manager",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/product-manager/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/product-manager/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/product-manager/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "product-manager-toolkit",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/product-manager-toolkit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/product-manager-toolkit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-startup-founder/skills/product-manager-toolkit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/product-manager-toolkit/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "prompt-caching",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/prompt-caching/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/prompt-caching/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-llm-application-developer/skills/prompt-caching/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/prompt-caching/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "pypict-skill",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/pypict-skill/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/pypict-skill/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/pypict-skill/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "rag-engineer",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/rag-engineer/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/rag-engineer/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-agent-architect/skills/rag-engineer/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/rag-engineer/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "rag-implementation",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/rag-implementation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/rag-implementation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-llm-application-developer/skills/rag-implementation/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/rag-implementation/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "secrets-management",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/secrets-management/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/secrets-management/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/secrets-management/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "security-audit",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/security-audit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/security-audit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/security-audit/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "security-bluebook-builder",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/security-bluebook-builder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/security-bluebook-builder/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/security-bluebook-builder/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "security-requirement-extraction",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/security-requirement-extraction/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/security-requirement-extraction/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/security-requirement-extraction/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "security-scanning-security-dependencies",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/security-scanning-security-dependencies/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/security-scanning-security-dependencies/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/security-scanning-security-dependencies/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "security-scanning-security-hardening",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/security-scanning-security-hardening/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/security-scanning-security-hardening/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/security-scanning-security-hardening/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "systematic-debugging",
+                                 "copies":  5,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/systematic-debugging/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/systematic-debugging/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-essentials/skills/systematic-debugging/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-qa-testing/skills/systematic-debugging/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/systematic-debugging/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "tdd-orchestrator",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/tdd-orchestrator/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/tdd-orchestrator/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/tdd-orchestrator/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "test-driven-development",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/test-driven-development/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/test-driven-development/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-qa-testing/skills/test-driven-development/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/test-driven-development/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "test-fixing",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/test-fixing/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/test-fixing/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-qa-testing/skills/test-fixing/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/test-fixing/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "testing-qa",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/testing-qa/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/testing-qa/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/testing-qa/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "ui-ux-pro-max",
+                                 "copies":  4,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/ui-ux-pro-max/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/ui-ux-pro-max/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-bundle-web-designer/skills/ui-ux-pro-max/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/ui-ux-pro-max/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "unit-testing-test-generate",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/unit-testing-test-generate/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/unit-testing-test-generate/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/unit-testing-test-generate/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "ux-audit",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/ux-audit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/ux-audit/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/ux-audit/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "ux-copy",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/ux-copy/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/ux-copy/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/ux-copy/SKILL.md"
+                                             ]
+                             },
+                             {
+                                 "name":  "ux-feedback",
+                                 "copies":  3,
+                                 "sources":  [
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills-claude/skills/ux-feedback/SKILL.md",
+                                                 "antigravity-awesome-skills-main/plugins/antigravity-awesome-skills/skills/ux-feedback/SKILL.md",
+                                                 "antigravity-awesome-skills-main/skills/ux-feedback/SKILL.md"
+                                             ]
+                             }
+                         ],
+    "canonical_policy":  "Prefer archive root skills/\u003cname\u003e; ignore plugin/bundle distribution copies in project-local install."
+}

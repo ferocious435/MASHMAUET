@@ -1,0 +1,5 @@
+# Archived Source Idea Document
+
+Original source file archived to: `docs/archive/source-inputs/RAAEN.md.txt`
+
+Open it only when reconciling the current living product logic against the original idea document.

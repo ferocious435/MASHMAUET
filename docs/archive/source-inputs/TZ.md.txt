@@ -1,0 +1,1154 @@
+# Техническое ТЗ для разработчиков
+
+## Проект: AI-система автоматической подготовки “מסמך משמעויות” по описанию работ и מחירון
+
+---
+
+## 1. Цель разработки
+
+Разработать рабочую систему, которая:
+
+* принимает описание предстоящих работ
+* принимает фото
+* принимает базовые размеры
+* использует шаблон **“מסמך משמעויות”**
+* использует большой **מחירון**
+* подбирает релевантные позиции из מחירון
+* считает стоимость
+* агрегирует суммы по строкам шаблона
+* генерирует готовый заполненный документ
+* сохраняет внутренний детальный расчёт
+* явно показывает спорные места, допущения и неуверенные совпадения
+
+---
+
+## 2. Основной принцип системы
+
+Система не должна “угадывать молча”.
+
+Правила:
+
+* если данных не хватает — запросить уточнение
+* если совпадение неуверенное — показать варианты
+* если единица измерения не совпадает — поднять флаг
+* если нет mapping в шаблон — не вставлять автоматически
+* если расчёт частично предположительный — явно это отметить
+* в финальный шаблон автоматически попадают только:
+
+  * точные позиции
+  * подтверждённые вероятные позиции
+
+---
+
+## 3. MVP-границы
+
+### В MVP входит:
+
+* обработка одного типа шаблона **“מסמך משמעויות”**
+* работа с одним подготовленным מחירון
+* ввод текста
+* ввод размеров
+* загрузка фото
+* извлечение типов работ
+* подбор позиций
+* расчёт
+* агрегация по шаблону
+* review step
+* генерация итогового документа
+* генерация внутреннего расчётного листа
+* генерация листа допущений / спорных мест
+
+### В MVP не входит:
+
+* обязательный анализ видео
+* полностью автономный режим без проверки
+* поддержка произвольных шаблонов без настройки
+* сложное автообучение
+* глубокие ERP-интеграции
+* OCR плохих сканов как обязательная функция
+
+---
+
+## 4. Роли пользователей
+
+### 4.1. Operator
+
+Пользователь, который создаёт документ.
+
+Права:
+
+* создать новый кейс
+* загрузить входные данные
+* запустить анализ
+* просмотреть результат
+* внести ответы на уточнения
+* отправить на подтверждение
+* скачать итоговые файлы
+
+### 4.2. Reviewer
+
+Более опытный сотрудник.
+
+Права:
+
+* просматривать спорные позиции
+* подтверждать / заменять позиции
+* править агрегирование
+* утверждать финальный документ
+
+### 4.3. Admin
+
+Администратор справочников и настроек.
+
+Права:
+
+* загружать и обновлять מחירון
+* управлять mapping table
+* управлять шаблонами
+* управлять библиотекой скрытых работ
+* просматривать системные логи и ошибки
+
+---
+
+## 5. Основной pipeline
+
+### Шаг 1. Intake
+
+Система принимает:
+
+* case title / ID
+* описание работы
+* размеры
+* фото
+* шаблон
+* מחירון
+* дополнительные комментарии
+
+### Шаг 2. Preprocessing
+
+Система:
+
+* нормализует текст
+* извлекает числа, размеры, единицы
+* индексирует фото
+* проверяет наличие обязательных входов
+* валидирует, что шаблон и מחירון доступны
+
+### Шаг 3. Work Understanding
+
+Система строит структурированную карту работ:
+
+* основной тип работы
+* дополнительные операции
+* потенциальные скрытые работы
+* объёмы
+* список missing inputs
+
+### Шаг 4. Clarification
+
+Если есть missing critical data:
+
+* система генерирует уточняющие вопросы
+* ждёт ответы пользователя
+* пересчитывает карту работ
+
+### Шаг 5. Matching
+
+Система ищет релевантные позиции в מחירון:
+
+* keyword search
+* semantic search
+* section-aware filtering
+* unit-aware filtering
+* hidden-work expansion
+
+### Шаг 6. Scoring
+
+Каждой найденной позиции присваивается:
+
+* confidence_score
+* match_reason
+* unit_status
+* mapping_status
+* requires_review
+
+### Шаг 7. Calculation
+
+Система считает:
+
+* quantity
+* unit_price
+* line_total
+
+### Шаг 8. Aggregation
+
+Система переносит внутренние позиции в строки шаблона через mapping table
+
+### Шаг 9. Review
+
+Пользователь / reviewer видит:
+
+* что система поняла
+* какие позиции выбраны
+* что попало в шаблон
+* что требует проверки
+* какие есть допущения
+
+### Шаг 10. Output
+
+Система генерирует:
+
+* итоговый “מסמך משמעויות”
+* внутренний расчётный лист
+* лист проверки / допущений
+
+---
+
+## 6. Архитектурные модули
+
+## 6.1. Template Engine
+
+Назначение:
+
+* хранение структуры шаблона
+* заполнение шаблона данными
+* экспорт итогового документа
+
+Функции:
+
+* parse_template_definition()
+* validate_required_fields()
+* fill_template()
+* export_document()
+
+На вход:
+
+* template_definition
+* aggregated_values
+* text_blocks
+* metadata
+
+На выход:
+
+* filled_template_document
+
+---
+
+## 6.2. Pricebook Engine
+
+Назначение:
+
+* работа с מחירון как со структурированным справочником
+
+Функции:
+
+* import_pricebook()
+* normalize_pricebook()
+* search_pricebook()
+* fetch_price_item()
+* filter_by_unit()
+* filter_by_section()
+
+На вход:
+
+* raw pricebook file
+* normalized search query
+* unit hints
+* section hints
+
+На выход:
+
+* candidate items list
+
+---
+
+## 6.3. Work Understanding Engine
+
+Назначение:
+
+* интерпретация входного описания и преобразование в карту работ
+
+Функции:
+
+* parse_user_description()
+* extract_dimensions()
+* detect_work_types()
+* detect_hidden_work_candidates()
+* detect_missing_data()
+
+На вход:
+
+* free text
+* dimensions
+* image-derived hints
+* optional notes
+
+На выход:
+
+* structured_work_map
+
+---
+
+## 6.4. Clarification Engine
+
+Назначение:
+
+* генерация уточняющих вопросов
+
+Функции:
+
+* build_questions()
+* classify_missing_fields()
+* merge_user_answers()
+
+На выход:
+
+* clarification_questions
+* updated_work_map
+
+---
+
+## 6.5. Matching Engine
+
+Назначение:
+
+* подбор позиций из מחירון
+
+Функции:
+
+* keyword_match()
+* semantic_match()
+* rank_candidates()
+* merge_candidates()
+* apply_hidden_work_rules()
+
+На выход:
+
+* ranked_price_candidates
+
+---
+
+## 6.6. Calculation Engine
+
+Назначение:
+
+* расчёт количества и стоимости
+
+Функции:
+
+* derive_quantity()
+* validate_unit()
+* calculate_line_total()
+* flag_estimation_mode()
+
+На выход:
+
+* detailed_cost_lines
+
+---
+
+## 6.7. Aggregation Engine
+
+Назначение:
+
+* преобразование детального расчёта в финансовые строки шаблона
+
+Функции:
+
+* load_mapping_rules()
+* map_items_to_template_lines()
+* aggregate_template_amounts()
+* validate_aggregation()
+
+На выход:
+
+* aggregated_template_lines
+
+---
+
+## 6.8. Review Engine
+
+Назначение:
+
+* управление ручной проверкой
+
+Функции:
+
+* mark_review_required()
+* override_candidate()
+* approve_case()
+* reject_case()
+* record_reason()
+
+На выход:
+
+* approved_result_state
+
+---
+
+## 6.9. Output Package Engine
+
+Назначение:
+
+* формирование выходного пакета документов
+
+Функции:
+
+* build_main_document()
+* build_detailed_sheet()
+* build_review_sheet()
+* export_package()
+
+---
+
+## 7. Сущности данных
+
+## 7.1. Case
+
+Поля:
+
+* case_id
+* title
+* created_by
+* created_at
+* status
+* template_id
+* pricebook_id
+* raw_description
+* normalized_description
+* dimensions_json
+* notes
+* review_status
+* final_status
+
+---
+
+## 7.2. UploadedAsset
+
+Поля:
+
+* asset_id
+* case_id
+* type: image / video / file
+* file_name
+* mime_type
+* storage_url
+* extracted_text
+* metadata_json
+
+---
+
+## 7.3. TemplateDefinition
+
+Поля:
+
+* template_id
+* template_name
+* template_version
+* output_format
+* fields_schema_json
+* financial_lines_schema_json
+* required_fields_json
+* insertion_rules_json
+
+---
+
+## 7.4. PricebookItem
+
+Поля:
+
+* item_id
+* code
+* description
+* normalized_description
+* unit
+* unit_price
+* section
+* subsection
+* tags_json
+* synonyms_json
+* active_flag
+* metadata_json
+
+---
+
+## 7.5. WorkItem
+
+Поля:
+
+* work_item_id
+* case_id
+* work_type
+* description
+* quantity
+* unit
+* derived_from
+* confidence
+* hidden_work_flag
+* requires_clarification
+
+---
+
+## 7.6. CandidateMatch
+
+Поля:
+
+* candidate_id
+* case_id
+* work_item_id
+* pricebook_item_id
+* confidence_score
+* match_type: exact / probable / doubtful
+* match_reason
+* unit_status
+* mapping_status
+* selected_flag
+* reviewer_override_flag
+
+---
+
+## 7.7. DetailedCostLine
+
+Поля:
+
+* cost_line_id
+* case_id
+* pricebook_item_id
+* quantity
+* unit
+* unit_price
+* total
+* source_confidence
+* estimation_flag
+* included_in_output_flag
+
+---
+
+## 7.8. TemplateMappingRule
+
+Поля:
+
+* rule_id
+* template_id
+* target_line_key
+* pricebook_filter_json
+* aggregation_logic
+* allow_merge_flag
+* requires_separate_output_flag
+* active_flag
+
+---
+
+## 7.9. AggregatedTemplateLine
+
+Поля:
+
+* aggregated_line_id
+* case_id
+* template_line_key
+* amount
+* source_cost_line_ids
+* status
+* warning_flag
+
+---
+
+## 7.10. ClarificationQuestion
+
+Поля:
+
+* question_id
+* case_id
+* field_key
+* question_text
+* priority
+* answer_value
+* answer_status
+
+---
+
+## 7.11. ReviewDecision
+
+Поля:
+
+* decision_id
+* case_id
+* reviewer_id
+* decision_type
+* target_entity_type
+* target_entity_id
+* comment
+* created_at
+
+---
+
+## 8. Хранилища
+
+Нужны отдельные логические хранилища:
+
+### 8.1. File Storage
+
+Для:
+
+* шаблонов
+* מחירון
+* изображений
+* итоговых документов
+* промежуточных экспортов
+
+### 8.2. Relational DB
+
+Для:
+
+* кейсов
+* candidates
+* mappings
+* cost lines
+* review actions
+* template schemas
+
+### 8.3. Search Index
+
+Для:
+
+* semantic / keyword поиска по מחירון
+* быстрого ранжирования кандидатов
+
+---
+
+## 9. API-слой
+
+## 9.1. Case API
+
+### POST /cases
+
+Создать новый кейс
+
+Input:
+
+* title
+* template_id
+* pricebook_id
+* description
+* dimensions
+* notes
+
+Output:
+
+* case_id
+
+### GET /cases/{id}
+
+Получить кейс целиком
+
+### POST /cases/{id}/assets
+
+Загрузить файлы кейса
+
+### POST /cases/{id}/analyze
+
+Запустить пайплайн анализа
+
+### GET /cases/{id}/status
+
+Получить статус пайплайна
+
+---
+
+## 9.2. Clarification API
+
+### GET /cases/{id}/questions
+
+Получить уточняющие вопросы
+
+### POST /cases/{id}/questions/answers
+
+Отправить ответы
+
+### POST /cases/{id}/reanalyze
+
+Перезапустить анализ после ответов
+
+---
+
+## 9.3. Matching API
+
+### GET /cases/{id}/candidates
+
+Получить список найденных позиций
+
+### POST /cases/{id}/candidates/select
+
+Подтвердить / заменить выбранные позиции
+
+---
+
+## 9.4. Review API
+
+### GET /cases/{id}/review
+
+Получить обзор спорных мест
+
+### POST /cases/{id}/review/approve
+
+Утвердить кейс
+
+### POST /cases/{id}/review/reject
+
+Вернуть кейс на исправление
+
+### POST /cases/{id}/review/override
+
+Сделать ручную замену
+
+---
+
+## 9.5. Output API
+
+### POST /cases/{id}/generate
+
+Сгенерировать финальный пакет
+
+### GET /cases/{id}/outputs
+
+Получить ссылки на итоговые файлы
+
+---
+
+## 10. Внутренняя логика matching
+
+Matching не должен быть одним поиском по словам.
+
+Нужен multi-layer matching:
+
+### Layer 1. Lexical match
+
+* совпадение по словам
+* совпадение по корням
+* совпадение по кодам / разделам
+
+### Layer 2. Semantic match
+
+* смысловое сходство описания работ и позиции מחירון
+
+### Layer 3. Unit filter
+
+* отбрасывание кандидатов с неподходящей единицей измерения
+
+### Layer 4. Section relevance
+
+* усиление кандидатов из релевантных разделов
+
+### Layer 5. Hidden-work expansion
+
+* добавление типовых сопутствующих работ
+
+### Layer 6. Business rules
+
+* правила, специфичные для шаблона и домена
+
+---
+
+## 11. Confidence model
+
+Каждой позиции нужен score, например 0–1.
+
+Пороговая логика MVP:
+
+* 0.85–1.00 = exact
+* 0.60–0.84 = probable
+* ниже 0.60 = doubtful
+
+Правила:
+
+* exact можно предлагать как автоподтверждённые кандидаты
+* probable требуют review пользователем
+* doubtful не должны попадать в шаблон автоматически
+
+---
+
+## 12. Правила расчёта количества
+
+Система должна поддерживать минимум 3 режима:
+
+### 12.1. Direct quantity
+
+Количество пришло явно от пользователя
+
+### 12.2. Derived quantity
+
+Количество вычислено из размеров
+Примеры:
+
+* площадь = длина × ширина
+* длина = сумма отрезков
+* количество = указанное число единиц
+
+### 12.3. Estimated quantity
+
+Количество предположено
+Такой режим обязательно помечается флагом estimation_flag
+
+---
+
+## 13. Правила валидации
+
+Перед финальной генерацией система обязана проверить:
+
+1. шаблон выбран
+2. מחירון выбран
+3. обязательные поля кейса заполнены
+4. все aggregated lines имеют валидные суммы или обоснованную пустоту
+5. нет line_total < 0 без правила
+6. единицы измерения согласованы
+7. все doubtful items исключены из финального шаблона
+8. итоговая сумма документа = сумме aggregated lines
+9. если есть missing critical data — документ получает статус preliminary
+
+---
+
+## 14. Форматы выхода
+
+Система должна выдавать минимум 3 файла:
+
+### 14.1. Main Document
+
+Готовый “מסמך משמעויות”
+
+Содержит:
+
+* описание работ
+* суммы по строкам шаблона
+* примечания
+* итог
+
+### 14.2. Detailed Cost Sheet
+
+Содержит:
+
+* выбранные позиции מחירון
+* код
+* описание
+* количество
+* единицу
+* цену
+* сумму
+* confidence
+* источник количества
+
+### 14.3. Review / Assumptions Sheet
+
+Содержит:
+
+* спорные позиции
+* недостающие данные
+* допущения
+* позиции с estimation_flag
+* позиции без уверенного mapping
+
+---
+
+## 15. UI-экраны MVP
+
+## 15.1. New Case Screen
+
+Поля:
+
+* название кейса
+* описание работ
+* размеры
+* выбор шаблона
+* выбор מחירון
+* загрузка фото
+
+## 15.2. Analysis Result Screen
+
+Блоки:
+
+* что система поняла
+* найденные work items
+* missing data
+* уточняющие вопросы
+
+## 15.3. Candidate Review Screen
+
+Блоки:
+
+* work item
+* найденные кандидаты
+* confidence
+* единица
+* цена
+* выбранный вариант
+* комментарий reviewer
+
+## 15.4. Aggregation Preview Screen
+
+Блоки:
+
+* строки шаблона
+* связанные cost lines
+* итоговые суммы
+* warnings
+
+## 15.5. Output Screen
+
+Блоки:
+
+* main document
+* detailed sheet
+* review sheet
+* статус кейса
+* скачать пакет
+
+---
+
+## 16. Логи и аудируемость
+
+Система должна хранить audit trail:
+
+* кто создал кейс
+* какие входы загрузил
+* какие вопросы были заданы
+* какие ответы даны
+* какие позиции были предложены
+* какие были подтверждены / заменены
+* кто утвердил кейс
+* какая версия מחירון использовалась
+* какая версия шаблона использовалась
+* какая версия mapping rules использовалась
+
+Это обязательно.
+
+---
+
+## 17. Обновление справочников
+
+Нужны отдельные admin-потоки:
+
+### 17.1. Загрузка нового מחירון
+
+Процесс:
+
+* import raw file
+* normalize
+* validate columns
+* rebuild search index
+* versioning
+
+### 17.2. Обновление mapping rules
+
+Процесс:
+
+* создать / изменить правило
+* протестировать на sample cases
+* активировать новую версию
+
+### 17.3. Обновление hidden-work library
+
+Процесс:
+
+* добавить новый тип работы
+* добавить типовые сопутствующие операции
+* протестировать влияние на matching
+
+---
+
+## 18. Технические приоритеты MVP
+
+### Приоритет 1
+
+Нормализованный מחירון + search index
+
+### Приоритет 2
+
+Mapping table + aggregation engine
+
+### Приоритет 3
+
+Core pipeline:
+
+* intake
+* work understanding
+* matching
+* calculation
+* review
+* output
+
+### Приоритет 4
+
+Template filling engine
+
+### Приоритет 5
+
+Audit trail и admin layer
+
+---
+
+## 19. Предлагаемый порядок разработки
+
+## Фаза 1. Data Foundation
+
+Сделать:
+
+* schema for pricebook
+* schema for template
+* schema for mapping
+* import scripts
+* basic admin tools
+
+Результат:
+система умеет хранить шаблон, מחירון, mapping
+
+---
+
+## Фаза 2. Core Matching MVP
+
+Сделать:
+
+* case intake
+* text parsing
+* basic work extraction
+* keyword + semantic search
+* candidate ranking
+* candidate review UI
+
+Результат:
+система умеет находить позиции и показывать shortlist
+
+---
+
+## Фаза 3. Calculation & Aggregation
+
+Сделать:
+
+* quantity rules
+* line calculations
+* aggregated lines generation
+* validation engine
+
+Результат:
+система умеет считать и раскладывать суммы по шаблону
+
+---
+
+## Фаза 4. Output Generation
+
+Сделать:
+
+* text generation
+* template filling
+* output exports
+* document package UI
+
+Результат:
+система умеет выдавать готовый документ
+
+---
+
+## Фаза 5. Quality & Governance
+
+Сделать:
+
+* clarification engine
+* estimation flags
+* audit logs
+* mapping version control
+* better review workflow
+
+---
+
+## 20. Acceptance criteria по модулям
+
+### Template Engine
+
+Приёмка:
+
+* умеет заполнять все обязательные поля шаблона
+* корректно вставляет агрегированные суммы
+* не ломает формат документа
+
+### Pricebook Engine
+
+Приёмка:
+
+* умеет импортировать מחירון
+* умеет искать по коду / словам / смыслу
+* умеет фильтровать по unit и section
+
+### Matching Engine
+
+Приёмка:
+
+* выдаёт ranked candidates
+* присваивает confidence
+* объясняет причину выбора
+
+### Calculation Engine
+
+Приёмка:
+
+* корректно считает totals
+* валидирует unit
+* помечает estimation cases
+
+### Aggregation Engine
+
+Приёмка:
+
+* правильно применяет mapping
+* строит суммы по строкам шаблона
+* даёт traceability до исходных позиций
+
+### Output Package Engine
+
+Приёмка:
+
+* генерирует 3 файла
+* суммы сходятся
+* warnings вынесены отдельно
+
+---
+
+## 21. Ключевые риски для разработки
+
+1. Плохая подготовка מחירון
+2. Слабый mapping layer
+3. Смешение UI-логики и расчётной логики
+4. Отсутствие audit trace
+5. Слишком ранняя попытка сделать “полный AI-автопилот”
+6. Недостаточный контроль единиц измерения
+7. Попытка вставлять спорные позиции в финальный документ автоматически
+
+---
+
+## 22. Главный технический принцип
+
+Система должна строиться не вокруг “чата”, а вокруг **контролируемого расчётного pipeline**.
+
+Основа архитектуры:
+
+* структурированные данные
+* движок правил
+* explainable matching
+* validation
+* review step
+* reproducible outputs
+
+---
+
+## 23. Краткая формулировка задачи для команды
+
+Нужно построить инженерно-документный pipeline, который:
+
+* принимает кейс
+* интерпретирует работы
+* находит правильные позиции מתוך מחירון
+* считает стоимость
+* агрегирует суммы по правилам шаблона
+* даёт человеку review control
+* выпускает готовый “מסמך משמעויות”
+
+Главный фокус разработки:
+**не генерация текста, а точный controlled matching + aggregation + document output.**
+

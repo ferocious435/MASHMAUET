@@ -1,0 +1,23 @@
+{
+  "manager_skill": "manage-skills",
+  "routing_executor": "antigravity-skill-orchestrator",
+  "long_task_mode": "loki-mode",
+  "active_skill_layer": "project-local",
+  "global_layer_role": "universal-only",
+  "supplemental_registry": "skill-system/supplemental-skills.json",
+  "logging": {
+    "storage": "skill-system/logs/*.jsonl",
+    "trace_required": true,
+    "attribution_required": true
+  },
+  "gates": {
+    "review_for_high_risk": true,
+    "traceable_result_required": true,
+    "final_output_requires": [
+      "validated aggregation",
+      "testing gate",
+      "security gate"
+    ]
+  },
+  "reference_file": "skill-system/reference/governance.full.json"
+}

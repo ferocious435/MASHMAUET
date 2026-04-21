@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="15" uniqueCount="15">
+  <si><t>סוג שירות</t></si>
+  <si><t>פריט SSC</t></si>
+  <si><t>טקסט ארוך</t></si>
+  <si><t>מספר פעילות</t></si>
+  <si><t>כמות</t></si>
+  <si><t>יחידת מידה בסיסית</t></si>
+  <si><t>תעריף</t></si>
+  <si><t>B95</t></si>
+  <si><t>95...</t></si>
+  <si><t>סעיפים מתומחרים</t></si>
+  <si><t>95.07.68.0001</t></si>
+  <si><t>פירוק ארון כיבוי אש</t></si>
+  <si><t>יח</t></si>
+  <si><t>95.07.68.0002</t></si>
+  <si><t>הרכבה בלבד של ארון כיבוי אש</t></si>
+</sst>

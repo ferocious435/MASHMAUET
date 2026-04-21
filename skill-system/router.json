@@ -1,0 +1,220 @@
+{
+  "categories": [
+    {
+      "category": "Product / discovery / brainstorming",
+      "primary": "product-manager",
+      "secondary": "brainstorming",
+      "support": [
+        "product-manager-toolkit",
+        "ask-questions-if-underspecified",
+        "behavioral-modes"
+      ],
+      "validation": "evaluation",
+      "fallback": "loki-mode",
+      "review_required": true
+    },
+    {
+      "category": "PRD / scope / roadmap",
+      "primary": "product-manager",
+      "secondary": "product-manager-toolkit",
+      "support": [
+        "brainstorming",
+        "ask-questions-if-underspecified",
+        "documentation-templates"
+      ],
+      "validation": "evaluation",
+      "fallback": "behavioral-modes",
+      "review_required": true
+    },
+    {
+      "category": "Architecture / system design",
+      "primary": "architecture",
+      "secondary": "backend-architect",
+      "support": [
+        "database-architect",
+        "database-design",
+        "c4-context",
+        "c4-container",
+        "c4-component",
+        "c4-code"
+      ],
+      "validation": "advanced-evaluation",
+      "fallback": "loki-mode",
+      "review_required": true
+    },
+    {
+      "category": "Database / schema / storage",
+      "primary": "database-architect",
+      "secondary": "database-design",
+      "support": [
+        "database",
+        "database-admin",
+        "database-optimizer",
+        "data-engineering-data-pipeline"
+      ],
+      "validation": "evaluation",
+      "fallback": "architecture",
+      "review_required": true
+    },
+    {
+      "category": "API / backend design",
+      "primary": "api-design-principles",
+      "secondary": "api-endpoint-builder",
+      "support": [
+        "backend-architect",
+        "backend-dev-guidelines",
+        "nodejs-backend-patterns"
+      ],
+      "validation": "api-security-best-practices",
+      "fallback": "backend-dev-guidelines",
+      "review_required": true
+    },
+    {
+      "category": "Backend implementation",
+      "primary": "backend-development-feature-development",
+      "secondary": "backend-dev-guidelines",
+      "support": [
+        "nodejs-backend-patterns",
+        "cc-skill-backend-patterns",
+        "api-endpoint-builder"
+      ],
+      "validation": "testing-qa",
+      "fallback": "systematic-debugging",
+      "review_required": true
+    },
+    {
+      "category": "AI / RAG / retrieval / matching / evaluation",
+      "primary": "rag-engineer",
+      "secondary": "rag-implementation",
+      "support": [
+        "ai-engineering-toolkit",
+        "llm-ops",
+        "context-manager",
+        "context-window-management",
+        "conversation-memory",
+        "prompt-caching",
+        "llm-evaluation"
+      ],
+      "validation": "advanced-evaluation",
+      "fallback": "evaluation",
+      "review_required": true
+    },
+    {
+      "category": "Document generation / template flow",
+      "primary": "documentation-generation-doc-generate",
+      "secondary": "documentation-templates",
+      "support": [
+        "product-manager",
+        "brainstorming",
+        "api-documentation",
+        "api-documentation-generator"
+      ],
+      "validation": "evaluation",
+      "fallback": "product-manager",
+      "review_required": true
+    },
+    {
+      "category": "Frontend / UX / review screens",
+      "primary": "ui-ux-pro-max",
+      "secondary": "frontend-dev-guidelines",
+      "support": [
+        "ux-audit",
+        "ux-feedback",
+        "ux-copy",
+        "frontend-ui-dark-ts"
+      ],
+      "validation": "ux-audit",
+      "fallback": "frontend-dev-guidelines",
+      "review_required": true
+    },
+    {
+      "category": "Testing / QA",
+      "primary": "testing-qa",
+      "secondary": "tdd-orchestrator",
+      "support": [
+        "test-driven-development",
+        "unit-testing-test-generate",
+        "pypict-skill",
+        "llm-evaluation",
+        "evaluation"
+      ],
+      "validation": "advanced-evaluation",
+      "fallback": "systematic-debugging",
+      "review_required": true
+    },
+    {
+      "category": "Debugging / incident resolution",
+      "primary": "systematic-debugging",
+      "secondary": "debugging-strategies",
+      "support": [
+        "error-diagnostics-smart-debug",
+        "test-fixing",
+        "testing-qa"
+      ],
+      "validation": "evaluation",
+      "fallback": "loki-mode",
+      "review_required": true
+    },
+    {
+      "category": "Security / hardening / audit",
+      "primary": "security-audit",
+      "secondary": "007",
+      "support": [
+        "api-security-best-practices",
+        "api-security-testing",
+        "backend-security-coder",
+        "security-requirement-extraction",
+        "security-scanning-security-hardening",
+        "security-scanning-security-dependencies",
+        "secrets-management",
+        "security-bluebook-builder"
+      ],
+      "validation": "evaluation",
+      "fallback": "security-requirement-extraction",
+      "review_required": true
+    },
+    {
+      "category": "Documentation / diagrams / API docs",
+      "primary": "documentation-generation-doc-generate",
+      "secondary": "api-documentation",
+      "support": [
+        "api-documentation-generator",
+        "c4-context",
+        "c4-container",
+        "c4-component",
+        "c4-code",
+        "documentation-templates"
+      ],
+      "validation": "evaluation",
+      "fallback": "product-manager",
+      "review_required": false
+    },
+    {
+      "category": "Data import / normalization / pipelines",
+      "primary": "data-engineering-data-pipeline",
+      "secondary": "database",
+      "support": [
+        "database-admin",
+        "database-optimizer",
+        "prompt-caching"
+      ],
+      "validation": "evaluation",
+      "fallback": "database-design",
+      "review_required": true
+    },
+    {
+      "category": "Skill governance / self-maintenance",
+      "primary": "manage-skills",
+      "secondary": "antigravity-skill-orchestrator",
+      "support": [
+        "loki-mode",
+        "evaluation",
+        "advanced-evaluation"
+      ],
+      "validation": "evaluation",
+      "fallback": "loki-mode",
+      "review_required": true
+    }
+  ],
+  "reference_file": "skill-system/reference/router.full.json"
+}
