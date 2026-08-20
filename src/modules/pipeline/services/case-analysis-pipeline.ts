@@ -27,7 +27,16 @@ import {
   InMemoryPricebookRepository,
   InMemoryTemplateRepository,
 } from "../../references/repositories/in-memory-reference-repositories.ts";
-import { DekelMatchingService } from "../../references/services/dekel-matching-service.ts";
+import type { DekelCandidateMatch } from "../../references/services/dekel-matching-service.ts";
+
+type DekelMatchingGateway = {
+  findCandidatesByDescription(
+    description: string,
+    limit?: number,
+    options?: { workItems?: WorkItem[] },
+  ): Promise<DekelCandidateMatch[]>;
+  findPricebookItemsByCodes(codes: string[]): Promise<PricebookItem[]>;
+};
 
 const quantityUnits = new Set(["m2", "m", "unit", "komplet"]);
 
@@ -62,14 +71,14 @@ export class CaseAnalysisPipeline {
   private readonly pricebookRepository: InMemoryPricebookRepository;
   private readonly mappingRepository: InMemoryMappingRuleRepository;
   private readonly skillOrchestratorService?: SkillOrchestratorService;
-  private readonly dekelMatchingService?: DekelMatchingService;
+  private readonly dekelMatchingService?: DekelMatchingGateway;
 
   public constructor(
     templateRepository: InMemoryTemplateRepository,
     pricebookRepository: InMemoryPricebookRepository,
     mappingRepository: InMemoryMappingRuleRepository,
     skillOrchestratorService?: SkillOrchestratorService,
-    dekelMatchingService?: DekelMatchingService,
+    dekelMatchingService?: DekelMatchingGateway,
   ) {
     this.templateRepository = templateRepository;
     this.pricebookRepository = pricebookRepository;
@@ -436,7 +445,7 @@ export class CaseAnalysisPipeline {
 }
 
 async function resolveLiveDekelPricebookItems(
-  dekelMatchingService: DekelMatchingService | undefined,
+  dekelMatchingService: DekelMatchingGateway | undefined,
   description: string,
   workItems: WorkItem[],
 ): Promise<{ items: PricebookItem[]; warning: string | null }> {
@@ -954,7 +963,7 @@ function buildCandidateMatches(
     const candidatePool = pricebookItems
       .map((pricebookItem) => {
         const lexicalScore = scoreLexicalMatch(workItem, pricebookItem);
-        const unitStatus =
+        const unitStatus: CandidateMatch["unitStatus"] =
           workItem.unit === pricebookItem.unit
             ? "valid"
             : quantityUnits.has(workItem.unit) && quantityUnits.has(pricebookItem.unit)
@@ -970,7 +979,7 @@ function buildCandidateMatches(
           score -= 0.35;
         }
 
-        const mappingStatus = mappingRules.some((rule) =>
+        const mappingStatus: CandidateMatch["mappingStatus"] = mappingRules.some((rule) =>
           rule.pricebookFilterJson.sections.includes(pricebookItem.section),
         )
           ? "mapped"

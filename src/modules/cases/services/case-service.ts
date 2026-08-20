@@ -842,10 +842,7 @@ export class CaseService {
         ...new Set(
           appliedSelections
             .map((selection) => selection.recommendationKey)
-            .filter(
-              (key): key is string =>
-                typeof key === "string" && key.trim().length > 0,
-            ),
+            .filter((key) => typeof key === "string" && key.trim().length > 0),
         ),
       ];
 

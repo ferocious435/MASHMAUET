@@ -369,10 +369,6 @@ function buildScopeSectionV2(caseRecord: CaseRecord): MasmachBulletSection {
     }
 
     for (const recommendation of selectedMavnadim.ancillaryRecommendations) {
-      if (recommendation.status === "optional") {
-        continue;
-      }
-
       items.push(
         `עבודה נלווית למבנה [${recommendation.status}]: ${recommendation.title}`,
       );

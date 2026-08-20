@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { PricebookItem } from "../domain/reference-schemas.ts";
@@ -9,8 +9,8 @@ import {
 } from "./dekel-estimate-preview.ts";
 import {
   readDekelRowsFromXlsx,
-  selectBillableDekelRows,
 } from "./openxml-dekel-reader.ts";
+import type { DekelWorkbookRow } from "../domain/dekel-schemas.ts";
 
 export interface DekelWorkbookSummary {
   exists: boolean;
@@ -23,6 +23,7 @@ export interface DekelWorkbookSummary {
 export class DekelCatalogService {
   private readonly configuredWorkbookPath: string | null;
   private readonly workbookDirectoryPath: string;
+  private cache?: { workbookPath: string; fingerprint: string; rows: DekelWorkbookRow[]; items: PricebookItem[] };
 
   public constructor(options?: { workbookPath?: string; workbookDirectoryPath?: string }) {
     this.configuredWorkbookPath = options?.workbookPath ?? null;
@@ -44,14 +45,13 @@ export class DekelCatalogService {
     }
 
     try {
-      const rows = await readDekelRowsFromXlsx(workbookPath);
-      const billableRows = selectBillableDekelRows(rows);
+      const snapshot = await this.loadSnapshot(workbookPath);
 
       return {
         exists: true,
         workbookPath,
-        rowsCount: rows.length,
-        billableRowsCount: billableRows.length,
+        rowsCount: snapshot.rows.length,
+        billableRowsCount: snapshot.items.length,
         error: null,
       };
     } catch (error) {
@@ -77,13 +77,7 @@ export class DekelCatalogService {
       return [];
     }
 
-    const rows = await readDekelRowsFromXlsx(workbookPath);
-    const workbookLabel = path.basename(workbookPath);
-
-    return buildDekelPricebookItems(rows, {
-      pricebookId: "dekel-live",
-      workbookLabel,
-    });
+    return [...(await this.loadSnapshot(workbookPath)).items];
   }
 
   public async getEstimatePreview(
@@ -99,8 +93,8 @@ export class DekelCatalogService {
       });
     }
 
-    const rows = await readDekelRowsFromXlsx(workbookPath);
-    return buildDekelEstimatePreview(rows, {
+    const snapshot = await this.loadSnapshot(workbookPath);
+    return buildDekelEstimatePreview(snapshot.rows, {
       limit,
       managementFeePercent,
     });
@@ -128,5 +122,20 @@ export class DekelCatalogService {
     } catch {
       return null;
     }
+  }
+
+  private async loadSnapshot(workbookPath: string): Promise<{ rows: DekelWorkbookRow[]; items: PricebookItem[] }> {
+    const file = await stat(workbookPath);
+    const fingerprint = `${file.size}:${file.mtimeMs}`;
+    if (this.cache?.workbookPath === workbookPath && this.cache.fingerprint === fingerprint) {
+      return this.cache;
+    }
+    const rows = await readDekelRowsFromXlsx(workbookPath);
+    const items = buildDekelPricebookItems(rows, {
+      pricebookId: "dekel-live",
+      workbookLabel: path.basename(workbookPath),
+    });
+    this.cache = { workbookPath, fingerprint, rows, items };
+    return this.cache;
   }
 }

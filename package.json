@@ -6,7 +6,21 @@
   "scripts": {
     "dev": "node --watch --experimental-strip-types src/server.ts",
     "start": "node --experimental-strip-types src/server.ts",
-    "test": "node --experimental-strip-types tests/run-tests.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test",
+    "test": "node --experimental-strip-types tests/run-tests.ts && node --experimental-strip-types --test tests/local-workspace.test.ts tests/local-workspace-api.test.ts tests/professional-knowledge.test.ts && node --test tests/ui-calculations.test.mjs tests/ui-workspace.test.mjs",
     "live-check": "node --experimental-strip-types src/live-case-check.ts"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.7",
+    "@openai/codex": "^0.148.0",
+    "mammoth": "^1.12.1",
+    "pdfjs-dist": "^6.2.108",
+    "read-excel-file": "^9.3.10",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
   }
 }

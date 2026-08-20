@@ -41,10 +41,7 @@ export async function buildMavnadimDekelPackagePreview(input: {
   for (const recommendation of orderRecommendations(
     input.selectedMavnadim.ancillaryRecommendations,
   )) {
-    if (
-      recommendation.status === "optional" ||
-      recommendation.status === "usually_not_required"
-    ) {
+    if (recommendation.status === "usually_not_required") {
       continue;
     }
 

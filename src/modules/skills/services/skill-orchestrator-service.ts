@@ -323,7 +323,9 @@ export class SkillOrchestratorService {
     const governance = await this.readJson<GovernanceConfig>(
       this.governanceConfigPath,
     );
-    const payload = isRecord(body) ? { ...body } : { value: body };
+    const payload: Record<string, unknown> = isRecord(body)
+      ? { ...body }
+      : { value: body };
     const executionSkill =
       typeof payload.skill === "string" ? payload.skill : decision.primarySkill;
 
@@ -361,7 +363,7 @@ export class SkillOrchestratorService {
         handoffFrom: decision.handoffFrom,
         handoffTo: decision.handoffTo,
       },
-    };
+    } as unknown as T & Record<string, unknown>;
   }
 
   private async recordTaskOutcome(

@@ -1,5 +1,15 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
+import { servePublicFile } from "./static-file-handler.ts";
+import { join } from "node:path";
+import { enforceLocalRequestSecurity, setSecurityHeaders } from "./local-request-security.ts";
+import { loadLocalAppConfig, type LocalAppConfig } from "../config/local-app-config.ts";
+import { LocalProjectStore } from "../modules/local-workspace/local-project-store.ts";
+import { LocalWorkspaceController } from "../modules/local-workspace/local-workspace-controller.ts";
+import { CodexAppServerClient, type CodexGateway } from "../modules/local-workspace/codex-app-server-client.ts";
+import { LocalWorkspaceService } from "../modules/local-workspace/local-workspace-service.ts";
+import { LocalWorkspaceLogger } from "../modules/local-workspace/local-workspace-logger.ts";
+
 import { CaseController } from "../modules/cases/controllers/case-controller.ts";
 import { InMemoryCaseRepository } from "../modules/cases/repositories/case-repository.ts";
 import { CaseService } from "../modules/cases/services/case-service.ts";
@@ -9,6 +19,7 @@ import { DekelCatalogService } from "../modules/references/services/dekel-catalo
 import { DekelMatchingService } from "../modules/references/services/dekel-matching-service.ts";
 import { MavnadimCatalogService } from "../modules/references/services/mavnadim-catalog-service.ts";
 import { MavnadimMatchingService } from "../modules/references/services/mavnadim-matching-service.ts";
+import { ProfessionalKnowledgeService, type ProfessionalKnowledgeGateway } from "../modules/references/services/professional-knowledge-service.ts";
 import { CaseOutputExportService } from "../modules/output/services/case-output-export-service.ts";
 import { SkillOrchestratorService } from "../modules/skills/services/skill-orchestrator-service.ts";
 import {
@@ -19,22 +30,25 @@ import {
   InMemoryTemplateRepository,
 } from "../modules/references/repositories/in-memory-reference-repositories.ts";
 
-export function createApp(): {
+type MashmauetApplication = {
   handleRequest: (
     request: IncomingMessage,
     response: ServerResponse,
   ) => Promise<void>;
+  close: () => void;
 };
+
 export function createApp(options?: {
   dekelWorkbookPath?: string;
   skillLogsDirectoryPath?: string;
   artifactsDirectoryPath?: string;
-}): {
-  handleRequest: (
-    request: IncomingMessage,
-    response: ServerResponse,
-  ) => Promise<void>;
-} {
+  localDataRootPath?: string;
+  codexClient?: CodexGateway;
+  professionalKnowledgeService?: ProfessionalKnowledgeGateway;
+  contract3210DirectoryPath?: string;
+  blueBookDirectoryPath?: string;
+  localConfig?: Partial<LocalAppConfig>;
+}): MashmauetApplication {
   const templateRepository = new InMemoryTemplateRepository();
   const pricebookRepository = new InMemoryPricebookRepository();
   const mappingRepository = new InMemoryMappingRuleRepository();
@@ -71,14 +85,43 @@ export function createApp(options?: {
     outputExportService,
   );
   const caseController = new CaseController(caseService);
+  const defaultLocalConfig = loadLocalAppConfig();
+  const localConfig: LocalAppConfig = {
+    ...defaultLocalConfig,
+    ...options?.localConfig,
+    dataRootPath: options?.localDataRootPath ?? options?.localConfig?.dataRootPath ?? defaultLocalConfig.dataRootPath,
+  };
+  const localProjectStore = new LocalProjectStore(localConfig.dataRootPath);
+  const codexClient = options?.codexClient ?? new CodexAppServerClient(process.cwd());
+  const localLogger = new LocalWorkspaceLogger(join(localConfig.dataRootPath, "logs", "application.log"));
+  const professionalKnowledgeService = options?.professionalKnowledgeService ?? new ProfessionalKnowledgeService({
+    contractDirectoryPath: options?.contract3210DirectoryPath ?? join(process.cwd(), "HOMER", "3210"),
+    blueBookDirectoryPath: options?.blueBookDirectoryPath ?? join(process.cwd(), "HOMER", "BLUE BOOK"),
+    cacheDirectoryPath: join(localConfig.dataRootPath, "knowledge-cache"),
+  });
+  const localWorkspaceService = new LocalWorkspaceService(localProjectStore, codexClient, localConfig, localLogger, dekelCatalogService, professionalKnowledgeService);
+  const localWorkspaceController = new LocalWorkspaceController(
+    localWorkspaceService,
+    localConfig,
+    localLogger,
+  );
 
   const handleRequest = async (
     request: IncomingMessage,
     response: ServerResponse,
   ): Promise<void> => {
+    if (!enforceLocalRequestSecurity(request, response)) return;
     const url = new URL(request.url ?? "/", "http://localhost");
     const pathname = url.pathname;
     const method = request.method ?? "GET";
+
+    if (method === "GET" && (await servePublicFile(pathname, response))) {
+      return;
+    }
+
+    if (await localWorkspaceController.tryHandle(request, response, url)) {
+      return;
+    }
 
     if (method === "GET" && pathname === "/health") {
       return executeRoutedRequest(
@@ -688,7 +731,7 @@ export function createApp(options?: {
     );
   };
 
-  return { handleRequest };
+  return { handleRequest, close: () => localWorkspaceService.close() };
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<unknown> {
@@ -711,6 +754,7 @@ function sendJson(
   body: unknown,
 ): void {
   const payload = JSON.stringify(body);
+  setSecurityHeaders(response);
   response.writeHead(statusCode, {
     "content-type": "application/json; charset=utf-8",
   });

@@ -89,7 +89,7 @@ function buildSelectedMavnadimSelection(
     catalogItemId: "mavnadim-cafe-container",
     displayName: "Cafe Container",
     shortLabel: "Cafe",
-    category: "business",
+    category: "commercial",
     dimensionsLabel: "3x6",
     basePrice: 80000,
     sourceImageName: "cafe-container.png",
@@ -753,6 +753,8 @@ function testDekelMatchingDownweightsThresholdNoise(): void {
       section: "51.01",
       subsection: "flooring",
       tagsJson: ["ריצוף", "גרניט"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "51",
       },
@@ -768,6 +770,8 @@ function testDekelMatchingDownweightsThresholdNoise(): void {
       section: "95.06",
       subsection: "doors",
       tagsJson: ["דלת", "פירוק"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "95",
       },
@@ -797,6 +801,8 @@ function testDekelMatchingUsesWorkItemAwareQueries(): void {
       section: "51.01",
       subsection: "flooring",
       tagsJson: ["ריצוף", "גרניט"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "51",
       },
@@ -812,6 +818,8 @@ function testDekelMatchingUsesWorkItemAwareQueries(): void {
       section: "95.06",
       subsection: "paint",
       tagsJson: ["צבע", "קיר"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "95",
       },
@@ -827,6 +835,8 @@ function testDekelMatchingUsesWorkItemAwareQueries(): void {
       section: "95.06",
       subsection: "doors",
       tagsJson: ["דלת", "פירוק"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "95",
       },
@@ -909,6 +919,8 @@ function testDekelMatchingChapterPrefilterBoostsPreferredChapter(): void {
       section: "95.02",
       subsection: "demolition",
       tagsJson: ["ריצוף", "טיח"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "02",
       },
@@ -924,6 +936,8 @@ function testDekelMatchingChapterPrefilterBoostsPreferredChapter(): void {
       section: "95.10",
       subsection: "flooring",
       tagsJson: ["ריצוף", "גרניט"],
+      synonymsJson: [],
+      activeFlag: true,
       metadataJson: {
         dekel_chapter_code: "10",
       },
@@ -1874,11 +1888,15 @@ async function testSkillOrchestratorService(): Promise<void> {
       "Product / discovery / brainstorming",
     );
     assert.equal(brainstormingTask.decision.primarySkill, "product-manager");
+    const brainstormingResponseBody = brainstormingTask.responseBody as unknown as {
+      supportingSkills: string[];
+      supportingSkillSources: Array<{ name: string; source: string }>;
+    };
     assert.ok(
-      brainstormingTask.responseBody.supportingSkills.includes("brainstorming"),
+      brainstormingResponseBody.supportingSkills.includes("brainstorming"),
     );
     assert.ok(
-      brainstormingTask.responseBody.supportingSkillSources.some(
+      brainstormingResponseBody.supportingSkillSources.some(
         (skill) =>
           skill.name === "brainstorming" && skill.source === "platform-resident",
       ),
@@ -1917,8 +1935,11 @@ async function testSkillOrchestratorService(): Promise<void> {
       secondTask.responseBody.executionSkill,
       "architecture",
     );
+    const secondResponseBody = secondTask.responseBody as unknown as {
+      supportingSkills: string[];
+    };
     assert.ok(
-      secondTask.responseBody.supportingSkills.includes("product-manager"),
+      secondResponseBody.supportingSkills.includes("product-manager"),
     );
 
     const logFiles = await readdir(logsDirectoryPath);
@@ -2134,17 +2155,6 @@ function testCaseOutputDraftUsesCompactScopeFragmentsWithoutConfirmedDekelLines(
       requiredFieldsJson: ["documentTitle", "projectDescription", "totalAmount"],
       insertionRulesJson: {},
     },
-    estimatePreview: {
-      lines: [],
-      executionSubtotal: 0,
-      managementFeePercent: 14,
-      managementFeeAmount: 0,
-      totalProjectCost: 0,
-      source: "dekel_selected_lines",
-      trace: [],
-      skill: "architecture",
-      selectedLinesCount: 0,
-    },
     managementFeePercent: 14,
   });
 
@@ -2186,17 +2196,6 @@ function testCaseOutputDraftUsesDetectedWorkLocationInNarrativeSections(): void 
       financialLinesSchemaJson: [],
       requiredFieldsJson: ["documentTitle", "projectDescription", "totalAmount"],
       insertionRulesJson: {},
-    },
-    estimatePreview: {
-      lines: [],
-      executionSubtotal: 0,
-      managementFeePercent: 14,
-      managementFeeAmount: 0,
-      totalProjectCost: 0,
-      source: "dekel_selected_lines",
-      trace: [],
-      skill: "architecture",
-      selectedLinesCount: 0,
     },
     managementFeePercent: 14,
   });
@@ -2264,8 +2263,11 @@ function testCaseOutputPackageBuilder(): void {
         {
           evidenceId: "evidence-package-1",
           sourceType: "handwritten",
+          format: "inline_text",
+          role: "supporting",
           label: "field-note",
           content: "Check final alignment on site.",
+          extractedText: null,
           normalizedContent: "check final alignment on site.",
           confidence: 0.4,
           reviewStatus: "needs_review",
@@ -2394,7 +2396,7 @@ async function testCaseOutputExportService(): Promise<void> {
         catalogItemId: "mavnadim-office-3x6",
         displayName: "Office module",
         shortLabel: "Office",
-        category: "office",
+        category: "commercial",
         sourceImageName: "office-3x6.png",
       }),
       selectedDekelLines: [
@@ -3205,6 +3207,11 @@ async function testHttpFlow(): Promise<void> {
         selectedBy: string;
         responsibleSkill: string;
       }>;
+      caseStatus: {
+        status: string;
+        reviewStatus: string;
+        finalStatus: string;
+      };
       estimatePreview: {
         lines: Array<{
           sourceCode: string;
@@ -3321,10 +3328,15 @@ async function testHttpFlow(): Promise<void> {
           executionSubtotal: number;
           totalProjectCost: number;
         };
+        budgetBreakdownSection: { rows: unknown[] };
+        scheduleSection: { rows: unknown[]; months: number[] };
+        riskManagementSection: { rows: unknown[] };
       };
       templateBindings: {
         projectDescription: string;
         totalAmount: number;
+        scheduleDurationMonths: number;
+        riskItemsCount: number;
       };
       reviewSummary: {
         selectedLinesCount: number;

@@ -253,6 +253,7 @@ async function main(): Promise<void> {
     console.log(`Report: ${reportPath}`);
     console.log(`Output directory: ${outputDirectory}`);
   } finally {
+    app.close();
     await new Promise<void>((resolve, reject) => {
       server.close((error) => {
         if (error) {
@@ -273,11 +274,10 @@ async function buildCasePayload(
     const raw = await readFile(options.caseFilePath, "utf8");
     const payload = JSON.parse(stripUtf8Bom(raw)) as LiveCheckCasePayload;
     return {
-      supportingEvidence: [],
-      createdBy: "live-check",
-      templateId: DEFAULT_TEMPLATE_ID,
-      pricebookId: DEFAULT_PRICEBOOK_ID,
       ...payload,
+      createdBy: payload.createdBy ?? "live-check",
+      templateId: payload.templateId ?? DEFAULT_TEMPLATE_ID,
+      pricebookId: payload.pricebookId ?? DEFAULT_PRICEBOOK_ID,
       description:
         payload.description ?? deriveDescriptionFromSupportingEvidence(payload.supportingEvidence),
       supportingEvidence: payload.supportingEvidence ?? [],

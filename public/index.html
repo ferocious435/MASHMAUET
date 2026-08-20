@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>MASHMAUET — מסמך משמעויות</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-mobile-view="document">
+    <nav class="mobile-nav" aria-label="ניווט ראשי">
+      <button type="button" data-mobile-view="projects" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z"/><path d="M9 5v14"/></svg>
+        פרויקטים
+      </button>
+      <button class="active" type="button" data-mobile-view="document" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg>
+        מסמך
+      </button>
+      <button type="button" data-mobile-view="chat" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H9l-5 4z"/><path d="M8 9h8M8 13h5"/></svg>
+        צ׳אט
+      </button>
+    </nav>
+    <div id="app" class="app-shell">
+      <aside class="projects-panel" aria-label="פרויקטים">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">M</div>
+          <div>
+            <strong>MASHMAUET</strong>
+            <span>סביבת עבודה מקומית</span>
+          </div>
+        </div>
+
+        <button id="new-project-button" class="primary-button full-width" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          פרויקט חדש
+        </button>
+
+        <label class="search-box">
+          <span class="sr-only">חיפוש פרויקט</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          <input id="project-search" type="search" placeholder="חיפוש בפרויקטים" />
+        </label>
+
+        <div id="project-list" class="project-list" aria-live="polite">
+          <div class="skeleton-card" aria-hidden="true"></div>
+          <div class="skeleton-card" aria-hidden="true"></div>
+        </div>
+
+        <section class="materials-section" aria-labelledby="materials-title">
+          <div class="section-row">
+            <h2 id="materials-title">חומרי הפרויקט</h2>
+            <label class="icon-button" title="הוספת קבצים">
+              <span class="sr-only">הוספת קבצים</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              <input id="material-input" type="file" multiple hidden />
+            </label>
+          </div>
+          <div id="material-list" class="material-list" aria-live="polite">
+            <div class="skeleton-line" aria-hidden="true"></div>
+            <div class="skeleton-line" aria-hidden="true"></div>
+          </div>
+        </section>
+
+        <button id="system-center-button" class="local-status" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 2.9 8.6 7 10 4.1-1.4 7-5.5 7-10V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>
+          <div><strong>נשמר מקומית</strong><span>ללא שם משתמש וסיסמה</span></div>
+          <svg class="local-status-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </aside>
+
+      <main class="workspace">
+        <header class="workspace-toolbar">
+          <div>
+            <span class="eyebrow">מסמך פעיל</span>
+            <h1 id="workspace-title"></h1>
+            <span id="save-indicator" class="save-indicator" role="status">טוען את סביבת העבודה...</span>
+          </div>
+          <div class="toolbar-actions">
+            <button id="project-settings-button" class="secondary-button" type="button">פרטי פרויקט</button>
+            <button id="versions-button" class="secondary-button" type="button">גרסאות</button>
+            <button id="dekel-review-button" class="secondary-button dekel-toolbar-button" type="button">בדיקת DEKEL</button>
+            <button id="edit-button" class="secondary-button" type="button">עריכה</button>
+            <button id="export-button" class="secondary-button" type="button">ייצוא HTML</button>
+            <button id="print-button" class="primary-button" type="button">הדפסה / PDF</button>
+          </div>
+        </header>
+        <div id="document-stage" class="document-stage" aria-live="polite">
+          <div class="document-skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        </div>
+      </main>
+
+      <aside class="chat-panel" aria-label="צ'אט הפרויקט">
+        <div class="chat-header">
+          <div>
+            <span class="eyebrow">צ'אט הפרויקט</span>
+            <h2>Codex לפרויקט הנוכחי</h2>
+          </div>
+          <span id="codex-status" class="status-badge pending">טרם קושר</span>
+        </div>
+        <div class="scope-notice">
+          הצ'אט יראה רק את התיאור, החומרים והמסמך של הפרויקט הזה. שינוי במסמך ידרוש אישור.
+        </div>
+        <button id="connect-codex-button" class="connect-button" type="button">
+          קישור חד־פעמי לחשבון Codex
+        </button>
+        <div id="chat-messages" class="chat-messages" aria-live="polite">
+          <div class="chat-skeleton" aria-hidden="true"></div>
+          <div class="chat-skeleton short" aria-hidden="true"></div>
+        </div>
+        <form id="chat-form" class="chat-composer">
+          <label for="chat-input" class="sr-only">הודעה לצ'אט</label>
+          <textarea id="chat-input" rows="3" placeholder="שאל, דייק או בקש שינוי במסמך..."></textarea>
+          <div>
+            <span>Enter לשליחה · Shift+Enter לשורה חדשה</span>
+            <button class="send-button" type="submit" aria-label="שליחת הודעה">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 17 8-17 8 4-8-4-8Z" /><path d="M8 12h13" /></svg>
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+
+    <dialog id="project-dialog" class="app-dialog">
+      <form id="project-form" method="dialog">
+        <div class="dialog-title-row">
+          <div><span class="eyebrow">פרויקט מקומי</span><h2>פתיחת פרויקט חדש</h2></div>
+          <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+        </div>
+        <label>שם הפרויקט<input id="project-name" required maxlength="90" /></label>
+        <label>תיאור העבודה<textarea id="project-description" required rows="5"></textarea></label>
+        <label class="file-drop">חומרים ראשוניים<input id="project-files" type="file" multiple /><span>PDF, Excel, מסמכים ותמונות — נשמרים בפרויקט זה בלבד</span></label>
+        <div class="dialog-actions"><button class="secondary-button dialog-close" type="button">ביטול</button><button class="primary-button" type="submit">פתיחת הפרויקט</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="versions-dialog" class="app-dialog">
+      <div class="dialog-title-row">
+        <div><span class="eyebrow">היסטוריה מקומית</span><h2>גרסאות המסמך</h2></div>
+        <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+      </div>
+      <div id="versions-list" class="versions-list"></div>
+      <div class="dialog-actions"><button id="create-version-button" class="primary-button" type="button">שמירת גרסה עכשיו</button></div>
+    </dialog>
+
+    <dialog id="project-settings-dialog" class="app-dialog">
+      <form id="project-settings-form">
+        <div class="dialog-title-row">
+          <div><span class="eyebrow">הפרויקט הנוכחי</span><h2>פרטי הפרויקט</h2></div>
+          <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+        </div>
+        <label for="settings-project-name">שם הפרויקט</label>
+        <input id="settings-project-name" required maxlength="90" />
+        <label for="settings-project-description">תיאור העבודה</label>
+        <textarea id="settings-project-description" required maxlength="5000" rows="6"></textarea>
+        <p class="field-hint">התיאור זמין רק לצ׳אט של הפרויקט הנוכחי ונשמר מקומית.</p>
+        <div class="dialog-actions split-actions">
+          <button id="archive-project-button" class="danger-button" type="button">העברה לארכיון</button>
+          <div><button class="secondary-button dialog-close" type="button">ביטול</button><button class="primary-button" type="submit">שמירת פרטים</button></div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="material-dialog" class="app-dialog compact-dialog">
+      <div class="dialog-title-row">
+        <div><span class="eyebrow">חומר בפרויקט</span><h2 id="material-dialog-title">פרטי הקובץ</h2></div>
+        <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+      </div>
+      <dl id="material-details" class="details-grid"></dl>
+      <p id="material-dialog-message" class="inline-notice"></p>
+      <div class="dialog-actions material-actions">
+        <button id="download-material-button" class="primary-button" type="button">הורדת המקור</button>
+        <button id="reprocess-material-button" class="secondary-button" type="button">קריאה מחדש</button>
+        <button id="delete-material-button" class="danger-button" type="button">מחיקה</button>
+      </div>
+    </dialog>
+
+    <dialog id="dekel-dialog" class="app-dialog wide-dialog dekel-dialog" aria-labelledby="dekel-dialog-title">
+      <div class="dialog-title-row">
+        <div><span class="eyebrow">מחירון דקל · לפני מע״מ</span><h2 id="dekel-dialog-title">בדיקת כתב הכמויות מול DEKEL</h2></div>
+        <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+      </div>
+      <section class="dekel-catalog-card">
+        <div><span>מחירון ברירת המחדל הקבוע של המערכת</span><strong id="dekel-catalog-status">טוען את מחירון DEKEL...</strong></div>
+        <button id="dekel-analyze-button" class="secondary-button" type="button">הרצת התאמה מחדש</button>
+      </section>
+      <p class="inline-notice dekel-rule-notice">קובץ DEKEL נמצא תמיד בתיקייה הגלובלית של המערכת ואינו מועלה לכל פרויקט. זהו מקור הקודים והמחירים היחיד כברירת מחדל. כל מחירון אחר יישאר מחוץ לחישוב גם אם הוא שמור בתיקייה גלובלית או בתיקיית פרויקט, אלא אם בעל המערכת יציין במפורש את שם הקובץ ויבקש להשתמש דווקא בו. המערכת לא תשאל ולא תציע להחליף מחירון. היא בוחרת התאמת DEKEL מומלצת וממשיכה; אפשר לתקן קוד, כמות או להוציא שורה לפני ההחלה. כל מחירי היחידה נשמרים ללא מע״מ.</p>
+      <div id="dekel-warnings" class="dekel-warnings" aria-live="polite"></div>
+      <div id="dekel-lines" class="dekel-lines" aria-live="polite">
+        <div class="management-skeleton" aria-hidden="true"></div>
+        <div class="management-skeleton" aria-hidden="true"></div>
+      </div>
+      <div class="dialog-actions dekel-dialog-actions">
+        <span id="dekel-review-summary" class="muted"></span>
+        <div><button class="secondary-button dialog-close" type="button">סגירה</button><button id="dekel-apply-button" class="primary-button" type="button">החלה על כתב הכמויות</button></div>
+      </div>
+    </dialog>
+
+    <dialog id="evidence-dialog" class="app-dialog compact-dialog evidence-dialog" aria-labelledby="evidence-dialog-title">
+      <div class="dialog-title-row evidence-title-row">
+        <div class="evidence-heading">
+          <span id="evidence-dialog-marker" class="evidence-dialog-marker" aria-hidden="true">1</span>
+          <div><span class="eyebrow">הסבר להחלטת המערכת</span><h2 id="evidence-dialog-title">עבודה שנכללה על ידי המערכת</h2></div>
+        </div>
+        <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+      </div>
+      <p id="evidence-dialog-explanation" class="evidence-dialog-explanation"></p>
+      <dl id="evidence-dialog-details" class="evidence-details"></dl>
+      <blockquote id="evidence-dialog-excerpt" class="evidence-excerpt" hidden></blockquote>
+      <div class="dialog-actions evidence-actions">
+        <button id="evidence-discuss-button" class="primary-button" type="button">דיון בצ׳אט</button>
+        <button id="evidence-source-button" class="secondary-button" type="button">הצגת המקור</button>
+        <button class="secondary-button dialog-close" type="button">סגירה</button>
+      </div>
+    </dialog>
+
+    <dialog id="system-dialog" class="app-dialog wide-dialog">
+      <div class="dialog-title-row">
+        <div><span class="eyebrow">MASHMAUET מקומי</span><h2>מרכז המערכת והגיבויים</h2></div>
+        <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+      </div>
+      <div id="system-status-grid" class="status-grid" aria-live="polite">
+        <div class="status-card"><span>אחסון מקומי</span><strong id="storage-health-status">בודק...</strong></div>
+        <div class="status-card"><span>פרויקטים פעילים</span><strong id="active-projects-count">—</strong></div>
+        <div class="status-card"><span>Codex</span><strong id="system-codex-status">בודק...</strong></div>
+      </div>
+      <div class="system-section-heading">
+        <div><h3>גיבויים</h3><p>עותק יומי נוצר אוטומטית. שחזור יוצר קודם גיבוי ביטחון.</p></div>
+        <button id="create-backup-button" class="primary-button" type="button">יצירת גיבוי עכשיו</button>
+      </div>
+      <div id="backups-list" class="management-list" aria-live="polite"></div>
+      <div class="system-section-heading">
+        <div><h3>פרויקטים בארכיון</h3><p>העברה לארכיון אינה מוחקת את הפרויקט.</p></div>
+        <button id="refresh-system-button" class="secondary-button" type="button">רענון</button>
+      </div>
+      <div id="archived-projects-list" class="management-list" aria-live="polite"></div>
+    </dialog>
+
+    <dialog id="confirm-dialog" class="app-dialog compact-dialog confirm-dialog">
+      <form id="confirm-form" method="dialog">
+        <div class="dialog-title-row">
+          <div><span class="eyebrow">נדרש אישור</span><h2 id="confirm-title">אישור פעולה</h2></div>
+          <button class="icon-button" value="cancel" type="submit" aria-label="סגירה">×</button>
+        </div>
+        <p id="confirm-message"></p>
+        <div class="dialog-actions"><button class="secondary-button" value="cancel" type="submit">ביטול</button><button id="confirm-action-button" class="danger-button" value="confirm" type="submit">אישור</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="codex-dialog" class="app-dialog compact-dialog">
+      <div class="dialog-title-row">
+        <div><span class="eyebrow">חיבור מאובטח</span><h2>קישור Codex</h2></div>
+        <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
+      </div>
+      <p>הקישור מתבצע פעם אחת דרך חשבון ChatGPT הקיים. אין שם משתמש או סיסמה בתוך MASHMAUET.</p>
+      <p id="codex-dialog-status" class="muted">בודק את מצב החיבור...</p>
+      <div class="dialog-actions"><button id="start-codex-login-button" class="primary-button" type="button">קישור לחשבון הקיים</button><button class="secondary-button dialog-close" type="button">סגירה</button></div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
