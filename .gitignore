@@ -4,6 +4,8 @@ dist/
 *.log
 .npm-cache/
 .tmp/
+playwright-report/
+test-results/
 tmp/
 artifacts/
 .vendor/
@@ -19,6 +21,7 @@ graphify-out/.graphify_root
 graphify-out/.graphify_analysis.json
 graphify-out/.graphify_ast.json
 graphify-out/.graphify_chunk_*.json
+graphify-out/20??-??-??/
 graphify-out/.graphify_chunks.json
 graphify-out/.graphify_detect.json
 graphify-out/.graphify_extract.json

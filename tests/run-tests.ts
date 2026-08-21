@@ -564,6 +564,42 @@ async function testPipelineUnderstandsSewerLineDescription(): Promise<void> {
   );
 }
 
+async function testPipelineContinuesWithEstimatedAreaForLinearSewerRestoration(): Promise<void> {
+  const pipeline = buildPipeline();
+  const result = await pipeline.run(
+    buildCaseRecord({
+      rawDescription:
+        "החלפת קו ביוב באורך 24 מטר, כולל פירוק והחזרת ריצוף מקומית לאורך התוואי.",
+      dimensions: {},
+    }),
+  );
+
+  const floorReplacement = result.analysis.workItems.find(
+    (item) => item.workType === "floor_replacement",
+  );
+
+  assert.equal(result.status, "review_pending");
+  assert.equal(
+    result.analysis.missingInputs.includes("dimensions.length_width"),
+    false,
+  );
+  assert.equal(floorReplacement?.quantity, 24);
+  assert.equal(floorReplacement?.unit, "m2");
+  assert.equal(
+    floorReplacement?.derivedFrom,
+    "professional-linear-area-assumption",
+  );
+  assert.equal(floorReplacement?.requiresClarification, false);
+  assert.equal(
+    result.analysis.assumptions.some(
+      (assumption) =>
+        assumption.includes("1 m average restoration width") &&
+        assumption.includes("24 m2"),
+    ),
+    true,
+  );
+}
+
 async function testPipelineUsesLiveDekelFallbackForSewerLine(): Promise<void> {
   const pipeline = buildPipelineWithLiveDekelFallback();
   const result = await pipeline.run(
@@ -3995,6 +4031,10 @@ async function main(): Promise<void> {
   console.log("PASS testFlexibleIntakeDerivesDescriptionFromPrimaryDocument");
   await testPipelineUnderstandsSewerLineDescription();
   console.log("PASS testPipelineUnderstandsSewerLineDescription");
+  await testPipelineContinuesWithEstimatedAreaForLinearSewerRestoration();
+  console.log(
+    "PASS testPipelineContinuesWithEstimatedAreaForLinearSewerRestoration",
+  );
   await testDekelOpenXmlReader();
   console.log("PASS testDekelOpenXmlReader");
   await testDekelPricebookAdapter();

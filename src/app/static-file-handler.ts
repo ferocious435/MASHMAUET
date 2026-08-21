@@ -16,6 +16,10 @@ const publicFiles = new Map<string, { fileName: string; contentType: string }>([
     "/calculations.js",
     { fileName: "calculations.js", contentType: "text/javascript; charset=utf-8" },
   ],
+  [
+    "/document-layout.js",
+    { fileName: "document-layout.js", contentType: "text/javascript; charset=utf-8" },
+  ],
 ]);
 
 export async function servePublicFile(

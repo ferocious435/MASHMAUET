@@ -169,7 +169,12 @@ export class CaseAnalysisPipeline {
       },
       async () => detectWorkItems(record.caseId, record.normalizedDescription),
     );
-    const workItems = workUnderstandingStage.payload;
+    const professionalQuantityResolution = applyProfessionalQuantityAssumptions(
+      workUnderstandingStage.payload,
+      record.dimensions,
+    );
+    const workItems = professionalQuantityResolution.workItems;
+    record.analysis.assumptions.push(...professionalQuantityResolution.assumptions);
     record.analysis.workItems = workItems;
     record = appendTrace(
       record,
@@ -899,6 +904,60 @@ function detectMissingInputs(
   }
 
   return [...missing];
+}
+
+function applyProfessionalQuantityAssumptions(
+  workItems: WorkItem[],
+  dimensions: DimensionInput,
+): { workItems: WorkItem[]; assumptions: string[] } {
+  const sewerLine = workItems.find(
+    (item) =>
+      item.workType === "sewer_line_replacement" &&
+      item.unit === "m" &&
+      !item.hiddenWorkFlag,
+  );
+  const lineLengthMeters = sewerLine?.quantity ?? dimensions.lineLengthMeters;
+
+  if (!lineLengthMeters) {
+    return { workItems, assumptions: [] };
+  }
+
+  const averageRestorationWidthMeters = 1;
+  const estimatedAreaSquareMeters = roundQuantity(
+    lineLengthMeters * averageRestorationWidthMeters,
+  );
+  const inferredWorkTypes = new Set(["floor_replacement", "surface_preparation"]);
+  let resolvedItemsCount = 0;
+
+  const resolvedWorkItems = workItems.map((item) => {
+    if (
+      item.unit !== "m2" ||
+      item.quantity !== null ||
+      !inferredWorkTypes.has(item.workType)
+    ) {
+      return item;
+    }
+
+    resolvedItemsCount += 1;
+    return {
+      ...item,
+      quantity: estimatedAreaSquareMeters,
+      derivedFrom: "professional-linear-area-assumption",
+      confidence: Math.min(item.confidence, 0.7),
+      requiresClarification: false,
+    };
+  });
+
+  if (resolvedItemsCount === 0) {
+    return { workItems, assumptions: [] };
+  }
+
+  return {
+    workItems: resolvedWorkItems,
+    assumptions: [
+      `Assumed ${averageRestorationWidthMeters} m average restoration width along the ${lineLengthMeters} m sewer route; estimated associated area-based work at ${estimatedAreaSquareMeters} m2 for preliminary review.`,
+    ],
+  };
 }
 
 function buildClarificationQuestions(

@@ -99,3 +99,39 @@ test("financial audit allows only the approved 7.4%, 5.4% and 2.7% fees", () => 
   assert.equal(summary.audit.checks.onlyApprovedFees, true);
   assert.equal(summary.audit.checks.estimateGrossEqualsBoqGross, true);
 });
+
+test("5,000 varied BOQs preserve VAT, grouping and agora-level reconciliation", () => {
+  let seed = 20_260_821;
+  const random = () => {
+    seed = (seed * 1_664_525 + 1_013_904_223) >>> 0;
+    return seed / 4_294_967_296;
+  };
+
+  for (let caseIndex = 0; caseIndex < 5_000; caseIndex += 1) {
+    const rowCount = 1 + Math.floor(random() * 80);
+    const rows = Array.from({ length: rowCount }, (_, rowIndex) => ({
+      id: `case-${caseIndex}-row-${rowIndex}`,
+      description: `work ${rowIndex}`,
+      unit: "unit",
+      quantity: Math.round((0.01 + random() * 500) * 100) / 100,
+      unitPrice: Math.round(random() * 100_000) / 100,
+      category: `category ${Math.floor(random() * 12)}`,
+    }));
+
+    const summary = calculateProjectSummary(rows);
+    assert.equal(summary.audit.valid, true, `financial audit failed in case ${caseIndex}`);
+    assert.ok(summary.groups.length >= 1 && summary.groups.length <= 5);
+    assert.equal(
+      summary.groups.reduce((total, group) => total + Math.round(group.totalWithVat * 100), 0),
+      Math.round(summary.boq.totalWithVat * 100),
+      `estimate groups drifted in case ${caseIndex}`,
+    );
+    const netCents = Math.round(summary.boq.subtotalNet * 100);
+    assert.equal(summary.boq.vat, Math.round((netCents * 1_800) / 10_000) / 100);
+    for (const fee of summary.fees) {
+      const grossCents = Math.round(summary.boq.totalWithVat * 100);
+      const basisPoints = Math.round(fee.rate * 10_000);
+      assert.equal(fee.amount, Math.round((grossCents * basisPoints) / 10_000) / 100);
+    }
+  }
+});

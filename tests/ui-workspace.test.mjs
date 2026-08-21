@@ -8,6 +8,13 @@ const [html, script, styles] = await Promise.all([
   readFile(new URL("../public/styles.css", import.meta.url), "utf8"),
 ]);
 
+let documentLayout;
+try {
+  documentLayout = await import(new URL("../public/document-layout.js", import.meta.url));
+} catch {
+  documentLayout = null;
+}
+
 test("все операции локального backend доступны из интерфейса", () => {
   for (const id of [
     "system-center-button", "project-settings-button", "archive-project-button",
@@ -97,6 +104,54 @@ test("כתב כמויות печатается как читаемый A4 с п�
   assert.match(script, /Intl\.NumberFormat\("en-US"/);
   assert.match(script, /₪ \$\{moneyFormatter\.format/);
   assert.match(styles, /\.boq-table \.boq-description[^}]*white-space:\s*normal/);
+});
+
+test("пагинация כתב כמויות сохраняет каждое полное описание и резервирует место для итогов", () => {
+  assert.ok(documentLayout, "нет чистого модуля контроля A4");
+  const rows = Array.from({ length: 48 }, (_, index) => ({
+    id: `row-${index}`,
+    description: `תיאור מלא ${index} ${"פרט ".repeat((index % 7) + 5)}`,
+  }));
+  const pages = documentLayout.paginateBoqRows(rows);
+  assert.ok(pages.length > 1);
+  assert.deepEqual(pages.flat().map((row) => row.description), rows.map((row) => row.description));
+  assert.ok(documentLayout.boqPageWeight(pages.at(-1)) <= documentLayout.BOQ_PAGE_CAPACITY - documentLayout.BOQ_TOTALS_RESERVE);
+});
+
+test("очень длинная строка כתב כמויות не вытесняет итоги за границы A4", () => {
+  assert.ok(documentLayout, "нет чистого модуля контроля A4");
+  const row = { id: "long-row", description: "תיאור ".repeat(900) };
+  const pages = documentLayout.paginateBoqRows([row]);
+  assert.equal(pages[0][0].description, row.description);
+  assert.deepEqual(pages.at(-1), [], "итоги должны перейти на отдельную страницу, если строка занимает всю A4");
+});
+
+test("аудит A4 требует ровно три narrative-страницы, כתב כמויות и единый блок итогов", () => {
+  assert.ok(documentLayout, "нет чистого модуля контроля A4");
+  assert.deepEqual(documentLayout.assessA4Document({
+    narrativePages: [{ label: "1", contentHeight: 400, availableHeight: 500 }, { label: "2", contentHeight: 500.5, availableHeight: 500 }, { label: "3", contentHeight: 430, availableHeight: 500 }],
+    boqPages: [{ label: "1", contentHeight: 690, availableHeight: 700 }],
+    totalsBlockCount: 1,
+  }), []);
+  const issues = documentLayout.assessA4Document({
+    narrativePages: [{ label: "1", contentHeight: 520, availableHeight: 500 }, { label: "2", contentHeight: 400, availableHeight: 500 }],
+    boqPages: [],
+    totalsBlockCount: 0,
+  });
+  assert.ok(issues.some((issue) => issue.code === "narrative-page-count"));
+  assert.ok(issues.some((issue) => issue.code === "missing-boq-page"));
+  assert.ok(issues.some((issue) => issue.code === "totals-block-count"));
+  assert.ok(issues.some((issue) => issue.code === "page-overflow" && issue.label === "1"));
+});
+
+test("переполнение A4 видимо в интерфейсе и блокирует печать и экспорт", () => {
+  assert.match(html, /id="a4-layout-warning"[^>]*role="alert"/);
+  assert.match(script, /refreshA4LayoutStatus/);
+  assert.match(script, /ensureA4LayoutReady/);
+  assert.match(script, /if \(!ensureA4LayoutReady\(\)\) return/);
+  assert.match(styles, /\.a4-layout-warning/);
+  assert.match(styles, /\.document-page\.layout-overflow/);
+  assert.match(styles, /@media print[\s\S]*\.a4-layout-warning[^{]*\{[^}]*display:\s*none/);
 });
 
 test("основной документ повторяет трёхстраничную структуру образцов и имеет полноразмерный просмотр", () => {

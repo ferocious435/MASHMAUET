@@ -1,4 +1,5 @@
 import { calculateProjectSummary, VAT_RATE } from "./calculations.js";
+import { assessA4Document, paginateBoqRows } from "./document-layout.js";
 
 const ACTIVE_PROJECT_KEY = "mashmauet.active-project.v1";
 
@@ -60,6 +61,7 @@ const elements = {
   evidenceDiscussButton: document.querySelector("#evidence-discuss-button"),
   evidenceSourceButton: document.querySelector("#evidence-source-button"),
   documentStage: document.querySelector("#document-stage"),
+  a4LayoutWarning: document.querySelector("#a4-layout-warning"),
   workspaceTitle: document.querySelector("#workspace-title"),
   saveIndicator: document.querySelector("#save-indicator"),
   editButton: document.querySelector("#edit-button"),
@@ -95,6 +97,8 @@ let currentDekelCatalog = null;
 let confirmResolver;
 let codexConnected = false;
 let chatSending = false;
+let a4LayoutIssues = [];
+let a4LayoutFrame;
 let codexConnectionMessage = "בודק את החיבור לחשבון הנוכחי...";
 
 function createDefaultProject() {
@@ -342,7 +346,10 @@ function renderDocument() {
       </section>
       ${renderBoqPages(boqPages, summary, evidenceIndex)}
     </article>`;
-  requestAnimationFrame(fitDocumentPreview);
+  requestAnimationFrame(() => {
+    fitDocumentPreview();
+    refreshA4LayoutStatus();
+  });
 }
 
 function fitDocumentPreview() {
@@ -359,6 +366,73 @@ function fitDocumentPreview() {
   if (document.body.classList.contains("document-focus")) elements.documentStage.scrollLeft = 0;
 }
 
+function measureA4Page(page, label) {
+  const content = page.querySelector(".page-content");
+  const style = window.getComputedStyle(page);
+  const verticalPadding = (Number.parseFloat(style.paddingTop) || 0) + (Number.parseFloat(style.paddingBottom) || 0);
+  return {
+    label,
+    contentHeight: content?.scrollHeight || 0,
+    availableHeight: Math.max(0, page.clientHeight - verticalPadding),
+    element: page,
+  };
+}
+
+function readA4Layout() {
+  const documentRoot = elements.documentStage.querySelector("#printable-document");
+  if (!documentRoot) return { narrativePages: [], boqPages: [], totalsBlockCount: 0 };
+  return {
+    narrativePages: [...documentRoot.querySelectorAll(".narrative-page")].map((page, index) => measureA4Page(page, `עמוד מסמך ${index + 1}`)),
+    boqPages: [...documentRoot.querySelectorAll(".boq-page")].map((page, index) => measureA4Page(page, `עמוד כתב כמויות ${index + 1}`)),
+    totalsBlockCount: documentRoot.querySelectorAll("[data-boq-totals]").length,
+  };
+}
+
+function refreshA4LayoutStatus() {
+  const pages = [...elements.documentStage.querySelectorAll(".document-page")];
+  pages.forEach((page) => page.classList.remove("layout-compact", "layout-tight", "layout-overflow"));
+
+  let layout = readA4Layout();
+  assessA4Document(layout)
+    .filter((issue) => issue.code === "page-overflow")
+    .forEach((issue) => layout.narrativePages.find((page) => page.label === issue.label)?.element.classList.add("layout-compact"));
+
+  layout = readA4Layout();
+  assessA4Document(layout)
+    .filter((issue) => issue.code === "page-overflow")
+    .forEach((issue) => layout.narrativePages.find((page) => page.label === issue.label)?.element.classList.add("layout-tight"));
+
+  layout = readA4Layout();
+  a4LayoutIssues = assessA4Document(layout);
+  const pageByLabel = new Map([...layout.narrativePages, ...layout.boqPages].map((page) => [page.label, page.element]));
+  a4LayoutIssues.filter((issue) => issue.code === "page-overflow").forEach((issue) => pageByLabel.get(issue.label)?.classList.add("layout-overflow"));
+
+  if (!a4LayoutIssues.length) {
+    elements.a4LayoutWarning.hidden = true;
+    elements.a4LayoutWarning.textContent = "";
+    return [];
+  }
+
+  const overflowingLabels = a4LayoutIssues.filter((issue) => issue.code === "page-overflow").map((issue) => issue.label);
+  const details = overflowingLabels.length ? ` חריגה זוהתה ב: ${overflowingLabels.join(", ")}.` : " מבנה העמודים אינו תקין.";
+  elements.a4LayoutWarning.textContent = `המסמך אינו מוכן להדפסה או לייצוא.${details} התוכן נשאר גלוי לבדיקה; יש לקצר, לפצל או לערוך אותו.`;
+  elements.a4LayoutWarning.hidden = false;
+  return a4LayoutIssues;
+}
+
+function scheduleA4LayoutCheck() {
+  window.cancelAnimationFrame(a4LayoutFrame);
+  a4LayoutFrame = window.requestAnimationFrame(refreshA4LayoutStatus);
+}
+
+function ensureA4LayoutReady() {
+  const issues = refreshA4LayoutStatus();
+  if (!issues.length) return true;
+  elements.a4LayoutWarning.scrollIntoView({ behavior: "smooth", block: "center" });
+  showToast("ההדפסה והייצוא נעצרו: יש תוכן שחורג מגבולות A4", "error", 7000);
+  return false;
+}
+
 function narrativeSection(number, title, value, field, editable) {
   return `<section class="document-section"><h2>${number}. ${title}:</h2><p ${editable} data-doc-field="${field}">${escapeHtml(value)}</p></section>`;
 }
@@ -372,38 +446,6 @@ function renderEvidenceOverview(doc) {
   </button>`;
 }
 
-function paginateBoqRows(rows) {
-  const pageCapacity = 62;
-  const totalsReserve = 10;
-  const weightedRows = rows.map((row, sourceIndex) => ({
-    ...row,
-    sourceIndex,
-    pageWeight: Math.max(2.4, 1.25 + Math.ceil(String(row.description || "").length / 50)),
-  }));
-  const pages = [];
-  let current = [];
-  let currentWeight = 0;
-  for (const row of weightedRows) {
-    if (current.length && currentWeight + row.pageWeight > pageCapacity) {
-      pages.push(current);
-      current = [];
-      currentWeight = 0;
-    }
-    current.push(row);
-    currentWeight += row.pageWeight;
-  }
-  pages.push(current);
-
-  const lastPageWeight = () => pages.at(-1).reduce((total, row) => total + row.pageWeight, 0);
-  while (pages.at(-1).length > 1 && lastPageWeight() > pageCapacity - totalsReserve) {
-    const row = pages.at(-1).shift();
-    const previousPage = pages.at(-2);
-    if (previousPage && previousPage.reduce((total, item) => total + item.pageWeight, 0) + row.pageWeight <= pageCapacity) previousPage.push(row);
-    else pages.splice(pages.length - 1, 0, [row]);
-  }
-  return pages;
-}
-
 function renderBoqPages(pages, summary, evidenceIndex) {
   return pages.map((rows, pageIndex) => {
     const isLastPage = pageIndex === pages.length - 1;
@@ -414,7 +456,7 @@ function renderBoqPages(pages, summary, evidenceIndex) {
           <colgroup><col class="boq-col-code"><col class="boq-col-description"><col class="boq-col-unit"><col class="boq-col-quantity"><col class="boq-col-price"><col class="boq-col-total">${editing ? '<col class="boq-col-actions">' : ""}</colgroup>
           <thead><tr><th>פריט SSC</th><th>תיאור מלא</th><th>יח׳ מידה</th><th>כמות</th><th class="money">מחיר נטו</th><th class="money">סה״כ</th>${editing ? '<th><span class="sr-only">פעולות</span></th>' : ""}</tr></thead>
           <tbody>${rows.map((row) => boqRow(row, row.sourceIndex, evidenceIndex)).join("")}</tbody>
-          ${isLastPage ? `<tfoot>
+          ${isLastPage ? `<tfoot data-boq-totals>
             <tr><td colspan="5">סה״כ לפני מע״מ</td><td class="money">${formatMoney(summary.boq.subtotalNet)}</td>${editing ? "<td></td>" : ""}</tr>
             <tr><td colspan="5">מע״מ 18%</td><td class="money">${formatMoney(summary.boq.vat)}</td>${editing ? "<td></td>" : ""}</tr>
             <tr class="grand-total"><td colspan="5">סה״כ כולל מע״מ</td><td class="money">${formatMoney(summary.boq.totalWithVat)}</td>${editing ? "<td></td>" : ""}</tr>
@@ -941,6 +983,7 @@ function addChatMessage(role, text) {
 }
 
 async function exportHtml() {
+  if (!ensureA4LayoutReady()) return;
   const css = await fetch("/styles.css").then((response) => response.text());
   const clone = elements.documentStage.querySelector("#printable-document").cloneNode(true);
   clone.querySelectorAll(".document-controls, .delete-row-button, .evidence-overview").forEach((node) => node.remove());
@@ -1064,7 +1107,10 @@ document.querySelector("#create-version-button").addEventListener("click", async
 });
 document.querySelector("#connect-codex-button").addEventListener("click", () => elements.codexDialog.showModal());
 document.querySelector("#start-codex-login-button").addEventListener("click", connectCodex);
-document.querySelector("#print-button").addEventListener("click", () => window.print());
+document.querySelector("#print-button").addEventListener("click", () => {
+  if (!ensureA4LayoutReady()) return;
+  window.print();
+});
 document.querySelector("#document-focus-button").addEventListener("click", (event) => {
   const active = document.body.classList.toggle("document-focus");
   event.currentTarget.setAttribute("aria-pressed", String(active));
@@ -1075,7 +1121,10 @@ document.querySelector("#document-focus-button").addEventListener("click", (even
     window.scrollTo({ left: 0 });
   });
 });
-window.addEventListener("resize", fitDocumentPreview);
+window.addEventListener("resize", () => {
+  fitDocumentPreview();
+  scheduleA4LayoutCheck();
+});
 document.querySelector("#export-button").addEventListener("click", async (event) => {
   await runAction(event.currentTarget, "מייצא...", exportHtml);
 });
@@ -1362,9 +1411,11 @@ elements.documentStage.addEventListener("input", (event) => {
     const row = doc.boqRows[Number(target.dataset.boqIndex)];
     row[target.dataset.boqKey] = ["quantity", "unitPrice"].includes(target.dataset.boqKey) ? Number(target.value) || 0 : target.value;
     markChanged();
+    scheduleA4LayoutCheck();
     return;
   }
   markChanged();
+  scheduleA4LayoutCheck();
 });
 
 elements.documentStage.addEventListener("change", (event) => {

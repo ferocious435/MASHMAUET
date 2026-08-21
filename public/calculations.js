@@ -10,6 +10,20 @@ export function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }
 
+function moneyToCents(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100);
+}
+
+function rateToBasisPoints(rate) {
+  return Math.round(Number(rate) * 10_000);
+}
+
+function moneyAtRate(value, rate) {
+  const cents = moneyToCents(value);
+  const basisPoints = rateToBasisPoints(rate);
+  return Math.round((cents * basisPoints) / 10_000) / 100;
+}
+
 export function calculateBoq(rows) {
   const normalizedRows = rows.map((row) => {
     const quantity = Math.max(0, Number(row.quantity) || 0);
@@ -24,7 +38,7 @@ export function calculateBoq(rows) {
   const subtotalNet = roundMoney(
     normalizedRows.reduce((total, row) => total + row.amount, 0),
   );
-  const vat = roundMoney(subtotalNet * VAT_RATE);
+  const vat = moneyAtRate(subtotalNet, VAT_RATE);
   const totalWithVat = roundMoney(subtotalNet + vat);
 
   return { rows: normalizedRows, subtotalNet, vat, totalWithVat };
@@ -72,11 +86,12 @@ export function groupEstimate(rows) {
 }
 
 function allocateVatByLargestRemainder(groups, totalVat) {
-  const targetCents = Math.round(totalVat * 100);
+  const targetCents = moneyToCents(totalVat);
+  const vatBasisPoints = rateToBasisPoints(VAT_RATE);
   const allocations = groups.map((group, index) => {
-    const rawCents = group.net * VAT_RATE * 100;
-    const baseCents = Math.floor(rawCents + Number.EPSILON);
-    return { index, baseCents, remainder: rawCents - baseCents };
+    const rawAgoraBasisPoints = moneyToCents(group.net) * vatBasisPoints;
+    const baseCents = Math.floor(rawAgoraBasisPoints / 10_000);
+    return { index, baseCents, remainder: rawAgoraBasisPoints % 10_000 };
   });
   let remaining = targetCents - allocations.reduce((sum, item) => sum + item.baseCents, 0);
   const order = [...allocations].sort((left, right) => right.remainder - left.remainder || left.index - right.index);
@@ -89,7 +104,7 @@ export function calculateProjectSummary(rows) {
   const groups = groupEstimate(rows);
   const fees = FEE_ROWS.map((fee) => ({
     ...fee,
-    amount: roundMoney(boq.totalWithVat * fee.rate),
+    amount: moneyAtRate(boq.totalWithVat, fee.rate),
   }));
   const feesTotal = roundMoney(fees.reduce((total, fee) => total + fee.amount, 0));
   const grandTotal = roundMoney(boq.totalWithVat + feesTotal);
@@ -102,12 +117,12 @@ export function calculateProjectSummary(rows) {
 function buildFinancialAudit({ boq, groups, fees, feesTotal, grandTotal }) {
   const checks = {
     rowAmountsEqualNet: roundMoney(boq.rows.reduce((sum, row) => sum + row.amount, 0)) === boq.subtotalNet,
-    vatIsExactly18Percent: roundMoney(boq.subtotalNet * VAT_RATE) === boq.vat,
+    vatIsExactly18Percent: moneyAtRate(boq.subtotalNet, VAT_RATE) === boq.vat,
     grossEqualsNetPlusVat: roundMoney(boq.subtotalNet + boq.vat) === boq.totalWithVat,
     estimateNetEqualsBoqNet: roundMoney(groups.reduce((sum, group) => sum + group.net, 0)) === boq.subtotalNet,
     estimateVatEqualsBoqVat: roundMoney(groups.reduce((sum, group) => sum + group.vat, 0)) === boq.vat,
     estimateGrossEqualsBoqGross: roundMoney(groups.reduce((sum, group) => sum + group.totalWithVat, 0)) === boq.totalWithVat,
-    feesUseVatInclusiveBase: fees.every((fee) => fee.amount === roundMoney(boq.totalWithVat * fee.rate)),
+    feesUseVatInclusiveBase: fees.every((fee) => fee.amount === moneyAtRate(boq.totalWithVat, fee.rate)),
     feesTotalMatches: roundMoney(fees.reduce((sum, fee) => sum + fee.amount, 0)) === feesTotal,
     grandTotalMatches: roundMoney(boq.totalWithVat + feesTotal) === grandTotal,
     onlyApprovedFees: fees.length === FEE_ROWS.length && fees.every((fee, index) => fee.key === FEE_ROWS[index].key && fee.rate === FEE_ROWS[index].rate),

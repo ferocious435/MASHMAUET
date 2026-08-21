@@ -6,16 +6,16 @@
     "semantic_hash": "e4ea7d69ae7f406ef581436955d54cc1"
   },
   "package.json": {
-    "mtime": 1787243752.4373648,
-    "seen": 1787294930.815995,
-    "ast_hash": "626712f34da31f8087573815bd62829c",
-    "semantic_hash": "626712f34da31f8087573815bd62829c"
+    "mtime": 1787298224.7425816,
+    "seen": 1787298646.2495902,
+    "ast_hash": "bf7b7ec0ba9b766a21f8dc23ba989764",
+    "semantic_hash": ""
   },
   "public/app.js": {
-    "mtime": 1787292371.528352,
-    "seen": 1787294930.815995,
-    "ast_hash": "c5a9a05465bc96803a38aa599fca7a9f",
-    "semantic_hash": "c5a9a05465bc96803a38aa599fca7a9f"
+    "mtime": 1787297872.1357992,
+    "seen": 1787298646.2495902,
+    "ast_hash": "4093b581de6d6d9eb75396eb49aa02e1",
+    "semantic_hash": ""
   },
   "public/calculations.d.ts": {
     "mtime": 1787247699.9247904,
@@ -24,10 +24,10 @@
     "semantic_hash": "5daa2c1de219b87d38ff4bcdba01212e"
   },
   "public/calculations.js": {
-    "mtime": 1787247714.9904552,
-    "seen": 1787294930.815995,
-    "ast_hash": "13d0cb3d1e60b27583a66fa9ac76b1cd",
-    "semantic_hash": "13d0cb3d1e60b27583a66fa9ac76b1cd"
+    "mtime": 1787298082.4424093,
+    "seen": 1787298646.2495902,
+    "ast_hash": "7b92c0e075d794a2da5e2d0af665e8af",
+    "semantic_hash": ""
   },
   "scripts/start-mashmauet.ps1": {
     "mtime": 1787231005.9691277,
@@ -48,10 +48,10 @@
     "semantic_hash": "e0b63db015ec04a87a2e72827bba618f"
   },
   "src/app/static-file-handler.ts": {
-    "mtime": 1787234108.671155,
-    "seen": 1787294930.815995,
-    "ast_hash": "9283c21eb390a5467d73d392015cc4da",
-    "semantic_hash": "9283c21eb390a5467d73d392015cc4da"
+    "mtime": 1787297947.933009,
+    "seen": 1787298646.2495902,
+    "ast_hash": "8b57421fae922e6bd2c3fb89005fd4ae",
+    "semantic_hash": ""
   },
   "src/config/local-app-config.ts": {
     "mtime": 1787233710.7691875,
@@ -192,10 +192,10 @@
     "semantic_hash": "7d93e87a42e57b4f4077514e2a893a18"
   },
   "src/modules/pipeline/services/case-analysis-pipeline.ts": {
-    "mtime": 1787234924.129429,
-    "seen": 1787294930.815995,
-    "ast_hash": "2bdd7c732de2b0206123a0406b8f1296",
-    "semantic_hash": "2bdd7c732de2b0206123a0406b8f1296"
+    "mtime": 1787297683.8208587,
+    "seen": 1787298646.2495902,
+    "ast_hash": "d60fa2be68073ea14aaa7db495133534",
+    "semantic_hash": ""
   },
   "src/modules/references/domain/dekel-schemas.ts": {
     "mtime": 1787144053.2608385,
@@ -324,22 +324,22 @@
     "semantic_hash": "e95f0acdd4a66d140a7cd624b661ee24"
   },
   "tests/run-tests.ts": {
-    "mtime": 1787234924.1350462,
-    "seen": 1787294930.815995,
-    "ast_hash": "a5fc1de13329823815c6bed46ef27d97",
-    "semantic_hash": "a5fc1de13329823815c6bed46ef27d97"
+    "mtime": 1787297643.0436885,
+    "seen": 1787298646.2495902,
+    "ast_hash": "805f7075d9eb0172e40511dceac05a01",
+    "semantic_hash": ""
   },
   "tests/ui-calculations.test.mjs": {
-    "mtime": 1787248225.5535514,
-    "seen": 1787294930.815995,
-    "ast_hash": "63034ea37bdf99158f1ddd5b92e47549",
-    "semantic_hash": "63034ea37bdf99158f1ddd5b92e47549"
+    "mtime": 1787298094.2518811,
+    "seen": 1787298646.2495902,
+    "ast_hash": "fc4bd53f75e4a626635d180b4983d8f9",
+    "semantic_hash": ""
   },
   "tests/ui-workspace.test.mjs": {
-    "mtime": 1787292385.4770844,
-    "seen": 1787294930.815995,
-    "ast_hash": "0173d43c5d4a2e91b09ff484b5f295a1",
-    "semantic_hash": "0173d43c5d4a2e91b09ff484b5f295a1"
+    "mtime": 1787297748.5566974,
+    "seen": 1787298646.2495902,
+    "ast_hash": "8b378e0b0f19e85296fb39b5960b0111",
+    "semantic_hash": ""
   },
   "tsconfig.json": {
     "mtime": 1787232402.3777125,
@@ -408,10 +408,10 @@
     "semantic_hash": "3e1b9717b705b6865bfd1d545d98b44c"
   },
   "README.md": {
-    "mtime": 1787292421.5624068,
-    "seen": 1787294930.815995,
-    "ast_hash": "44115798fcd84919512812b9ff46f639",
-    "semantic_hash": "44115798fcd84919512812b9ff46f639"
+    "mtime": 1787298324.222344,
+    "seen": 1787298646.2495902,
+    "ast_hash": "efa0101df09155812a8eb4a7aa2ef7bb",
+    "semantic_hash": ""
   },
   "ROADMAP.md": {
     "mtime": 1787144052.5785682,
@@ -444,10 +444,10 @@
     "semantic_hash": "8e3f7060d310a49d200635e835702e25"
   },
   "docs/BACKEND-RUNBOOK.md": {
-    "mtime": 1787292421.5653493,
-    "seen": 1787294930.815995,
-    "ast_hash": "2eac7e20d11853ab986d2f8c7cd2d145",
-    "semantic_hash": "2eac7e20d11853ab986d2f8c7cd2d145"
+    "mtime": 1787298324.2260253,
+    "seen": 1787298646.2495902,
+    "ast_hash": "0486a84c2053422bf9e9e1f627e614a9",
+    "semantic_hash": ""
   },
   "docs/architecture/ADR-001-professional-reference-retrieval.md": {
     "mtime": 1787243868.049833,
@@ -534,10 +534,10 @@
     "semantic_hash": "5f1feedff234e583c4754380a9c419a5"
   },
   "public/index.html": {
-    "mtime": 1787291493.653851,
-    "seen": 1787294930.815995,
-    "ast_hash": "2d592b72d225488d813826bfef470ee7",
-    "semantic_hash": "2d592b72d225488d813826bfef470ee7"
+    "mtime": 1787297840.8440535,
+    "seen": 1787298646.2495902,
+    "ast_hash": "6f919adb606be29773c02d0ed4d7e8fd",
+    "semantic_hash": ""
   },
   "HOMER/3210/\u05d7\u05d5\u05d6\u05d4+\u05de\u05d3\u05e3+2019.pdf": {
     "mtime": 1787241652.463894,
@@ -934,5 +934,35 @@
     "seen": 1787294930.815995,
     "ast_hash": "d2dcc2930d79a26603b6990582309415",
     "semantic_hash": "d2dcc2930d79a26603b6990582309415"
+  },
+  "playwright.config.ts": {
+    "mtime": 1787297810.7834022,
+    "seen": 1787298646.2495902,
+    "ast_hash": "889d99d9cfe0de10ecc0d0cba52899d2",
+    "semantic_hash": ""
+  },
+  "public/document-layout.js": {
+    "mtime": 1787297778.449448,
+    "seen": 1787298646.2495902,
+    "ast_hash": "9ae1995c43e436a57932cdfdc19f3437",
+    "semantic_hash": ""
+  },
+  "tests/e2e/global-teardown.ts": {
+    "mtime": 1787297737.8958354,
+    "seen": 1787298646.2495902,
+    "ast_hash": "372552549d8f6e04e0848ee47188a7d7",
+    "semantic_hash": ""
+  },
+  "tests/e2e/local-app.spec.ts": {
+    "mtime": 1787298451.497389,
+    "seen": 1787298646.2495902,
+    "ast_hash": "cf974b687ef0e241e504e6f3cb9dfde8",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1787297737.8979292,
+    "seen": 1787298646.2495902,
+    "ast_hash": "406d5a19852f427da1b553fdc72b6195",
+    "semantic_hash": ""
   }
 }
