@@ -21,7 +21,7 @@ export function setSecurityHeaders(response: ServerResponse): void {
   response.setHeader("Referrer-Policy", "no-referrer");
   response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
-  response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+  response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
 }
 
 function normalizeHostname(hostHeader: string | undefined): string | undefined {

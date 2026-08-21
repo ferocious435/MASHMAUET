@@ -16,7 +16,7 @@ test("локальный API закрывает полный жизненный 
     assert.equal(initial.response.status, 200);
     assert.equal(initial.body.projects.length, 1);
     assert.equal(initial.response.headers.get("x-frame-options"), "DENY");
-    assert.doesNotMatch(JSON.stringify(initial.body), /sourcePath|extractedTextPath|visionImagePaths|codexThreadId/);
+    assert.doesNotMatch(JSON.stringify(initial.body), /sourcePath|extractedTextPath|analysisTextPath|correctedTextPath|visionImagePaths|codexThreadId/);
 
     const invalid = await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "", description: "x", unexpected: true } });
     assert.equal(invalid.response.status, 400);
@@ -38,11 +38,40 @@ test("локальный API закрывает полный жизненный 
     assert.equal(uploaded.status, 201);
     const uploadBody = (await uploaded.json()) as { material: { id: string; status: string } };
     assert.equal(uploadBody.material.status, "ready");
-    assert.doesNotMatch(JSON.stringify(uploadBody), /sourcePath|extractedTextPath|visionImagePaths/);
+    assert.doesNotMatch(JSON.stringify(uploadBody), /sourcePath|extractedTextPath|analysisTextPath|correctedTextPath|visionImagePaths/);
     const materialId = uploadBody.material.id as string;
+
+    const originalContent = await json(fixture.baseUrl, `/local/projects/${projectId}/materials/${materialId}/content`);
+    assert.equal(originalContent.body.content.originalText, "Локальный тестовый материал");
+    assert.equal(originalContent.body.content.hasCorrection, false);
+    const corrected = await json(fixture.baseUrl, `/local/projects/${projectId}/materials/${materialId}/content`, { method: "PUT", body: { text: "Исправленный владельцем текст" } });
+    assert.equal(corrected.body.content.effectiveText, "Исправленный владельцем текст");
+    assert.equal(corrected.body.project.materials[0].hasCorrection, true);
 
     const reprocessed = await json(fixture.baseUrl, `/local/projects/${projectId}/materials/${materialId}/reprocess`, { method: "POST" });
     assert.equal(reprocessed.body.project.materials[0].status, "ready");
+    assert.equal(reprocessed.body.project.materials[0].correctionNeedsReview, true);
+    assert.equal((await json(fixture.baseUrl, `/local/projects/${projectId}/materials/${materialId}/content`)).body.content.effectiveText, "Исправленный владельцем текст");
+    const resetContent = await json(fixture.baseUrl, `/local/projects/${projectId}/materials/${materialId}/content`, { method: "PUT", body: { text: null } });
+    assert.equal(resetContent.body.content.hasCorrection, false);
+    assert.equal(resetContent.body.content.effectiveText, "Локальный тестовый материал");
+    const analyzedContent = await json(fixture.baseUrl, `/local/projects/${projectId}/materials/${materialId}/analyze`, { method: "POST" });
+    assert.match(analyzedContent.body.content.analysisText, /Проверено/);
+
+    const videoBytes = Buffer.from([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0]);
+    const videoUpload = await fetch(`${fixture.baseUrl}/local/projects/${projectId}/materials`, {
+      method: "POST", headers: { "Content-Type": "video/mp4", "X-File-Name": encodeURIComponent("осмотр.mp4") }, body: videoBytes,
+    });
+    assert.equal(videoUpload.status, 201);
+    const videoBody = await videoUpload.json() as { material: { id: string } };
+    const frame = await fetch(`${fixture.baseUrl}/local/projects/${projectId}/materials/${videoBody.material.id}/video-frames?timestampSeconds=2.5&durationSeconds=20`, {
+      method: "POST", headers: { "Content-Type": "image/jpeg" }, body: Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0, 0, 0xff, 0xd9]),
+    });
+    assert.equal(frame.status, 201);
+    assert.equal(((await frame.json()) as { project: { materials: Array<{ id: string; videoFrameCount: number }> } }).project.materials.find((item) => item.id === videoBody.material.id)?.videoFrameCount, 1);
+    const preview = await fetch(`${fixture.baseUrl}/local/projects/${projectId}/materials/${videoBody.material.id}/preview`);
+    assert.equal(preview.status, 200);
+    assert.match(preview.headers.get("content-disposition") ?? "", /^inline;/);
 
     await json(fixture.baseUrl, `/local/projects/${projectId}`, { method: "PUT", body: { document: { ...created.body.project.document, objective: "Версия A" } } });
     const versionCreated = await json(fixture.baseUrl, `/local/projects/${projectId}/versions`, { method: "POST", body: { label: "Контрольная версия" } });
@@ -64,7 +93,15 @@ test("локальный API закрывает полный жизненный 
     assert.ok(afterChat.body.project.chat.some((item: { role: string }) => item.role === "assistant"));
 
     const proposalId = chat.body.proposals[0].id as string;
-    const applied = await json(fixture.baseUrl, `/local/projects/${projectId}/proposals/${proposalId}/apply`, { method: "POST", body: { scope: "project" } });
+    const forbiddenGlobal = await json(fixture.baseUrl, `/local/projects/${projectId}/proposals/${proposalId}/apply`, { method: "POST", body: { scope: "global", confirmGlobal: true } });
+    assert.equal(forbiddenGlobal.response.status, 400);
+    assert.equal(forbiddenGlobal.body.code, "validation_error");
+    const stale = await json(fixture.baseUrl, `/local/projects/${projectId}/proposals/${proposalId}/apply`, { method: "POST", body: { scope: "project" } });
+    assert.equal(stale.response.status, 409);
+    assert.equal(stale.body.code, "stale_chat_proposal");
+    const refreshedChat = await json(fixture.baseUrl, `/local/projects/${projectId}/chat`, { method: "POST", body: { message: "Подготовь цель ещё раз по текущей версии" } });
+    const refreshedProposalId = refreshedChat.body.proposals[0].id as string;
+    const applied = await json(fixture.baseUrl, `/local/projects/${projectId}/proposals/${refreshedProposalId}/apply`, { method: "POST", body: { scope: "project" } });
     assert.equal(applied.body.project.document.objective, "Цель от Codex");
 
     const backup = await json(fixture.baseUrl, "/local/backups", { method: "POST", body: { label: "Контрольная копия" } });
@@ -114,7 +151,13 @@ test("проекты изолированы, а ошибка Codex сохран�
   try {
     const first = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "Первый", description: "Первый проект" } })).body.project;
     const second = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "Второй", description: "Второй проект" } })).body.project;
-    await fetch(`${fixture.baseUrl}/local/projects/${first.id}/materials`, { method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("секрет.txt") }, body: "МАТЕРИАЛ_ТОЛЬКО_ПЕРВОГО_ПРОЕКТА" });
+    const firstUpload = await fetch(`${fixture.baseUrl}/local/projects/${first.id}/materials`, { method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("секрет.txt") }, body: "МАТЕРИАЛ_ТОЛЬКО_ПЕРВОГО_ПРОЕКТА" });
+    const firstMaterialId = ((await firstUpload.json()) as { material: { id: string } }).material.id;
+    await json(fixture.baseUrl, `/local/projects/${first.id}/materials/${firstMaterialId}/content`, { method: "PUT", body: { text: "ИСПРАВЛЕННЫЙ_ТЕКСТ_ВЛАДЕЛЬЦА" } });
+    await json(fixture.baseUrl, `/local/projects/${first.id}/chat`, { method: "POST", body: { message: "Прочитай исправленный материал" } });
+    assert.match(codex.prompts.at(-1) ?? "", /ИСПРАВЛЕННЫЙ_ТЕКСТ_ВЛАДЕЛЬЦА/);
+    assert.match(codex.prompts.at(-1) ?? "", /исправлено владельцем; этот текст имеет приоритет/);
+    assert.doesNotMatch(codex.prompts.at(-1) ?? "", /МАТЕРИАЛ_ТОЛЬКО_ПЕРВОГО_ПРОЕКТА/);
     const secondChat = await json(fixture.baseUrl, `/local/projects/${second.id}/chat`, { method: "POST", body: { message: "Что есть в моём проекте?" } });
     assert.equal(secondChat.response.status, 200);
     assert.doesNotMatch(codex.prompts.at(-1) ?? "", /МАТЕРИАЛ_ТОЛЬКО_ПЕРВОГО_ПРОЕКТА/);
@@ -127,13 +170,29 @@ test("проекты изолированы, а ошибка Codex сохран�
     assert.match(codex.prompts.at(-1) ?? "", /Местоположение: страница 8/);
     assert.match(codex.prompts.at(-1) ?? "", /не меняют структуру, формулировки, внешний вид или финансовые правила итогового документа/);
     assert.match(codex.prompts.at(-1) ?? "", /специальную спецификацию, כתב כמויות, чертежи или иные материалы текущего проекта/);
+    await json(fixture.baseUrl, `/local/projects/${second.id}/chat`, { method: "POST", body: { message: "Продолжи с учётом нашего разговора" } });
+    const continuedPrompt = codex.prompts.at(-1) ?? "";
+    assert.match(continuedPrompt, /Недавний диалог только этого проекта/);
+    assert.match(continuedPrompt, /Владелец: Что есть в моём проекте\?/);
+    assert.match(continuedPrompt, /Codex: Изолированный ответ/);
+    assert.match(continuedPrompt, /Внутренний чат не может создавать, изменять или удалять общие правила системы/);
+    assert.match(continuedPrompt, /Контрольный финансовый расчёт текущего документа/);
 
     codex.fail = true;
     const failed = await json(fixture.baseUrl, `/local/projects/${second.id}/chat`, { method: "POST", body: { message: "Вызови контролируемую ошибку" } });
     assert.equal(failed.response.status, 502);
     assert.equal(failed.body.code, "codex_unavailable");
     const projectAfterFailure = (await json(fixture.baseUrl, `/local/projects/${second.id}`)).body.project;
-    assert.match(projectAfterFailure.chat.at(-1).text, /Не удалось получить ответ Codex/);
+    assert.match(projectAfterFailure.chat.at(-1).text, /Codex לא הצליח להשיב/);
+    assert.equal(projectAfterFailure.chat.at(-1).status, "failed");
+    assert.equal(projectAfterFailure.chat.at(-1).retryOfMessageId, projectAfterFailure.chat.at(-2).id);
+    const failedUserId = projectAfterFailure.chat.at(-2).id as string;
+    codex.fail = false;
+    const retried = await json(fixture.baseUrl, `/local/projects/${second.id}/chat`, { method: "POST", body: { retryOfMessageId: failedUserId } });
+    assert.equal(retried.response.status, 200);
+    assert.equal(retried.body.project.chat.filter((item: any) => item.id === failedUserId).length, 1);
+    assert.equal(retried.body.project.chat.some((item: any) => item.status === "failed" && item.retryOfMessageId === failedUserId), false);
+    assert.equal(retried.body.project.chat.at(-1).replyToMessageId, failedUserId);
   } finally { await fixture.close(); }
 });
 
@@ -181,6 +240,8 @@ test("DEKEL проходит полный путь внутри локально
     assert.equal(status.body.catalog.askToSwitch, false);
     assert.equal(status.body.catalog.sourcePolicy, "dekel_only_until_explicit_file_request");
     assert.equal(status.body.catalog.ignoresUnrequestedPricebooksEverywhere, true);
+    assert.equal(status.body.catalog.workbookSelectionPolicy, "fixed_global_manifest");
+    assert.equal(status.body.catalog.workbookManifestFile, "default-dekel.json");
 
     const analyzed = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/analyze`, { method: "POST", body: {} });
     assert.equal(analyzed.response.status, 200);
@@ -190,8 +251,24 @@ test("DEKEL проходит полный путь внутри локально
     assert.ok(reviewLine);
     assert.equal(reviewLine.selectedCode, reviewLine.candidates[0].code);
     assert.equal(reviewLine.quantitySource, "document");
+    assert.match(reviewLine.quantitySourceReason, /כתב הכמויות/);
     assert.ok(reviewLine.candidates[0].unitPrice > 0);
     assert.equal(reviewLine.candidates[0].priceIncludesVat, false);
+    assert.match(reviewLine.candidates[0].unitCompatibility, /^(exact|compatible|corrected_by_code|unknown)$/);
+    assert.equal(analyzed.body.review.financialAudit.valid, true);
+    assert.equal(analyzed.body.review.financialAudit.vatRate, 0.18);
+    assert.equal(analyzed.body.review.financialAudit.estimateRows <= 5, true);
+    assert.deepEqual(analyzed.body.review.financialAudit.fees.map((fee: any) => fee.rate), [0.074, 0.054, 0.027]);
+
+    const foreignCandidate = analyzed.body.review.lines.flatMap((line: any) => line.candidates).find((candidate: any) => !reviewLine.candidates.some((item: any) => item.code === candidate.code));
+    assert.ok(foreignCandidate);
+    const manuallySelected = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/lines/${reviewLine.id}`, {
+      method: "PUT", body: { selectedCode: foreignCandidate.code },
+    });
+    const manualLine = manuallySelected.body.review.lines.find((line: any) => line.id === reviewLine.id);
+    assert.equal(manualLine.selectedCode, foreignCandidate.code);
+    assert.equal(manualLine.candidates.find((candidate: any) => candidate.code === foreignCandidate.code).score, 1);
+    assert.equal(manualLine.candidates.find((candidate: any) => candidate.code === foreignCandidate.code).priceIncludesVat, false);
 
     const selected = reviewLine.candidates[0];
     const updated = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/lines/${reviewLine.id}`, {
@@ -207,6 +284,9 @@ test("DEKEL проходит полный путь внутри локально
     assert.equal(applied.response.status, 200);
     assert.ok(applied.body.appliedRows >= 1);
     assert.equal(applied.body.review.status, "applied");
+    assert.equal(applied.body.review.financialAudit.valid, true);
+    assert.equal(applied.body.review.financialAudit.vat, Math.round(applied.body.review.financialAudit.subtotalNet * 18) / 100);
+    assert.equal(applied.body.review.financialAudit.grandTotal, Math.round((applied.body.review.financialAudit.totalWithVat + applied.body.review.financialAudit.feesTotal) * 100) / 100);
     const boqRow = applied.body.project.document.boqRows.find((row: any) => row.id === reviewLine.sourceBoqRowId);
     assert.equal(boqRow.code, selected.code);
     assert.equal(boqRow.unitPrice, selected.unitPrice);
@@ -215,6 +295,30 @@ test("DEKEL проходит полный путь внутри локально
     assert.match(evidence.source.fileName, /\.xlsx$/i);
     assert.match(evidence.source.location, new RegExp(selected.code.replaceAll(".", "\\.")));
     assert.equal(evidence.source.priceIncludesVat, undefined);
+  } finally { await fixture.close(); }
+});
+
+test("DEKEL блокирует устаревшую проверку и удаляет явно исключённые строки", async () => {
+  const fixture = await startFixture();
+  try {
+    let project = (await json(fixture.baseUrl, "/local/projects")).body.projects[0];
+    let analyzed = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/analyze`, { method: "POST", body: {} });
+    const changedDocument = structuredClone(project.document);
+    changedDocument.boqRows[0].quantity += 1;
+    project = (await json(fixture.baseUrl, `/local/projects/${project.id}`, { method: "PUT", body: { document: changedDocument } })).body.project;
+    const stale = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/apply`, { method: "POST", body: { confirm: true } });
+    assert.equal(stale.response.status, 409);
+    assert.equal(stale.body.code, "stale_dekel_review");
+
+    analyzed = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/analyze`, { method: "POST", body: {} });
+    const excluded = analyzed.body.review.lines.at(-1);
+    const updated = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/lines/${excluded.id}`, { method: "PUT", body: { included: false } });
+    assert.match(updated.body.review.warnings.join("\n"), /תימחק מכתב הכמויות/);
+    const applied = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/apply`, { method: "POST", body: { confirm: true } });
+    assert.equal(applied.response.status, 200);
+    assert.equal(applied.body.project.document.boqRows.some((row: any) => row.id === excluded.sourceBoqRowId), false);
+    assert.equal(applied.body.project.document.evidenceNotes.some((note: any) => note.anchorId === excluded.sourceBoqRowId), false);
+    assert.equal(applied.body.review.financialAudit.valid, true);
   } finally { await fixture.close(); }
 });
 

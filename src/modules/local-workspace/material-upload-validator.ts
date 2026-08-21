@@ -2,11 +2,11 @@ import { open } from "node:fs/promises";
 import { extname } from "node:path";
 import { LocalWorkspaceError } from "./local-workspace-error.ts";
 
-const ALLOWED_EXTENSIONS = new Set([".pdf", ".xlsx", ".xls", ".docx", ".csv", ".tsv", ".txt", ".md", ".json", ".jpg", ".jpeg", ".png", ".webp"]);
+const ALLOWED_EXTENSIONS = new Set([".pdf", ".xlsx", ".xls", ".docx", ".csv", ".tsv", ".txt", ".md", ".json", ".jpg", ".jpeg", ".png", ".webp", ".mp4", ".m4v", ".mov", ".webm"]);
 
 export async function validateUploadedFile(path: string, originalName: string): Promise<void> {
   const extension = extname(originalName).toLowerCase();
-  if (!ALLOWED_EXTENSIONS.has(extension)) throw new LocalWorkspaceError(415, "unsupported_file_type", "Этот тип файла не разрешён. Поддерживаются PDF, XLSX, DOCX, CSV, TXT и изображения.");
+  if (!ALLOWED_EXTENSIONS.has(extension)) throw new LocalWorkspaceError(415, "unsupported_file_type", "Этот тип файла не разрешён. Поддерживаются PDF, XLSX, DOCX, CSV, TXT, изображения и видео MP4/MOV/WEBM.");
   const handle = await open(path, "r");
   const header = Buffer.alloc(512);
   let bytesRead = 0;
@@ -19,6 +19,8 @@ export async function validateUploadedFile(path: string, originalName: string): 
     : [".jpg", ".jpeg"].includes(extension) ? startsWith(actualHeader, [0xff, 0xd8, 0xff])
     : extension === ".png" ? startsWith(actualHeader, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
     : extension === ".webp" ? actualHeader.subarray(0, 4).toString("ascii") === "RIFF" && actualHeader.subarray(8, 12).toString("ascii") === "WEBP"
+    : [".mp4", ".m4v", ".mov"].includes(extension) ? actualHeader.subarray(4, 8).toString("ascii") === "ftyp"
+    : extension === ".webm" ? startsWith(actualHeader, [0x1a, 0x45, 0xdf, 0xa3])
     : !actualHeader.includes(0);
   if (!valid) throw new LocalWorkspaceError(415, "file_signature_mismatch", "Содержимое файла не соответствует его расширению");
 }

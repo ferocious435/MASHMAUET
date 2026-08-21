@@ -1,0 +1,938 @@
+{
+  "HOMER/DEKEL/default-dekel.json": {
+    "mtime": 1787247733.9382434,
+    "seen": 1787294930.815995,
+    "ast_hash": "e4ea7d69ae7f406ef581436955d54cc1",
+    "semantic_hash": "e4ea7d69ae7f406ef581436955d54cc1"
+  },
+  "package.json": {
+    "mtime": 1787243752.4373648,
+    "seen": 1787294930.815995,
+    "ast_hash": "626712f34da31f8087573815bd62829c",
+    "semantic_hash": "626712f34da31f8087573815bd62829c"
+  },
+  "public/app.js": {
+    "mtime": 1787292371.528352,
+    "seen": 1787294930.815995,
+    "ast_hash": "c5a9a05465bc96803a38aa599fca7a9f",
+    "semantic_hash": "c5a9a05465bc96803a38aa599fca7a9f"
+  },
+  "public/calculations.d.ts": {
+    "mtime": 1787247699.9247904,
+    "seen": 1787294930.815995,
+    "ast_hash": "5daa2c1de219b87d38ff4bcdba01212e",
+    "semantic_hash": "5daa2c1de219b87d38ff4bcdba01212e"
+  },
+  "public/calculations.js": {
+    "mtime": 1787247714.9904552,
+    "seen": 1787294930.815995,
+    "ast_hash": "13d0cb3d1e60b27583a66fa9ac76b1cd",
+    "semantic_hash": "13d0cb3d1e60b27583a66fa9ac76b1cd"
+  },
+  "scripts/start-mashmauet.ps1": {
+    "mtime": 1787231005.9691277,
+    "seen": 1787294930.815995,
+    "ast_hash": "e78b22a6560aac7511bee2c26b4f6d38",
+    "semantic_hash": "e78b22a6560aac7511bee2c26b4f6d38"
+  },
+  "src/app/create-app.ts": {
+    "mtime": 1787243589.8432403,
+    "seen": 1787294930.815995,
+    "ast_hash": "e4ede4422175320c7024c2e9bb6aa7aa",
+    "semantic_hash": "e4ede4422175320c7024c2e9bb6aa7aa"
+  },
+  "src/app/local-request-security.ts": {
+    "mtime": 1787246487.0254207,
+    "seen": 1787294930.815995,
+    "ast_hash": "e0b63db015ec04a87a2e72827bba618f",
+    "semantic_hash": "e0b63db015ec04a87a2e72827bba618f"
+  },
+  "src/app/static-file-handler.ts": {
+    "mtime": 1787234108.671155,
+    "seen": 1787294930.815995,
+    "ast_hash": "9283c21eb390a5467d73d392015cc4da",
+    "semantic_hash": "9283c21eb390a5467d73d392015cc4da"
+  },
+  "src/config/local-app-config.ts": {
+    "mtime": 1787233710.7691875,
+    "seen": 1787294930.815995,
+    "ast_hash": "96fc781dd6012fabc1d47b8661f54ca5",
+    "semantic_hash": "96fc781dd6012fabc1d47b8661f54ca5"
+  },
+  "src/live-case-check.ts": {
+    "mtime": 1787234859.5288143,
+    "seen": 1787294930.815995,
+    "ast_hash": "61b2d25a5ea0da923965368356f62706",
+    "semantic_hash": "61b2d25a5ea0da923965368356f62706"
+  },
+  "src/live-check/auto-confirm-selection.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "e1b71bb4528937d661e53231dd884bf1",
+    "semantic_hash": "e1b71bb4528937d661e53231dd884bf1"
+  },
+  "src/modules/cases/controllers/case-controller.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "2a87a677172c1ed258ed407cb9e1882f",
+    "semantic_hash": "2a87a677172c1ed258ed407cb9e1882f"
+  },
+  "src/modules/cases/domain/case-schemas.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "a7ca989f735552e098c38b03aee3bb30",
+    "semantic_hash": "a7ca989f735552e098c38b03aee3bb30"
+  },
+  "src/modules/cases/repositories/case-repository.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "caa344b76b3d0296aa2060ae21401923",
+    "semantic_hash": "caa344b76b3d0296aa2060ae21401923"
+  },
+  "src/modules/cases/routes/case-routes.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "ac27c70c6abf670131bad76ac0242219",
+    "semantic_hash": "ac27c70c6abf670131bad76ac0242219"
+  },
+  "src/modules/cases/services/case-service.ts": {
+    "mtime": 1787234859.532161,
+    "seen": 1787294930.815995,
+    "ast_hash": "1fe594cc246fe03fc0895e0b195688f0",
+    "semantic_hash": "1fe594cc246fe03fc0895e0b195688f0"
+  },
+  "src/modules/local-workspace/codex-app-server-client.ts": {
+    "mtime": 1787292079.5559187,
+    "seen": 1787294930.815995,
+    "ast_hash": "ebb331cf3f127eb63c1c34bcac4ac491",
+    "semantic_hash": "ebb331cf3f127eb63c1c34bcac4ac491"
+  },
+  "src/modules/local-workspace/keyed-mutex.ts": {
+    "mtime": 1787233723.5024493,
+    "seen": 1787294930.815995,
+    "ast_hash": "68738ffa9230d1d5eab97ccdb793f802",
+    "semantic_hash": "68738ffa9230d1d5eab97ccdb793f802"
+  },
+  "src/modules/local-workspace/local-project-store.ts": {
+    "mtime": 1787246498.6471877,
+    "seen": 1787294930.815995,
+    "ast_hash": "92d7c8ffbb04413cd52859f4c708fc11",
+    "semantic_hash": "92d7c8ffbb04413cd52859f4c708fc11"
+  },
+  "src/modules/local-workspace/local-project-types.ts": {
+    "mtime": 1787291138.4429579,
+    "seen": 1787294930.815995,
+    "ast_hash": "7f0a4e6fed58b9b00f200f20e9efc3b9",
+    "semantic_hash": "7f0a4e6fed58b9b00f200f20e9efc3b9"
+  },
+  "src/modules/local-workspace/local-workspace-controller.ts": {
+    "mtime": 1787291116.1065378,
+    "seen": 1787294930.815995,
+    "ast_hash": "c3553536a46ab4f44dd54a1f7fea95fd",
+    "semantic_hash": "c3553536a46ab4f44dd54a1f7fea95fd"
+  },
+  "src/modules/local-workspace/local-workspace-error.ts": {
+    "mtime": 1787233710.7714365,
+    "seen": 1787294930.815995,
+    "ast_hash": "acdc57186ce6f7d16efd08c40fe97212",
+    "semantic_hash": "acdc57186ce6f7d16efd08c40fe97212"
+  },
+  "src/modules/local-workspace/local-workspace-logger.ts": {
+    "mtime": 1787233710.7714365,
+    "seen": 1787294930.815995,
+    "ast_hash": "4493fec2e65f2649646c320d8ea5b6fc",
+    "semantic_hash": "4493fec2e65f2649646c320d8ea5b6fc"
+  },
+  "src/modules/local-workspace/local-workspace-service.ts": {
+    "mtime": 1787291815.7244065,
+    "seen": 1787294930.815995,
+    "ast_hash": "8fc94baced5deb881dee3740cd9cc84b",
+    "semantic_hash": "8fc94baced5deb881dee3740cd9cc84b"
+  },
+  "src/modules/local-workspace/local-workspace-validation.ts": {
+    "mtime": 1787291116.1055453,
+    "seen": 1787294930.815995,
+    "ast_hash": "49318a4676a7454e4a08a3791b1ad4ab",
+    "semantic_hash": "49318a4676a7454e4a08a3791b1ad4ab"
+  },
+  "src/modules/local-workspace/material-extractor.ts": {
+    "mtime": 1787246487.021726,
+    "seen": 1787294930.815995,
+    "ast_hash": "55164f090aa7887abfa02329bbac2e48",
+    "semantic_hash": "55164f090aa7887abfa02329bbac2e48"
+  },
+  "src/modules/local-workspace/material-upload-validator.ts": {
+    "mtime": 1787247335.115953,
+    "seen": 1787294930.815995,
+    "ast_hash": "1a175d811827c33b9fc011eb926cbb91",
+    "semantic_hash": "1a175d811827c33b9fc011eb926cbb91"
+  },
+  "src/modules/output/services/case-output-draft-service.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "589cce6e6c14539279566600d5b440f2",
+    "semantic_hash": "589cce6e6c14539279566600d5b440f2"
+  },
+  "src/modules/output/services/case-output-export-service.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "32b6db469799d03a825e2241e1b16793",
+    "semantic_hash": "32b6db469799d03a825e2241e1b16793"
+  },
+  "src/modules/output/services/case-output-package-service.ts": {
+    "mtime": 1787144053.245207,
+    "seen": 1787294930.815995,
+    "ast_hash": "333dc8bcbb2418fda569c7cc19b2a6b3",
+    "semantic_hash": "333dc8bcbb2418fda569c7cc19b2a6b3"
+  },
+  "src/modules/output/services/masmach-template-engine.ts": {
+    "mtime": 1787234859.5366073,
+    "seen": 1787294930.815995,
+    "ast_hash": "7d93e87a42e57b4f4077514e2a893a18",
+    "semantic_hash": "7d93e87a42e57b4f4077514e2a893a18"
+  },
+  "src/modules/pipeline/services/case-analysis-pipeline.ts": {
+    "mtime": 1787234924.129429,
+    "seen": 1787294930.815995,
+    "ast_hash": "2bdd7c732de2b0206123a0406b8f1296",
+    "semantic_hash": "2bdd7c732de2b0206123a0406b8f1296"
+  },
+  "src/modules/references/domain/dekel-schemas.ts": {
+    "mtime": 1787144053.2608385,
+    "seen": 1787294930.815995,
+    "ast_hash": "18d81e9b46af0a30e685acdb546b8371",
+    "semantic_hash": "18d81e9b46af0a30e685acdb546b8371"
+  },
+  "src/modules/references/domain/mavnadim-schemas.ts": {
+    "mtime": 1787144053.2617214,
+    "seen": 1787294930.815995,
+    "ast_hash": "f4c61a0647c1f5a51aaf3827fc1f530c",
+    "semantic_hash": "f4c61a0647c1f5a51aaf3827fc1f530c"
+  },
+  "src/modules/references/domain/reference-schemas.ts": {
+    "mtime": 1787144053.2617214,
+    "seen": 1787294930.815995,
+    "ast_hash": "e4fc1d3991ede3d486cfbb918c5d8312",
+    "semantic_hash": "e4fc1d3991ede3d486cfbb918c5d8312"
+  },
+  "src/modules/references/repositories/in-memory-reference-repositories.ts": {
+    "mtime": 1787144053.2629545,
+    "seen": 1787294930.815995,
+    "ast_hash": "731fad857089a812817c82ad537af930",
+    "semantic_hash": "731fad857089a812817c82ad537af930"
+  },
+  "src/modules/references/services/dekel-case-estimate-service.ts": {
+    "mtime": 1787144053.2629545,
+    "seen": 1787294930.815995,
+    "ast_hash": "98057ac787661cad7748f3f2d3fb0d6d",
+    "semantic_hash": "98057ac787661cad7748f3f2d3fb0d6d"
+  },
+  "src/modules/references/services/dekel-catalog-service.ts": {
+    "mtime": 1787247733.9352303,
+    "seen": 1787294930.815995,
+    "ast_hash": "e57f6f4c03cc6f88dc758c981a580e1f",
+    "semantic_hash": "e57f6f4c03cc6f88dc758c981a580e1f"
+  },
+  "src/modules/references/services/dekel-estimate-preview.ts": {
+    "mtime": 1787144053.2648246,
+    "seen": 1787294930.815995,
+    "ast_hash": "d969db9202f6ee97df9b7f2798931e56",
+    "semantic_hash": "d969db9202f6ee97df9b7f2798931e56"
+  },
+  "src/modules/references/services/dekel-matching-service.ts": {
+    "mtime": 1787144053.2648246,
+    "seen": 1787294930.815995,
+    "ast_hash": "81d4c4a27c95b192798ca616e939885b",
+    "semantic_hash": "81d4c4a27c95b192798ca616e939885b"
+  },
+  "src/modules/references/services/dekel-pricebook-adapter.ts": {
+    "mtime": 1787144053.2648246,
+    "seen": 1787294930.815995,
+    "ast_hash": "4cd0edeb656dd245d5ec74605bcba325",
+    "semantic_hash": "4cd0edeb656dd245d5ec74605bcba325"
+  },
+  "src/modules/references/services/mavnadim-catalog-service.ts": {
+    "mtime": 1787144053.2667007,
+    "seen": 1787294930.815995,
+    "ast_hash": "f2a994e4beccc5056f0dfbffcf0273e1",
+    "semantic_hash": "f2a994e4beccc5056f0dfbffcf0273e1"
+  },
+  "src/modules/references/services/mavnadim-dekel-package-service.ts": {
+    "mtime": 1787234859.5422666,
+    "seen": 1787294930.815995,
+    "ast_hash": "7e71eddf4c975e5f9992e94a81506852",
+    "semantic_hash": "7e71eddf4c975e5f9992e94a81506852"
+  },
+  "src/modules/references/services/mavnadim-matching-service.ts": {
+    "mtime": 1787144053.267825,
+    "seen": 1787294930.815995,
+    "ast_hash": "66745268923a878081679ff9151aa6d5",
+    "semantic_hash": "66745268923a878081679ff9151aa6d5"
+  },
+  "src/modules/references/services/openxml-dekel-reader.ts": {
+    "mtime": 1787144053.2688234,
+    "seen": 1787294930.815995,
+    "ast_hash": "b35679dfed840e82688c23736bca81ee",
+    "semantic_hash": "b35679dfed840e82688c23736bca81ee"
+  },
+  "src/modules/references/services/professional-knowledge-service.ts": {
+    "mtime": 1787243831.3028474,
+    "seen": 1787294930.815995,
+    "ast_hash": "ad2e50ba3533ffb914178b4b12344d72",
+    "semantic_hash": "ad2e50ba3533ffb914178b4b12344d72"
+  },
+  "src/modules/skills/services/skill-orchestrator-service.ts": {
+    "mtime": 1787234924.1308227,
+    "seen": 1787294930.815995,
+    "ast_hash": "fef8cda298ad7c951291c0063406a558",
+    "semantic_hash": "fef8cda298ad7c951291c0063406a558"
+  },
+  "src/server.ts": {
+    "mtime": 1787234499.0843463,
+    "seen": 1787294930.815995,
+    "ast_hash": "4aa279a1fe64e6b6d680cacc82c877a3",
+    "semantic_hash": "4aa279a1fe64e6b6d680cacc82c877a3"
+  },
+  "src/shared/errors/application-error.ts": {
+    "mtime": 1787144053.2718465,
+    "seen": 1787294930.815995,
+    "ast_hash": "e4a15adec47b0a2f5163cf3a2fa783fd",
+    "semantic_hash": "e4a15adec47b0a2f5163cf3a2fa783fd"
+  },
+  "src/shared/http/base-controller.ts": {
+    "mtime": 1787144053.2731798,
+    "seen": 1787294930.815995,
+    "ast_hash": "1a6261b1bf006fff44978ebad66b9790",
+    "semantic_hash": "1a6261b1bf006fff44978ebad66b9790"
+  },
+  "tests/local-workspace-api.test.ts": {
+    "mtime": 1787291616.9243205,
+    "seen": 1787294930.815995,
+    "ast_hash": "58298234edd2a821c3792736e93bf8a4",
+    "semantic_hash": "58298234edd2a821c3792736e93bf8a4"
+  },
+  "tests/local-workspace.test.ts": {
+    "mtime": 1787292098.8940957,
+    "seen": 1787294930.815995,
+    "ast_hash": "4c650c443fea3db413791c8e632cdf76",
+    "semantic_hash": "4c650c443fea3db413791c8e632cdf76"
+  },
+  "tests/professional-knowledge.test.ts": {
+    "mtime": 1787243904.839517,
+    "seen": 1787294930.815995,
+    "ast_hash": "e95f0acdd4a66d140a7cd624b661ee24",
+    "semantic_hash": "e95f0acdd4a66d140a7cd624b661ee24"
+  },
+  "tests/run-tests.ts": {
+    "mtime": 1787234924.1350462,
+    "seen": 1787294930.815995,
+    "ast_hash": "a5fc1de13329823815c6bed46ef27d97",
+    "semantic_hash": "a5fc1de13329823815c6bed46ef27d97"
+  },
+  "tests/ui-calculations.test.mjs": {
+    "mtime": 1787248225.5535514,
+    "seen": 1787294930.815995,
+    "ast_hash": "63034ea37bdf99158f1ddd5b92e47549",
+    "semantic_hash": "63034ea37bdf99158f1ddd5b92e47549"
+  },
+  "tests/ui-workspace.test.mjs": {
+    "mtime": 1787292385.4770844,
+    "seen": 1787294930.815995,
+    "ast_hash": "0173d43c5d4a2e91b09ff484b5f295a1",
+    "semantic_hash": "0173d43c5d4a2e91b09ff484b5f295a1"
+  },
+  "tsconfig.json": {
+    "mtime": 1787232402.3777125,
+    "seen": 1787294930.815995,
+    "ast_hash": "7f7ec508a5d92b3ddeccb60d1cf73bc1",
+    "semantic_hash": "7f7ec508a5d92b3ddeccb60d1cf73bc1"
+  },
+  "ANCILLARY-WORKS-POLICY.md": {
+    "mtime": 1787144049.8615682,
+    "seen": 1787294930.815995,
+    "ast_hash": "4ebe92b8ba8722325953a95c9357e789",
+    "semantic_hash": "4ebe92b8ba8722325953a95c9357e789"
+  },
+  "BACKLOG.md": {
+    "mtime": 1787144049.862567,
+    "seen": 1787294930.815995,
+    "ast_hash": "29218f7625d67560e9ae1abee125c2d6",
+    "semantic_hash": "29218f7625d67560e9ae1abee125c2d6"
+  },
+  "GENERAL-SKILLS-SOP.md": {
+    "mtime": 1787144049.862567,
+    "seen": 1787294930.815995,
+    "ast_hash": "fb235f6bff130ecd7e5e4387113b50f5",
+    "semantic_hash": "fb235f6bff130ecd7e5e4387113b50f5"
+  },
+  "HOMER/DUGMAOT AVODA/\u05ea\u05d0\u05d5\u05e8.txt": {
+    "mtime": 1787144051.6872933,
+    "seen": 1787294930.815995,
+    "ast_hash": "01fe19980c12bdb759a0de1567845585",
+    "semantic_hash": "01fe19980c12bdb759a0de1567845585"
+  },
+  "MASMACH-SECTION-CONTRACTS.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "556807a20e0984f3867a501ce9fd4bb7",
+    "semantic_hash": "556807a20e0984f3867a501ce9fd4bb7"
+  },
+  "PRD.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "b36ccb3ffe850820a6aa07734e1f92c4",
+    "semantic_hash": "b36ccb3ffe850820a6aa07734e1f92c4"
+  },
+  "PRD.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "52ec7e56fe9f25bd40b8c017e6585a6a",
+    "semantic_hash": "52ec7e56fe9f25bd40b8c017e6585a6a"
+  },
+  "PROJECT-SKILLS.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "5f8216922ff16f5f371f928ee914fc07",
+    "semantic_hash": "5f8216922ff16f5f371f928ee914fc07"
+  },
+  "QUANTITY-RULE-MATRIX.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "d48532a8cd4c55d2ba6085ea65c4c4ff",
+    "semantic_hash": "d48532a8cd4c55d2ba6085ea65c4c4ff"
+  },
+  "RAAEN.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "3e1b9717b705b6865bfd1d545d98b44c",
+    "semantic_hash": "3e1b9717b705b6865bfd1d545d98b44c"
+  },
+  "README.md": {
+    "mtime": 1787292421.5624068,
+    "seen": 1787294930.815995,
+    "ast_hash": "44115798fcd84919512812b9ff46f639",
+    "semantic_hash": "44115798fcd84919512812b9ff46f639"
+  },
+  "ROADMAP.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "aa5bc66fedda8e9b71953b137dd4d84d",
+    "semantic_hash": "aa5bc66fedda8e9b71953b137dd4d84d"
+  },
+  "SKILLS DOWNLOAD.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "6b45723b1775491ed2101544718b1087",
+    "semantic_hash": "6b45723b1775491ed2101544718b1087"
+  },
+  "TEXT-POLICY-MATRIX.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "5c2f732ee366faf33550d0b74c68b0d2",
+    "semantic_hash": "5c2f732ee366faf33550d0b74c68b0d2"
+  },
+  "TZ.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "957969f40a8a4983c8a40a2af931c271",
+    "semantic_hash": "957969f40a8a4983c8a40a2af931c271"
+  },
+  "WORDING-RULES-BY-SECTION.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "8e3f7060d310a49d200635e835702e25",
+    "semantic_hash": "8e3f7060d310a49d200635e835702e25"
+  },
+  "docs/BACKEND-RUNBOOK.md": {
+    "mtime": 1787292421.5653493,
+    "seen": 1787294930.815995,
+    "ast_hash": "2eac7e20d11853ab986d2f8c7cd2d145",
+    "semantic_hash": "2eac7e20d11853ab986d2f8c7cd2d145"
+  },
+  "docs/architecture/ADR-001-professional-reference-retrieval.md": {
+    "mtime": 1787243868.049833,
+    "seen": 1787294930.815995,
+    "ast_hash": "55b98f2a57138de6c1c00dc56e9ba473",
+    "semantic_hash": "55b98f2a57138de6c1c00dc56e9ba473"
+  },
+  "docs/archive/source-inputs/PRD.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "77fd9b1f2cceca767d9ab94190faa945",
+    "semantic_hash": "77fd9b1f2cceca767d9ab94190faa945"
+  },
+  "docs/archive/source-inputs/RAAEN.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "1b376ebec8c73deeb2be7f335ca3d4c7",
+    "semantic_hash": "1b376ebec8c73deeb2be7f335ca3d4c7"
+  },
+  "docs/archive/source-inputs/SKILLS DOWNLOAD.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "1852d7d972f004c5a45906cb0a360efd",
+    "semantic_hash": "1852d7d972f004c5a45906cb0a360efd"
+  },
+  "docs/archive/source-inputs/TZ.md.txt": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "647f388828c83a75b6a23013bfb63639",
+    "semantic_hash": "647f388828c83a75b6a23013bfb63639"
+  },
+  "docs/reference/README.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "873713bc55dc53f97dfdfe366823fba5",
+    "semantic_hash": "873713bc55dc53f97dfdfe366823fba5"
+  },
+  "docs/reference/policies/ANCILLARY-WORKS-POLICY.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "3853cf8675b6d940e3503cd89b540e5e",
+    "semantic_hash": "3853cf8675b6d940e3503cd89b540e5e"
+  },
+  "docs/reference/policies/MASMACH-SECTION-CONTRACTS.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "a4a84ad4e07c2e2f8bfe0f01fd9ad1f7",
+    "semantic_hash": "a4a84ad4e07c2e2f8bfe0f01fd9ad1f7"
+  },
+  "docs/reference/policies/QUANTITY-RULE-MATRIX.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "f92d321e39b3f86489265b4d383343d4",
+    "semantic_hash": "f92d321e39b3f86489265b4d383343d4"
+  },
+  "docs/reference/policies/TEXT-POLICY-MATRIX.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "e573525088c4f0afe1f72243fa1b07fc",
+    "semantic_hash": "e573525088c4f0afe1f72243fa1b07fc"
+  },
+  "docs/reference/policies/WORDING-RULES-BY-SECTION.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "fbaa9da896ded03b78eccb9abab4b232",
+    "semantic_hash": "fbaa9da896ded03b78eccb9abab4b232"
+  },
+  "docs/reference/process/GENERAL-SKILLS-SOP.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "a85529a844052960ada06ce09c55a5c1",
+    "semantic_hash": "a85529a844052960ada06ce09c55a5c1"
+  },
+  "docs/reference/product/BACKLOG.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "e09bac528f2708c93ec97e4f339be25e",
+    "semantic_hash": "e09bac528f2708c93ec97e4f339be25e"
+  },
+  "docs/reference/product/ROADMAP.md": {
+    "mtime": 1787144052.5785682,
+    "seen": 1787294930.815995,
+    "ast_hash": "5f1feedff234e583c4754380a9c419a5",
+    "semantic_hash": "5f1feedff234e583c4754380a9c419a5"
+  },
+  "public/index.html": {
+    "mtime": 1787291493.653851,
+    "seen": 1787294930.815995,
+    "ast_hash": "2d592b72d225488d813826bfef470ee7",
+    "semantic_hash": "2d592b72d225488d813826bfef470ee7"
+  },
+  "HOMER/3210/\u05d7\u05d5\u05d6\u05d4+\u05de\u05d3\u05e3+2019.pdf": {
+    "mtime": 1787241652.463894,
+    "seen": 1787294930.815995,
+    "ast_hash": "479dd90847be91c33320b84654acbf9e",
+    "semantic_hash": "479dd90847be91c33320b84654acbf9e"
+  },
+  "HOMER/BLUE BOOK/\u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05dc\u05e4\u05e8\u05e7 04   \u05d0\u05d5\u05d2\u05d5\u05e1\u05d8 1997.pdf": {
+    "mtime": 1787241741.09175,
+    "seen": 1787294930.815995,
+    "ast_hash": "6a73bd38771d0a5314893629cecdd565",
+    "semantic_hash": "6a73bd38771d0a5314893629cecdd565"
+  },
+  "HOMER/BLUE BOOK/\u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05dc\u05e4\u05e8\u05e7 57   \u05d3\u05e6\u05de\u05d1\u05e8 2007.pdf": {
+    "mtime": 1787241742.0690393,
+    "seen": 1787294930.815995,
+    "ast_hash": "edc9c8d677e188c1eb1ad0f7371dfb60",
+    "semantic_hash": "edc9c8d677e188c1eb1ad0f7371dfb60"
+  },
+  "HOMER/BLUE BOOK/\u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05dc\u05e4\u05e8\u05e7 55 .pdf": {
+    "mtime": 1787241742.014286,
+    "seen": 1787294930.815995,
+    "ast_hash": "3c8c9caecddf3859741e9cdc1338528d",
+    "semantic_hash": "3c8c9caecddf3859741e9cdc1338528d"
+  },
+  "HOMER/BLUE BOOK/\u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 2 \u05dc\u05e4\u05e8\u05e7 55 \u05d9\u05d5\u05dc\u05d9 2007.pdf": {
+    "mtime": 1787241742.0371516,
+    "seen": 1787294930.815995,
+    "ast_hash": "8b6125dc3e48e5012b6a2dceabd39b8d",
+    "semantic_hash": "8b6125dc3e48e5012b6a2dceabd39b8d"
+  },
+  "HOMER/BLUE BOOK/\u05dc\u05d5\u05d7 \u05e4\u05e8\u05e1\u05d5\u05de\u05d9\u05dd \u05d8\u05d1\u05ea \u05ea\u05e9\u05e4\u05d5 1.1.2026.pdf": {
+    "mtime": 1787241742.364991,
+    "seen": 1787294930.815995,
+    "ast_hash": "8042903d5ddd92a7f3461189fd5f1201",
+    "semantic_hash": "8042903d5ddd92a7f3461189fd5f1201"
+  },
+  "HOMER/BLUE BOOK/\u05de\u05e1\u05de\u05db\u05d9\u05dd \u05d4\u05e0\u05d3\u05e1\u05d9\u05d9\u05dd  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2006.pdf": {
+    "mtime": 1787241742.3476565,
+    "seen": 1787294930.815995,
+    "ast_hash": "e6560a1da5dead286b0fddb7c9bf4a38",
+    "semantic_hash": "e6560a1da5dead286b0fddb7c9bf4a38"
+  },
+  "HOMER/BLUE BOOK/\u05de\u05e4\u05e8\u05d8 55 - \u05de\u05d4\u05d3\u05d5\u05e8\u05d4 2000 .pdf": {
+    "mtime": 1787241742.0064182,
+    "seen": 1787294930.815995,
+    "ast_hash": "0da3e3a6ce70ea499379ab67095d0217",
+    "semantic_hash": "0da3e3a6ce70ea499379ab67095d0217"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 00  \u05d3\u05e6\u05de\u05d1\u05e8 2009.pdf": {
+    "mtime": 1787241741.014294,
+    "seen": 1787294930.815995,
+    "ast_hash": "71ce72b5b221686a9beae0b95ab67dd2",
+    "semantic_hash": "71ce72b5b221686a9beae0b95ab67dd2"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 01 \u05e1\u05d9\u05d5\u05d5\u05df \u05ea\u05e9\u05e2\u05d0 \u05d9\u05d5\u05e0\u05d9 2011.pdf": {
+    "mtime": 1787241741.0411856,
+    "seen": 1787294930.815995,
+    "ast_hash": "5a425153bae4749c942427c6f2e6eadd",
+    "semantic_hash": "5a425153bae4749c942427c6f2e6eadd"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 02 - \u05e9\u05d1\u05d8 \u05ea\u05e9\u05e2\u05d2 \u05e4\u05d1\u05e8\u05d5\u05d0\u05e8 2013.pdf": {
+    "mtime": 1787241741.0548742,
+    "seen": 1787294930.815995,
+    "ast_hash": "01d0db3847598920c60007b3fe3f7954",
+    "semantic_hash": "01d0db3847598920c60007b3fe3f7954"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 03 \u05de\u05d5\u05e6\u05e8\u05d9 \u05d1\u05d8\u05d5\u05df \u05d8\u05e8\u05d5\u05de\u05d9 \u05db\u05e1\u05dc\u05d5 \u05ea\u05e9\u05e2\u05d8 \u05e0\u05d5\u05d1\u05de\u05d1\u05e8 2018.pdf": {
+    "mtime": 1787241741.069923,
+    "seen": 1787294930.815995,
+    "ast_hash": "555c5c0ab13482ff797fb759f5cbe40c",
+    "semantic_hash": "555c5c0ab13482ff797fb759f5cbe40c"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 04 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1995.pdf": {
+    "mtime": 1787241741.073339,
+    "seen": 1787294930.815995,
+    "ast_hash": "b2cb04ad540cf2329160484cf56f73ae",
+    "semantic_hash": "b2cb04ad540cf2329160484cf56f73ae"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 05 - \u05e2\u05d1\u05d5\u05d3\u05d5\u05ea \u05d0\u05d9\u05d8\u05d5\u05dd \u05db\u05e1\u05dc\u05d5 \u05ea\u05e9\u05e4 \u05d3\u05e6\u05de\u05d1\u05e8 2019.pdf": {
+    "mtime": 1787241741.1251297,
+    "seen": 1787294930.815995,
+    "ast_hash": "9a59d0747bb0487cc68151e1e09c7d44",
+    "semantic_hash": "9a59d0747bb0487cc68151e1e09c7d44"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 06 \u05d9\u05d5\u05dc\u05d9 2008 .pdf": {
+    "mtime": 1787241741.1412024,
+    "seen": 1787294930.815995,
+    "ast_hash": "4615c8dce5c85e76ceee9b16ac6ed86b",
+    "semantic_hash": "4615c8dce5c85e76ceee9b16ac6ed86b"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 07 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05ea\u05de\u05d5\u05d6 \u05ea\u05e9\u05e2\u05d6 \u05d9\u05d5\u05dc\u05d9 2017.pdf": {
+    "mtime": 1787241741.1809375,
+    "seen": 1787294930.815995,
+    "ast_hash": "f1c1536e48bdc98dc96a7304a85b555b",
+    "semantic_hash": "f1c1536e48bdc98dc96a7304a85b555b"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 07 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 2  \u05d8\u05d1\u05ea \u05ea\u05e9\u05e4\u05d1 \u05d3\u05e6\u05de\u05d1\u05e8 2021.pdf": {
+    "mtime": 1787241741.200348,
+    "seen": 1787294930.815995,
+    "ast_hash": "912cf6f803a8a04f8589ac63e2a97fc2",
+    "semantic_hash": "912cf6f803a8a04f8589ac63e2a97fc2"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 07 \u05de\u05ea\u05e7\u05e0\u05d9 \u05ea\u05d1\u05e8\u05d5\u05d0\u05d4 \u05d8\u05d1\u05ea \u05ea\u05e9\u05e2\u05d6 \u05d9\u05e0\u05d5\u05d0\u05e8 2017.pdf": {
+    "mtime": 1787241741.1750562,
+    "seen": 1787294930.815995,
+    "ast_hash": "23a7cc922dbc797a675a403f4a79b526",
+    "semantic_hash": "23a7cc922dbc797a675a403f4a79b526"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 08 - \u05de\u05ea\u05e7\u05e0\u05d9 \u05d7\u05e9\u05de\u05dc - \u05d0\u05dc\u05d5\u05dc \u05ea\u05e9\u05e4\u05d1 \u05e1\u05e4\u05d8\u05de\u05d1\u05e8 2022.pdf": {
+    "mtime": 1787241741.2919521,
+    "seen": 1787294930.815995,
+    "ast_hash": "7686ed9cf67f70dc724103666cd39d00",
+    "semantic_hash": "7686ed9cf67f70dc724103666cd39d00"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 09 -  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2007.pdf": {
+    "mtime": 1787241741.314973,
+    "seen": 1787294930.815995,
+    "ast_hash": "e5dbb4c7eac5894e4392f6231ee746f4",
+    "semantic_hash": "e5dbb4c7eac5894e4392f6231ee746f4"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 09 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05ea\u05de\u05d5\u05d6 \u05ea\u05e9\u05e4 \u05d9\u05d5\u05dc\u05d9 2020.pdf": {
+    "mtime": 1787241741.3230207,
+    "seen": 1787294930.815995,
+    "ast_hash": "4f0216bbecde7e1c432faa328acbae7e",
+    "semantic_hash": "4f0216bbecde7e1c432faa328acbae7e"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 10 \u05e8\u05d9\u05e6\u05d5\u05e3 \u05d5\u05d7\u05d9\u05e4\u05d5\u05d9 \u05ea\u05e9\u05e8\u05d9 \u05ea\u05e9\u05e2\u05d8 \u05e1\u05e4\u05d8\u05de\u05d1\u05e8 2018.pdf": {
+    "mtime": 1787241741.3631287,
+    "seen": 1787294930.815995,
+    "ast_hash": "44a43ca7fadb5b711b97a77ae36e51fd",
+    "semantic_hash": "44a43ca7fadb5b711b97a77ae36e51fd"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 11  2005.pdf": {
+    "mtime": 1787241741.3754108,
+    "seen": 1787294930.815995,
+    "ast_hash": "b45068eef2b7788369598e5b325e590d",
+    "semantic_hash": "b45068eef2b7788369598e5b325e590d"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 12 \u05d9\u05d5\u05dc\u05d9 2008  .pdf": {
+    "mtime": 1787241741.3932078,
+    "seen": 1787294930.815995,
+    "ast_hash": "93f6b723466a1549ef29f435110d1aed",
+    "semantic_hash": "93f6b723466a1549ef29f435110d1aed"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 13 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2006.pdf": {
+    "mtime": 1787241741.413173,
+    "seen": 1787294930.815995,
+    "ast_hash": "0eebcafd2a068bedaaf97fd5f93f7f44",
+    "semantic_hash": "0eebcafd2a068bedaaf97fd5f93f7f44"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 14 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1991.pdf": {
+    "mtime": 1787241741.430935,
+    "seen": 1787294930.815995,
+    "ast_hash": "50c42dfcf07c2d1c0495b58a5725b1f2",
+    "semantic_hash": "50c42dfcf07c2d1c0495b58a5725b1f2"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 15 \u05d0\u05d9\u05d9\u05e8 \u05ea\u05e9\u05e2\u05d0 \u05de\u05d0\u05d9 2011.pdf": {
+    "mtime": 1787241741.4586904,
+    "seen": 1787294930.815995,
+    "ast_hash": "ae47eae1f5f81b29ec2c0291ec32e727",
+    "semantic_hash": "ae47eae1f5f81b29ec2c0291ec32e727"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 15 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05ea\u05de\u05d5\u05d6 \u05ea\u05e9\u05e2\u05d1 \u05d9\u05d5\u05dc\u05d9 2012.pdf": {
+    "mtime": 1787241741.4586904,
+    "seen": 1787294930.815995,
+    "ast_hash": "3392bcaeeb7e544c4a09363fa357f01d",
+    "semantic_hash": "3392bcaeeb7e544c4a09363fa357f01d"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 16 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1992.pdf": {
+    "mtime": 1787241741.4862812,
+    "seen": 1787294930.815995,
+    "ast_hash": "3d5ef60ef9b474abda0d7d16ce9606a3",
+    "semantic_hash": "3d5ef60ef9b474abda0d7d16ce9606a3"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 17 - \u05de\u05e8\u05d7\u05e9\u05d5\u05d5\u05df \u05ea\u05e9\u05e2\u05d3 \u05d0\u05d5\u05e7\u05d8\u05d5\u05d1\u05e8 2013.pdf": {
+    "mtime": 1787241741.5052416,
+    "seen": 1787294930.815995,
+    "ast_hash": "e1c10daa3f9e0de1adc799d88abd621d",
+    "semantic_hash": "e1c10daa3f9e0de1adc799d88abd621d"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 18 \u05ea\u05e9\u05ea\u05d9\u05d5\u05ea \u05ea\u05e7\u05e9\u05d5\u05e8\u05ea \u05e9\u05d1\u05d8 \u05ea\u05e9\u05e4\u05d5 \u05e4\u05d1\u05e8\u05d5\u05d0\u05e8 2026.pdf": {
+    "mtime": 1787241741.5483189,
+    "seen": 1787294930.815995,
+    "ast_hash": "2a72ed3a598e2970306766ef7301934c",
+    "semantic_hash": "2a72ed3a598e2970306766ef7301934c"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 19 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2000.pdf": {
+    "mtime": 1787241741.5593028,
+    "seen": 1787294930.815995,
+    "ast_hash": "cdd3457443dafe6329206478632d7de0",
+    "semantic_hash": "cdd3457443dafe6329206478632d7de0"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 20  \u05d9\u05d5\u05dc\u05d9 2008 .pdf": {
+    "mtime": 1787241741.5689218,
+    "seen": 1787294930.815995,
+    "ast_hash": "bc824f948a20e17c74c78928490507d0",
+    "semantic_hash": "bc824f948a20e17c74c78928490507d0"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 20 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05e9\u05d1\u05d8 \u05ea\u05e9\u05e2\u05d1 \u05e4\u05d1\u05e8\u05d5\u05d0\u05e8 2012.pdf": {
+    "mtime": 1787241741.5734103,
+    "seen": 1787294930.815995,
+    "ast_hash": "9f86652a1bd34df05f43c5930a9e5515",
+    "semantic_hash": "9f86652a1bd34df05f43c5930a9e5515"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 21 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1995.pdf": {
+    "mtime": 1787241741.5879393,
+    "seen": 1787294930.815995,
+    "ast_hash": "e10b460b26ba39aad390158f15579e75",
+    "semantic_hash": "e10b460b26ba39aad390158f15579e75"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 22  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2007.pdf": {
+    "mtime": 1787241741.5975735,
+    "seen": 1787294930.815995,
+    "ast_hash": "bb56b49dbb95d28b6b4b960ddf63e5f8",
+    "semantic_hash": "bb56b49dbb95d28b6b4b960ddf63e5f8"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 23 \u05dc\u05d0\u05d9\u05e0\u05d8\u05e8\u05e0\u05d8 30.10.2008 .pdf": {
+    "mtime": 1787241741.6134508,
+    "seen": 1787294930.815995,
+    "ast_hash": "17c64e5e2b769b6c923fda0e2940e411",
+    "semantic_hash": "17c64e5e2b769b6c923fda0e2940e411"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 26  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2005.pdf": {
+    "mtime": 1787241741.6252928,
+    "seen": 1787294930.815995,
+    "ast_hash": "a2781ebbcca39fb7be849675d09753fc",
+    "semantic_hash": "a2781ebbcca39fb7be849675d09753fc"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 34 \u05d2\u05d9\u05dc\u05d5\u05d9 \u05d5\u05db\u05d9\u05d1\u05d5\u05d9 \u05d0\u05e9 \u05d8\u05d1\u05ea \u05ea\u05e9\u05e2\u05d8 \u05d9\u05e0\u05d5\u05d0\u05e8 2019.pdf": {
+    "mtime": 1787241741.6530833,
+    "seen": 1787294930.815995,
+    "ast_hash": "d2a4355666848b925f96a5cdb5f9a6bb",
+    "semantic_hash": "d2a4355666848b925f96a5cdb5f9a6bb"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 34 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05ea\u05de\u05d5\u05d6 \u05ea\u05e9\u05e4 \u05d9\u05d5\u05dc\u05d9 2020.pdf": {
+    "mtime": 1787241741.6697347,
+    "seen": 1787294930.815995,
+    "ast_hash": "1376c8db2bdbc9233da651f32ebeca16",
+    "semantic_hash": "1376c8db2bdbc9233da651f32ebeca16"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 35  \u05d1\u05e7\u05e8\u05ea \u05de\u05e2\u05e8\u05db\u05d5\u05ea \u05d1\u05de\u05ea\u05e7\u05df \u05e9\u05d1\u05d8 \u05ea\u05e9\u05e2\u05d8 \u05e4\u05d1\u05e8\u05d5\u05d0\u05e8 2019.pdf": {
+    "mtime": 1787241741.7056766,
+    "seen": 1787294930.815995,
+    "ast_hash": "9f6a40aeb50889650f9264303558fc77",
+    "semantic_hash": "9f6a40aeb50889650f9264303558fc77"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 36  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1988.pdf": {
+    "mtime": 1787241741.708677,
+    "seen": 1787294930.815995,
+    "ast_hash": "82dc83bb6ccec27267efb52e2a812862",
+    "semantic_hash": "82dc83bb6ccec27267efb52e2a812862"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 37 - \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1990.pdf": {
+    "mtime": 1787241741.7306163,
+    "seen": 1787294930.815995,
+    "ast_hash": "a61effd2b2a53afd04a66f0dd76740dd",
+    "semantic_hash": "a61effd2b2a53afd04a66f0dd76740dd"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 39 \u05d3\u05d9\u05d6\u05dc \u05d2\u05e0\u05e8\u05d8\u05d5\u05e8 \u05d8\u05d1\u05ea \u05ea\u05e9\u05e4\u05d2 \u05d9\u05e0\u05d5\u05d0\u05e8 2023.pdf": {
+    "mtime": 1787241741.7642186,
+    "seen": 1787294930.815995,
+    "ast_hash": "ea596036339be6e4fce7057e7405e19b",
+    "semantic_hash": "ea596036339be6e4fce7057e7405e19b"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 40 - \u05d3\u05e6\u05de\u05d1\u05e8 2009 .pdf": {
+    "mtime": 1787241741.7746594,
+    "seen": 1787294930.815995,
+    "ast_hash": "3492b79eb154633ee608103bbd5afd5f",
+    "semantic_hash": "3492b79eb154633ee608103bbd5afd5f"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 41 \u05d2\u05d9\u05e0\u05d5\u05df \u05d5\u05d4\u05e9\u05e7\u05d9\u05d4 \u05d0\u05d1 \u05ea\u05e9\u05e4\u05d4 \u05d0\u05d5\u05d2\u05d5\u05e1\u05d8 2025.pdf": {
+    "mtime": 1787241741.7919805,
+    "seen": 1787294930.815995,
+    "ast_hash": "efe14165b8ba90571b17992f558c89b4",
+    "semantic_hash": "efe14165b8ba90571b17992f558c89b4"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 41.5 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2001.pdf": {
+    "mtime": 1787241741.8238997,
+    "seen": 1787294930.815995,
+    "ast_hash": "d4685f8d4ebe48c38306070c0644b83d",
+    "semantic_hash": "d4685f8d4ebe48c38306070c0644b83d"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 43  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2005.pdf": {
+    "mtime": 1787241741.8349583,
+    "seen": 1787294930.815995,
+    "ast_hash": "1f2cfebd92275a370b4df74a87b71c90",
+    "semantic_hash": "1f2cfebd92275a370b4df74a87b71c90"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 50 \u05de\u05e9\u05d8\u05d7\u05d9 \u05d1\u05d8\u05d5\u05df \u05ea\u05e9\u05e8\u05d9 \u05ea\u05e9\u05e2\u05d7 \u05d0\u05d5\u05e7\u05d8\u05d5\u05d1\u05e8 2017.pdf": {
+    "mtime": 1787241741.8554218,
+    "seen": 1787294930.815995,
+    "ast_hash": "681fc32ae902bd4d005335a9765d35c8",
+    "semantic_hash": "681fc32ae902bd4d005335a9765d35c8"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 51 \u05e2\u05d1\u05d5\u05d3\u05d5\u05ea \u05e1\u05dc\u05d9\u05dc\u05d4 \u05d0\u05d3\u05e8 \u05d1 \u05ea\u05e9\u05e2\u05d3 \u05de\u05e8\u05e5 2014.pdf": {
+    "mtime": 1787241741.9031024,
+    "seen": 1787294930.815995,
+    "ast_hash": "743a2da6146def382346c55946293080",
+    "semantic_hash": "743a2da6146def382346c55946293080"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 54 \u05e2\u05d1\u05d5\u05d3\u05d5\u05ea \u05de\u05e0\u05d4\u05d5\u05e8 \u05ea\u05de\u05d5\u05d6 \u05ea\u05e9\u05e4\u05d2 \u05d9\u05d5\u05dc\u05d9 2023.pdf": {
+    "mtime": 1787241741.9807062,
+    "seen": 1787294930.815995,
+    "ast_hash": "e5196dfb5814f470cac5555022b36a69",
+    "semantic_hash": "e5196dfb5814f470cac5555022b36a69"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 57  \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 1990.pdf": {
+    "mtime": 1787241742.0421388,
+    "seen": 1787294930.815995,
+    "ast_hash": "be510ea33e94d9b995eb5bbb36101e42",
+    "semantic_hash": "be510ea33e94d9b995eb5bbb36101e42"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 58-59 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 1 \u05d0\u05d3\u05e8 \u05d1' \u05ea\u05e9\u05e2\u05d5 \u05d0\u05e4\u05e8\u05d9\u05dc 2016.pdf": {
+    "mtime": 1787241742.125448,
+    "seen": 1787294930.815995,
+    "ast_hash": "2d59b1b76f34b9a192806cf680c593ae",
+    "semantic_hash": "2d59b1b76f34b9a192806cf680c593ae"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 58-59 \u05d3\u05e3 \u05ea\u05d9\u05e7\u05d5\u05df \u05de\u05e1 2 \u05ea\u05de\u05d5\u05d6 \u05ea\u05e9\u05e2\u05d6 \u05d9\u05d5\u05dc\u05d9 2017.pdf": {
+    "mtime": 1787241742.1160004,
+    "seen": 1787294930.815995,
+    "ast_hash": "88fec33b779ddfa337475b805f4fde4b",
+    "semantic_hash": "88fec33b779ddfa337475b805f4fde4b"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 58-59 \u05e0\u05d9\u05e1\u05df \u05ea\u05e9\u05e2\u05d4 \u05d0\u05e4\u05e8\u05d9\u05dc 2015.pdf": {
+    "mtime": 1787241742.0967858,
+    "seen": 1787294930.815995,
+    "ast_hash": "4fc7f4b99c1ef360b16273ebf99ecead",
+    "semantic_hash": "4fc7f4b99c1ef360b16273ebf99ecead"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 62 \u05e9\u05db\u05d1\u05d5\u05ea \u05de\u05d2\u05df \u05dc\u05d1\u05d9\u05e6\u05d5\u05e8\u05d9\u05dd \u05db\u05e1\u05dc\u05d5 \u05ea\u05e9\u05e2\u05d4 \u05d3\u05e6\u05de\u05d1\u05e8 2014.pdf": {
+    "mtime": 1787241742.1906314,
+    "seen": 1787294930.815995,
+    "ast_hash": "1e19c0c2921b555cf1d47519ef422ef6",
+    "semantic_hash": "1e19c0c2921b555cf1d47519ef422ef6"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 66 \u05de\u05d4\u05d3\u05d5\u05e8\u05d4 \u05e9\u05e0\u05d9\u05d9\u05d4 \u05d3\u05e6\u05de\u05d1\u05e8 2008 .pdf": {
+    "mtime": 1787241742.2059362,
+    "seen": 1787294930.815995,
+    "ast_hash": "8fbb754c1e4864798640e19f427dfb57",
+    "semantic_hash": "8fbb754c1e4864798640e19f427dfb57"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 67 \u05de\u05d4\u05d3\u05d5\u05e8\u05ea 2007.pdf": {
+    "mtime": 1787241742.217994,
+    "seen": 1787294930.815995,
+    "ast_hash": "dc85ae888ae1cd799caebdc34de03b0a",
+    "semantic_hash": "dc85ae888ae1cd799caebdc34de03b0a"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 81 \u05d1\u05d9\u05dd \u05dc\u05e0\u05d9\u05d4\u05d5\u05dc \u05ea\u05d9\u05d0\u05d5\u05dd \u05d5\u05d1\u05d9\u05e6\u05d5\u05e2 \u05e2\u05d1\u05d5\u05d3\u05d5\u05ea \u05d1\u05e0\u05d9\u05d9\u05d4 \u05ea\u05de\u05d5\u05d6 \u05ea.pdf": {
+    "mtime": 1787241742.2365294,
+    "seen": 1787294930.815995,
+    "ast_hash": "99be91868ed45eedea91117d1e661008",
+    "semantic_hash": "99be91868ed45eedea91117d1e661008"
+  },
+  "HOMER/BLUE BOOK/\u05e4\u05e8\u05e7 97 \u05d1\u05d8\u05d9\u05d7\u05d5\u05ea \u05d1\u05e2\u05d1\u05d5\u05d3\u05d5\u05ea \u05d1\u05e0\u05d9\u05d9\u05d4 \u05db\u05e1\u05dc\u05d5 \u05ea\u05e9\u05e4\u05d4 \u05d3\u05e6\u05de\u05d1\u05e8 2024.pdf": {
+    "mtime": 1787241742.2845433,
+    "seen": 1787294930.815995,
+    "ast_hash": "770795bf8102eec0bbeee310182879df",
+    "semantic_hash": "770795bf8102eec0bbeee310182879df"
+  },
+  "HOMER/DUGMAOT AVODA/\u05de\u05e6\u05d2\u05ea 23.05.26.pdf": {
+    "mtime": 1787144051.6690466,
+    "seen": 1787294930.815995,
+    "ast_hash": "d0252e502b5977cdf7b3e7bb04f793d3",
+    "semantic_hash": "d0252e502b5977cdf7b3e7bb04f793d3"
+  },
+  "HOMER/DUGMAOT AVODA/\u05de\u05e6\u05d2\u05ea \u05d0 23.05.26.pdf": {
+    "mtime": 1787144051.686303,
+    "seen": 1787294930.815995,
+    "ast_hash": "a991ece32e64fe7b4f9f82f4f52d7093",
+    "semantic_hash": "a991ece32e64fe7b4f9f82f4f52d7093"
+  },
+  "HOMER/KTAV KAMUET LE DUGMA/Aug 17, Doc 1.pdf": {
+    "mtime": 1787218271.372771,
+    "seen": 1787294930.815995,
+    "ast_hash": "7ecc02d68bc60c8f3f1d166785433f29",
+    "semantic_hash": "7ecc02d68bc60c8f3f1d166785433f29"
+  },
+  "HOMER/MISMAH LE DUGMA/MISMAH 1/\u05de\u05e1\u05de\u05da 1.pdf": {
+    "mtime": 1787217071.0787425,
+    "seen": 1787294930.815995,
+    "ast_hash": "fefc4c73673d0980ced3ab3b46170048",
+    "semantic_hash": "fefc4c73673d0980ced3ab3b46170048"
+  },
+  "HOMER/MISMAH LE DUGMA/MISMAH 2/\u05de\u05e1\u05de\u05da 2.pdf": {
+    "mtime": 1787217078.5715098,
+    "seen": 1787294930.815995,
+    "ast_hash": "d2ffa96dcfaa48116108d0286e0099e7",
+    "semantic_hash": "d2ffa96dcfaa48116108d0286e0099e7"
+  },
+  "HOMER/MISMAH LE DUGMA/MISMAH 3/\u05de\u05e1\u05de\u05da 3.pdf": {
+    "mtime": 1787217086.1875198,
+    "seen": 1787294930.815995,
+    "ast_hash": "d2dcc2930d79a26603b6990582309415",
+    "semantic_hash": "d2dcc2930d79a26603b6990582309415"
+  }
+}

@@ -41,10 +41,14 @@ const elements = {
   materialDialogTitle: document.querySelector("#material-dialog-title"),
   materialDetails: document.querySelector("#material-details"),
   materialDialogMessage: document.querySelector("#material-dialog-message"),
+  materialPreview: document.querySelector("#material-preview"),
+  materialContentEditor: document.querySelector("#material-content-editor"),
+  materialContentStatus: document.querySelector("#material-content-status"),
   dekelDialog: document.querySelector("#dekel-dialog"),
   dekelCatalogStatus: document.querySelector("#dekel-catalog-status"),
   dekelLines: document.querySelector("#dekel-lines"),
   dekelWarnings: document.querySelector("#dekel-warnings"),
+  dekelFinancialAudit: document.querySelector("#dekel-financial-audit"),
   dekelReviewSummary: document.querySelector("#dekel-review-summary"),
   dekelApplyButton: document.querySelector("#dekel-apply-button"),
   evidenceDialog: document.querySelector("#evidence-dialog"),
@@ -72,6 +76,7 @@ const elements = {
   confirmForm: document.querySelector("#confirm-form"),
   codexDialog: document.querySelector("#codex-dialog"),
   codexStatus: document.querySelector("#codex-status"),
+  chatStateMessage: document.querySelector("#chat-state-message"),
   chatMessages: document.querySelector("#chat-messages"),
   chatForm: document.querySelector("#chat-form"),
   chatInput: document.querySelector("#chat-input"),
@@ -84,9 +89,13 @@ let editing = false;
 let saveTimer;
 let toastTimer;
 let selectedMaterialId = "";
+let selectedMaterialContent = null;
 let selectedEvidenceNoteId = "";
 let currentDekelCatalog = null;
 let confirmResolver;
+let codexConnected = false;
+let chatSending = false;
+let codexConnectionMessage = "בודק את החיבור לחשבון הנוכחי...";
 
 function createDefaultProject() {
   const now = new Date().toISOString();
@@ -252,7 +261,7 @@ function renderMaterials() {
             </div>`,
         )
         .join("")
-    : '<div class="empty-state compact"><strong>אין עדיין חומרים</strong><span>הוסף PDF, Excel, מסמך או תמונה לפרויקט הזה.</span></div>';
+    : '<div class="empty-state compact"><strong>אין עדיין חומרים</strong><span>הוסף PDF, Excel, מסמך, תמונה או וידאו לפרויקט הזה.</span></div>';
 }
 
 function renderDocument() {
@@ -263,11 +272,11 @@ function renderDocument() {
   const editable = editing ? 'contenteditable="true"' : "";
   const boqPages = paginateBoqRows(summary.boq.rows);
   const evidenceIndex = buildEvidenceIndex(doc);
-  const totalPages = 3 + boqPages.length;
 
   elements.documentStage.innerHTML = `
     <article id="printable-document" aria-label="מסמך משמעויות">
-      <section class="document-page">
+      <section class="document-page narrative-page narrative-page-one">
+        <div class="page-content">
         ${renderEvidenceOverview(doc)}
         <h1 class="document-subject" ${editable} data-doc-field="subject">הנדון: ${escapeHtml(doc.subject)}</h1>
         ${narrativeSection(1, "רקע", doc.background, "background", editable)}
@@ -276,26 +285,48 @@ function renderDocument() {
           <h2>3. תכולת הפרויקט:</h2>
           <ol type="א">${doc.scope.map((item, index) => `<li ${editable} data-doc-array="scope" data-index="${index}">${escapeHtml(item)}</li>`).join("")}</ol>
         </section>
-        <footer class="page-footer">עמוד 1 מתוך ${totalPages}</footer>
+        </div>
+        <footer class="page-footer">עמוד 1 מתוך 3</footer>
       </section>
 
-      <section class="document-page">
-        <section class="document-section">
-          <h2>4. פירוט האומדן:</h2>
-          <table class="official-table">
-            <thead><tr><th style="width:9%">מס׳</th><th>סוג העבודה</th><th class="money" style="width:27%">סכום כולל מע״מ</th></tr></thead>
-            <tbody>${summary.groups.map((group) => `<tr><td class="center">${group.serialNumber}</td><td>${escapeHtml(group.category)}</td><td class="money">${formatMoney(group.totalWithVat)}</td></tr>`).join("")}</tbody>
-            <tfoot>
-              <tr><td colspan="2">סה״כ ביצוע כולל מע״מ</td><td class="money">${formatMoney(summary.boq.totalWithVat)}</td></tr>
-              ${summary.fees.map((fee) => `<tr><td colspan="2">${fee.label} (${formatPercent(fee.rate)})</td><td class="money">${formatMoney(fee.amount)}</td></tr>`).join("")}
-              <tr class="grand-total"><td colspan="2">סה״כ אומדן הפרויקט</td><td class="money">${formatMoney(summary.grandTotal)}</td></tr>
-            </tfoot>
-          </table>
-          <div class="estimate-details">
-            ${summary.groups.map((group) => `<details><summary>${escapeHtml(group.category)} — התאמה לכתב הכמויות</summary><ul>${group.sourceRows.map((row) => `<li>${escapeHtml(row.code)} · ${escapeHtml(row.description)} · ${formatMoney(row.amount)} לפני מע״מ</li>`).join("")}</ul></details>`).join("")}
+      <section class="document-page narrative-page narrative-page-two">
+        <div class="page-content">
+        <div class="estimate-page-grid">
+          <section class="document-section estimate-section">
+            <h2>4. פירוט האומדן:</h2>
+            <table class="official-table estimate-table">
+              <thead><tr><th style="width:9%">מס׳</th><th>סוג העבודה</th><th class="money" style="width:29%">סכום כולל מע״מ</th></tr></thead>
+              <tbody>${summary.groups.map((group) => `<tr><td class="center">${group.serialNumber}</td><td>${escapeHtml(group.category)}</td><td class="money">${formatMoney(group.totalWithVat)}</td></tr>`).join("")}</tbody>
+              <tfoot>
+                <tr><td colspan="2">סה״כ ביצוע כולל מע״מ</td><td class="money">${formatMoney(summary.boq.totalWithVat)}</td></tr>
+                ${summary.fees.map((fee) => `<tr><td colspan="2">${fee.label} (${formatPercent(fee.rate)})</td><td class="money">${formatMoney(fee.amount)}</td></tr>`).join("")}
+                <tr class="grand-total"><td colspan="2">סה״כ אומדן הפרויקט</td><td class="money">${formatMoney(summary.grandTotal)}</td></tr>
+              </tfoot>
+            </table>
+            <details class="estimate-source-details">
+              <summary>הצגת התאמת ${summary.groups.length} סוגי העבודה לכתב הכמויות</summary>
+              ${summary.groups.map((group) => `<section><h3>${escapeHtml(group.category)}</h3><ul>${group.sourceRows.map((row) => `<li>${escapeHtml(row.code)} · ${escapeHtml(row.description)} · ${formatMoney(row.amount)} לפני מע״מ</li>`).join("")}</ul></section>`).join("")}
+            </details>
+          </section>
+          <div class="estimate-support-column">
+            <section class="document-section estimate-notes-section"><h2>5. הערות לאומדן:</h2><ul>${doc.estimateNotes.map((item, index) => `<li ${editable} data-doc-array="estimateNotes" data-index="${index}">${escapeHtml(item)}</li>`).join("")}</ul></section>
           </div>
+        </div>
+        <section class="document-section">
+          <h2>6. לו״ז עקרוני לפרויקט:</h2>
+          <table class="official-table"><thead><tr><th>שלב</th><th>משך משוער</th><th>הערות</th></tr></thead><tbody>${doc.scheduleRows.map((row, index) => `<tr><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="stage">${escapeHtml(row.stage)}</td><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="duration">${escapeHtml(row.duration)}</td><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="notes">${escapeHtml(row.notes)}</td></tr>`).join("")}</tbody></table>
         </section>
-        <section class="document-section"><h2>5. הערות לאומדן:</h2><ul>${doc.estimateNotes.map((item, index) => `<li ${editable} data-doc-array="estimateNotes" data-index="${index}">${escapeHtml(item)}</li>`).join("")}</ul></section>
+        ${narrativeSection(7, "הערות ללו״ז", doc.scheduleNotes, "scheduleNotes", editable)}
+        </div>
+        <footer class="page-footer">עמוד 2 מתוך 3</footer>
+      </section>
+
+      <section class="document-page narrative-page narrative-page-three">
+        <div class="page-content">
+        <section class="document-section">
+          <h2>8. ניהול סיכונים:</h2>
+          <table class="official-table"><thead><tr><th>סיכון</th><th>מענה</th><th>אחריות</th></tr></thead><tbody>${doc.riskRows.map((row, index) => `<tr><td ${editable} data-table="riskRows" data-index="${index}" data-key="risk">${escapeHtml(row.risk)}</td><td ${editable} data-table="riskRows" data-index="${index}" data-key="response">${escapeHtml(row.response)}</td><td ${editable} data-table="riskRows" data-index="${index}" data-key="owner">${escapeHtml(row.owner)}</td></tr>`).join("")}</tbody></table>
+        </section>
         <section class="logic-box">
           <h3>הסבר חישוב</h3>
           <ol>
@@ -305,24 +336,27 @@ function renderDocument() {
             <li>דמי תכנון 7.4%, תפעול וניהול 5.4% ופיקוח 2.7% מחושבים מסה״כ הביצוע שכבר כולל מע״מ.</li>
           </ol>
         </section>
-        <footer class="page-footer">עמוד 2 מתוך ${totalPages}</footer>
-      </section>
-
-      <section class="document-page">
-        <section class="document-section">
-          <h2>6. לו״ז עקרוני לפרויקט:</h2>
-          <table class="official-table"><thead><tr><th>שלב</th><th>משך משוער</th><th>הערות</th></tr></thead><tbody>${doc.scheduleRows.map((row, index) => `<tr><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="stage">${escapeHtml(row.stage)}</td><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="duration">${escapeHtml(row.duration)}</td><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="notes">${escapeHtml(row.notes)}</td></tr>`).join("")}</tbody></table>
-        </section>
-        ${narrativeSection(7, "הערות ללו״ז", doc.scheduleNotes, "scheduleNotes", editable)}
-        <section class="document-section">
-          <h2>8. ניהול סיכונים:</h2>
-          <table class="official-table"><thead><tr><th>סיכון</th><th>מענה</th><th>אחריות</th></tr></thead><tbody>${doc.riskRows.map((row, index) => `<tr><td ${editable} data-table="riskRows" data-index="${index}" data-key="risk">${escapeHtml(row.risk)}</td><td ${editable} data-table="riskRows" data-index="${index}" data-key="response">${escapeHtml(row.response)}</td><td ${editable} data-table="riskRows" data-index="${index}" data-key="owner">${escapeHtml(row.owner)}</td></tr>`).join("")}</tbody></table>
-        </section>
         ${narrativeSection(9, "הערות נוספות", doc.additionalNotes, "additionalNotes", editable)}
-        <footer class="page-footer">עמוד 3 מתוך ${totalPages}</footer>
+        </div>
+        <footer class="page-footer">עמוד 3 מתוך 3</footer>
       </section>
-      ${renderBoqPages(boqPages, summary, totalPages, evidenceIndex)}
+      ${renderBoqPages(boqPages, summary, evidenceIndex)}
     </article>`;
+  requestAnimationFrame(fitDocumentPreview);
+}
+
+function fitDocumentPreview() {
+  const pages = elements.documentStage.querySelectorAll(".narrative-page");
+  if (!pages.length) return;
+  if (window.matchMedia("(max-width: 900px)").matches) {
+    pages.forEach((page) => { page.style.zoom = ""; });
+    return;
+  }
+  const a4LandscapeWidthPx = 297 / 25.4 * 96;
+  const availableWidth = Math.max(320, elements.documentStage.clientWidth - 8);
+  const scale = Math.min(1, availableWidth / a4LandscapeWidthPx);
+  pages.forEach((page) => { page.style.zoom = String(scale); });
+  if (document.body.classList.contains("document-focus")) elements.documentStage.scrollLeft = 0;
 }
 
 function narrativeSection(number, title, value, field, editable) {
@@ -370,11 +404,11 @@ function paginateBoqRows(rows) {
   return pages;
 }
 
-function renderBoqPages(pages, summary, totalPages, evidenceIndex) {
+function renderBoqPages(pages, summary, evidenceIndex) {
   return pages.map((rows, pageIndex) => {
     const isLastPage = pageIndex === pages.length - 1;
-    const pageNumber = pageIndex + 4;
     return `<section class="document-page boq-page">
+      <div class="page-content">
       <section class="document-section boq-section" aria-label="כתב כמויות${pageIndex ? " — המשך" : ""}">
         <table class="official-table boq-table">
           <colgroup><col class="boq-col-code"><col class="boq-col-description"><col class="boq-col-unit"><col class="boq-col-quantity"><col class="boq-col-price"><col class="boq-col-total">${editing ? '<col class="boq-col-actions">' : ""}</colgroup>
@@ -388,7 +422,8 @@ function renderBoqPages(pages, summary, totalPages, evidenceIndex) {
         </table>
         ${editing && isLastPage ? '<div class="document-controls"><button id="add-boq-row" class="secondary-button" type="button">הוספת שורה</button></div>' : ""}
       </section>
-      <footer class="page-footer">עמוד ${pageNumber} מתוך ${totalPages}</footer>
+      </div>
+      <footer class="page-footer">כתב כמויות · עמוד ${pageIndex + 1} מתוך ${pages.length}</footer>
     </section>`;
   }).join("");
 }
@@ -502,20 +537,36 @@ function renderChat() {
   const chat = project.chat;
   elements.chatMessages.innerHTML = chat
     .map(
-      (message) => `<div class="chat-message ${message.role}" dir="auto">${escapeHtml(message.text)}<time>${escapeHtml(shortDate(message.createdAt))}</time></div>${renderMessageProposals(project, message)}`,
+      (message) => `${renderChatMessage(message)}${renderMessageProposals(project, message)}`,
     )
     .join("");
   elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
 }
 
+function renderChatMessage(message) {
+  const retry = message.role === "assistant" && message.status === "failed" && message.retryOfMessageId
+    ? `<button class="chat-retry-button" data-retry-chat="${escapeAttribute(message.retryOfMessageId)}" type="button">נסה שוב</button>`
+    : "";
+  return `<div class="chat-message ${message.role} ${message.status || "complete"}" dir="auto"><span>${escapeHtml(message.text)}</span>${retry}<time>${escapeHtml(shortDate(message.createdAt))}</time></div>`;
+}
+
 function renderMessageProposals(project, message) {
   const proposals = (message.proposalIds || []).map((id) => project.proposals?.find((item) => item.id === id)).filter(Boolean);
-  return proposals.map((proposal) => `<section class="proposal-card ${proposal.status}">
-    <strong>${proposal.target === "document" ? `שינוי במסמך: ${escapeHtml(proposal.path)}` : "כלל חישוב/עבודה"}</strong>
+  return proposals.map((proposal) => {
+    const paths = proposal.changes?.map((change) => change.path) || (proposal.path ? proposal.path.split(",").map((path) => path.trim()).filter(Boolean) : []);
+    const changedSections = paths.length ? `<ul>${paths.map((path) => `<li>${escapeHtml(documentPathLabel(path))}</li>`).join("")}</ul>` : "";
+    return `<section class="proposal-card ${proposal.status}">
+    <strong>${proposal.target === "document" ? `שינוי מאוחד במסמך${paths.length ? ` · ${paths.length} חלקים` : ""}` : "כלל עבודה לפרויקט הנוכחי בלבד"}</strong>
     <p dir="auto">${escapeHtml(proposal.reason)}</p>
+    ${proposal.target === "document" ? changedSections : ""}
     ${proposal.target === "projectRule" ? `<blockquote dir="auto">${escapeHtml(proposal.rule)}</blockquote>` : ""}
-    ${proposal.status === "pending" ? `<div><button class="primary-button" data-apply-proposal="${proposal.id}" type="button">אישור</button>${proposal.target === "projectRule" ? `<button class="secondary-button" data-global-proposal="${proposal.id}" type="button">אישור לכל הפרויקטים</button>` : ""}<button class="secondary-button" data-reject-proposal="${proposal.id}" type="button">דחייה</button></div>` : `<small>${proposal.status === "applied" ? "אושר והוחל" : "נדחה"}</small>`}
-  </section>`).join("");
+    ${proposal.status === "pending" ? `<div><button class="primary-button" data-apply-proposal="${proposal.id}" type="button">אישור והחלה</button><button class="secondary-button" data-reject-proposal="${proposal.id}" type="button">דחייה</button></div>` : `<small>${proposal.status === "applied" ? "אושר והוחל" : "נדחה"}</small>`}
+  </section>`;
+  }).join("");
+}
+
+function documentPathLabel(path) {
+  return ({ subject: "נושא המסמך", background: "רקע", objective: "מטרת המסמך", scope: "תכולת הפרויקט", estimateNotes: "הערות לאומדן", scheduleRows: "לוח זמנים", scheduleNotes: "הערות ללוח הזמנים", riskRows: "ניהול סיכונים", additionalNotes: "הערות נוספות", boqRows: "כתב כמויות", evidenceNotes: "הערות והנחות מקצועיות" })[path] || path;
 }
 
 function renderVersions() {
@@ -530,10 +581,11 @@ function renderVersions() {
     : '<p class="muted">עדיין לא נשמרו גרסאות. השמירה השוטפת קיימת, וגרסה מאפשרת לחזור לנקודת זמן מסוימת.</p>';
 }
 
-function openMaterialDialog(materialId, sourceContext) {
+async function openMaterialDialog(materialId, sourceContext) {
   const material = getActiveProject().materials.find((item) => item.id === materialId);
   if (!material) return;
   selectedMaterialId = materialId;
+  selectedMaterialContent = null;
   elements.materialDialogTitle.textContent = material.name;
   elements.materialDetails.innerHTML = [
     ["מצב", materialSummary(material)],
@@ -542,6 +594,9 @@ function openMaterialDialog(materialId, sourceContext) {
     ["נוסף", shortDate(material.addedAt)],
     ...(material.pageCount ? [["עמודים", String(material.pageCount)]] : []),
     ...(material.sheetCount ? [["גיליונות", String(material.sheetCount)]] : []),
+    ...(material.videoDurationSeconds ? [["משך וידאו", formatDuration(material.videoDurationSeconds)]] : []),
+    ...(material.videoFrameCount ? [["פריימים לניתוח", String(material.videoFrameCount)]] : []),
+    ...(material.correctedAt ? [["תיקון אחרון", shortDate(material.correctedAt)]] : []),
   ].map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("");
   const baseMessage = material.status === "error"
     ? "הקריאה נכשלה. אפשר לנסות לקרוא את הקובץ מחדש או להחליף אותו."
@@ -552,8 +607,45 @@ function openMaterialDialog(materialId, sourceContext) {
     ? [sourceContext.location && `מיקום: ${sourceContext.location}`, sourceContext.excerpt && `ציטוט: ${sourceContext.excerpt}`].filter(Boolean).join("\n")
     : "";
   elements.materialDialogMessage.textContent = [baseMessage, sourceMessage].filter(Boolean).join("\n\n");
+  renderMaterialPreview(material);
+  elements.materialContentEditor.value = "";
+  elements.materialContentEditor.disabled = true;
+  elements.materialContentStatus.textContent = "טוען את התוכן שנקרא...";
+  document.querySelector("#reset-material-content-button").disabled = true;
+  document.querySelector("#analyze-material-button").disabled = material.status !== "ready" || (!material.visionImageCount && !material.hasTextContent);
   document.querySelector("#reprocess-material-button").disabled = material.status === "processing";
   elements.materialDialog.showModal();
+  try {
+    const { content } = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(materialId)}/content`);
+    if (selectedMaterialId !== materialId) return;
+    showMaterialContent(content);
+  } catch (error) {
+    elements.materialContentStatus.textContent = `לא ניתן להציג את התוכן: ${error.message}`;
+  }
+}
+
+function showMaterialContent(content) {
+  selectedMaterialContent = content;
+  elements.materialContentEditor.value = content.effectiveText || "";
+  elements.materialContentEditor.disabled = false;
+  elements.materialContentStatus.textContent = content.hasCorrection
+    ? content.correctionNeedsReview ? "יש תיקון שמור; לאחר קריאה מחדש מומלץ לבדוק אותו" : "מוצג תיקון שנשמר על ידך"
+    : content.analysisText ? "מוצגים החילוץ המקורי וניתוח Codex" : content.originalText ? "מוצגת הקריאה האוטומטית המקורית" : "אין עדיין טקסט; אפשר להקליד ידנית או להפעיל פענוח עם Codex";
+  document.querySelector("#reset-material-content-button").disabled = !content.hasCorrection;
+}
+
+function renderMaterialPreview(material) {
+  const source = `/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(material.id)}/preview`;
+  if (/^video\//i.test(material.type)) {
+    elements.materialPreview.innerHTML = `<video controls preload="metadata" src="${source}" aria-label="תצוגת וידאו ${escapeHtml(material.name)}"></video>`;
+    elements.materialPreview.hidden = false;
+  } else if (/^image\//i.test(material.type)) {
+    elements.materialPreview.innerHTML = `<img src="${source}" alt="תצוגת ${escapeHtml(material.name)}" />`;
+    elements.materialPreview.hidden = false;
+  } else {
+    elements.materialPreview.innerHTML = "";
+    elements.materialPreview.hidden = true;
+  }
 }
 
 async function openDekelReview() {
@@ -561,6 +653,7 @@ async function openDekelReview() {
   elements.dekelCatalogStatus.textContent = "טוען את מחירון DEKEL...";
   elements.dekelLines.innerHTML = managementSkeleton();
   elements.dekelWarnings.innerHTML = "";
+  elements.dekelFinancialAudit.innerHTML = "";
   elements.dekelReviewSummary.textContent = "";
   elements.dekelApplyButton.disabled = true;
   try {
@@ -594,14 +687,19 @@ function renderDekelReview(review) {
   elements.dekelWarnings.innerHTML = review.warnings?.length
     ? `<details open><summary>${review.warnings.length} הערות לבדיקה</summary><ul>${review.warnings.map((warning) => `<li dir="auto">${escapeHtml(warning)}</li>`).join("")}</ul></details>`
     : '<div class="dekel-clean-status">כל שורות העבודה קיבלו התאמת DEKEL.</div>';
+  renderDekelFinancialAudit(review.financialAudit);
   elements.dekelLines.innerHTML = review.lines.length
     ? review.lines.map((line, index) => renderDekelReviewLine(line, index, review.status)).join("")
     : '<div class="empty-state"><strong>אין שורות לבדיקה</strong><span>הוסף עבודות לכתב הכמויות והריץ התאמה מחדש.</span></div>';
-  const selectedCount = review.lines.filter((line) => line.included && line.selectedCode).length;
+  const includedLines = review.lines.filter((line) => line.included);
+  const selectedCount = includedLines.filter((line) => {
+    const selected = line.candidates.find((candidate) => candidate.code === line.selectedCode);
+    return selected && selected.unitCompatibility !== "mismatch";
+  }).length;
   elements.dekelReviewSummary.textContent = review.status === "applied"
     ? `הבדיקה הוחלה על המסמך · ${shortDate(review.appliedAt)}`
-    : `${selectedCount} מתוך ${review.lines.length} שורות מוכנות להחלה`;
-  elements.dekelApplyButton.disabled = review.status !== "ready" || selectedCount === 0;
+    : `${selectedCount} מתוך ${includedLines.length} שורות כלולות מוכנות להחלה${review.lines.length > includedLines.length ? ` · ${review.lines.length - includedLines.length} שורות הוחרגו ויימחקו` : ""}`;
+  elements.dekelApplyButton.disabled = review.status !== "ready" || selectedCount === 0 || selectedCount !== includedLines.length || !review.financialAudit?.valid;
   elements.dekelApplyButton.textContent = review.status === "applied" ? "הוחל על המסמך" : "החלה על כתב הכמויות";
   if (catalog?.rowsCount && !review.workbookRowsCount) review.workbookRowsCount = catalog.rowsCount;
 }
@@ -617,12 +715,39 @@ function renderDekelReviewLine(line, index, reviewStatus) {
       <span class="dekel-confidence ${confidence >= 75 ? "high" : confidence >= 45 ? "medium" : "low"}">${confidence}%</span>
     </header>
     ${line.candidates.length ? `<div class="dekel-line-fields">
-      <label>סעיף DEKEL<select data-dekel-select ${disabled}>${line.candidates.map((candidate) => `<option value="${escapeAttribute(candidate.code)}" ${candidate.code === line.selectedCode ? "selected" : ""}>${escapeHtml(candidate.code)} · ${escapeHtml(candidate.unit)} · ${formatMoney(candidate.unitPrice)}</option>`).join("")}</select></label>
+      <label>קוד DEKEL<input data-dekel-code list="dekel-candidates-${escapeAttribute(line.id)}" value="${escapeAttribute(line.selectedCode || "")}" ${disabled} /><datalist id="dekel-candidates-${escapeAttribute(line.id)}">${line.candidates.map((candidate) => `<option value="${escapeAttribute(candidate.code)}">${escapeHtml(formatDekelUnit(candidate.unit))} · ${formatMoney(candidate.unitPrice)}</option>`).join("")}</datalist></label>
       <label>כמות<input type="number" min="0.01" step="0.01" value="${line.quantity}" data-dekel-quantity ${disabled} /></label>
     </div>
-    <div class="dekel-selected-detail"><strong>${escapeHtml(selected.description)}</strong><span>מחיר יחידה ללא מע״מ: ${formatMoney(selected.unitPrice)} · פרק ${escapeHtml(selected.sourceChapterCode || "—")} · שורת מקור ${escapeHtml(selected.sourceRow || "—")}</span></div>`
+    <div class="dekel-selected-detail"><strong>${escapeHtml(selected.description)}</strong><span>מחיר יחידה ללא מע״מ: ${formatMoney(selected.unitPrice)} · יחידה: ${escapeHtml(formatDekelUnit(selected.unit))} · פרק ${escapeHtml(selected.sourceChapterCode || "—")} · שורת מקור ${escapeHtml(selected.sourceRow || "—")} · התאמת יחידה: ${escapeHtml(dekelUnitCompatibilityLabel(selected.unitCompatibility))}</span></div>`
     : '<div class="dekel-no-match">לא נמצאה התאמה. השורה לא תוחל עד לבחירת מחיר תקין.</div>'}
   </article>`;
+}
+
+function renderDekelFinancialAudit(audit) {
+  if (!audit) {
+    elements.dekelFinancialAudit.innerHTML = '<div class="dekel-audit-failed">נדרשת הרצת התאמה מחדש כדי לבצע ביקורת כספית מלאה.</div>';
+    return;
+  }
+  const fee = (key) => audit.fees?.find((item) => item.key === key)?.amount || 0;
+  elements.dekelFinancialAudit.innerHTML = `<header><strong>${audit.valid ? "הביקורת הכספית עברה בהצלחה" : "הביקורת הכספית נכשלה"}</strong><span>${audit.valid ? "כל הסכומים תואמים עד האגורה" : escapeHtml((audit.failedChecks || []).join(", "))}</span></header>
+    <dl>
+      <div><dt>לפני מע״מ</dt><dd>${formatMoney(audit.subtotalNet)}</dd></div>
+      <div><dt>מע״מ 18%</dt><dd>${formatMoney(audit.vat)}</dd></div>
+      <div><dt>ביצוע כולל מע״מ</dt><dd>${formatMoney(audit.totalWithVat)}</dd></div>
+      <div><dt>תכנון 7.4%</dt><dd>${formatMoney(fee("planning"))}</dd></div>
+      <div><dt>תפעול וניהול 5.4%</dt><dd>${formatMoney(fee("management"))}</dd></div>
+      <div><dt>פיקוח 2.7%</dt><dd>${formatMoney(fee("supervision"))}</dd></div>
+      <div class="grand"><dt>סה״כ פרויקט</dt><dd>${formatMoney(audit.grandTotal)}</dd></div>
+    </dl>`;
+  elements.dekelFinancialAudit.classList.toggle("failed", !audit.valid);
+}
+
+function formatDekelUnit(unit) {
+  return ({ m2: "מ״ר", m3: "מ״ק", m: "מטר", unit: "יח׳", complete: "קומפ׳", day: "יום", hour: "שעה", kg: "ק״ג", ton: "טון" })[unit] || unit || "—";
+}
+
+function dekelUnitCompatibilityLabel(value) {
+  return ({ exact: "זהה", compatible: "תואמת", corrected_by_code: "תתוקן לפי הקוד", mismatch: "אינה תואמת", unknown: "לא ידועה" })[value] || "לא ידועה";
 }
 
 function dekelQuantitySourceLabel(source) {
@@ -710,6 +835,11 @@ async function handleFiles(files) {
         body: file,
       });
       replaceProject(result.project);
+      if (/^video\//i.test(file.type) || /\.(mp4|m4v|mov|webm)$/i.test(file.name)) {
+        elements.saveIndicator.textContent = `מכין פריימים מהווידאו: ${file.name}`;
+        const project = await prepareVideoFrames(file, result.material.id);
+        if (project) replaceProject(project);
+      }
       completed += 1;
       renderMaterials();
     } catch (error) {
@@ -726,6 +856,79 @@ async function handleFiles(files) {
   );
 }
 
+async function prepareVideoFrames(file, materialId) {
+  const objectUrl = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.preload = "metadata";
+  video.muted = true;
+  video.src = objectUrl;
+  try {
+    if (video.readyState < 1) await waitForMediaEvent(video, "loadedmetadata", 15_000);
+    const duration = Number(video.duration);
+    if (!Number.isFinite(duration) || duration <= 0 || !video.videoWidth || !video.videoHeight) throw new Error("לא ניתן לקרוא את משך הווידאו או את ממדי התמונה");
+    const frameCount = Math.min(12, Math.max(3, Math.ceil(duration / 15) + 2));
+    const timestamps = Array.from({ length: frameCount }, (_, index) => Math.min(duration - 0.05, duration * ((index + 0.5) / frameCount)));
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1, 1280 / video.videoWidth);
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("הדפדפן לא הצליח להכין פריימים מהווידאו");
+    let latestProject;
+    for (const timestamp of timestamps) {
+      await seekVideo(video, Math.max(0, timestamp), 15_000);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = await canvasToJpeg(canvas);
+      const result = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(materialId)}/video-frames?timestampSeconds=${encodeURIComponent(timestamp)}&durationSeconds=${encodeURIComponent(duration)}`, {
+        method: "POST", headers: { "Content-Type": "image/jpeg" }, body: frame,
+      });
+      latestProject = result.project;
+    }
+    return latestProject;
+  } finally {
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function seekVideo(video, timestamp, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => finish(new Error("תם הזמן להכנת פריים מהווידאו")), timeoutMs);
+    const onSuccess = () => finish();
+    const onError = () => finish(new Error("לא ניתן לעבור לנקודה שנבחרה בווידאו"));
+    const finish = (error) => {
+      window.clearTimeout(timer);
+      video.removeEventListener("seeked", onSuccess);
+      video.removeEventListener("error", onError);
+      error ? reject(error) : resolve();
+    };
+    video.addEventListener("seeked", onSuccess, { once: true });
+    video.addEventListener("error", onError, { once: true });
+    video.currentTime = timestamp;
+  });
+}
+
+function waitForMediaEvent(media, eventName, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => finish(new Error("תם הזמן לקריאת הווידאו")), timeoutMs);
+    const onSuccess = () => finish();
+    const onError = () => finish(new Error("הדפדפן לא הצליח לקרוא את קובץ הווידאו"));
+    const finish = (error) => {
+      window.clearTimeout(timer);
+      media.removeEventListener(eventName, onSuccess);
+      media.removeEventListener("error", onError);
+      error ? reject(error) : resolve();
+    };
+    media.addEventListener(eventName, onSuccess, { once: true });
+    media.addEventListener("error", onError, { once: true });
+  });
+}
+
+function canvasToJpeg(canvas) {
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("יצירת פריים מהווידאו נכשלה")), "image/jpeg", 0.84));
+}
+
 async function downloadMaterial(materialId) {
   const link = document.createElement("a");
   link.href = `/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(materialId)}`;
@@ -733,21 +936,22 @@ async function downloadMaterial(materialId) {
 }
 
 function addChatMessage(role, text) {
-  getActiveProject().chat.push({ id: crypto.randomUUID(), role, text, createdAt: new Date().toISOString() });
+  getActiveProject().chat.push({ id: crypto.randomUUID(), role, text, createdAt: new Date().toISOString(), status: "complete" });
   renderChat();
 }
 
 async function exportHtml() {
   const css = await fetch("/styles.css").then((response) => response.text());
   const clone = elements.documentStage.querySelector("#printable-document").cloneNode(true);
-  clone.querySelectorAll(".document-controls, .delete-row-button").forEach((node) => node.remove());
+  clone.querySelectorAll(".document-controls, .delete-row-button, .evidence-overview").forEach((node) => node.remove());
+  clone.querySelectorAll(".narrative-page").forEach((node) => { node.style.zoom = ""; });
   clone.querySelectorAll("[contenteditable]").forEach((node) => node.removeAttribute("contenteditable"));
   clone.querySelectorAll("input").forEach((input) => {
     const text = document.createElement("span");
     text.textContent = input.value;
     input.replaceWith(text);
   });
-  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(getActiveProject().name)}</title><style>${css}</style></head><body><main class="document-stage">${clone.outerHTML}</main></body></html>`;
+  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(getActiveProject().name)}</title><style>${css}</style></head><body class="exported-document"><main class="document-stage">${clone.outerHTML}</main></body></html>`;
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -805,6 +1009,7 @@ function materialSummary(material) {
   if (material.pageCount) return `${material.pageCount} עמודים נקראו${material.visionImageCount ? " כולל קריאה חזותית" : ""}`;
   if (material.sheetCount) return `${material.sheetCount} גיליונות נקראו`;
   if (/^image\//.test(material.type)) return "מוכן לניתוח חזותי";
+  if (/^video\//.test(material.type)) return material.videoFrameCount ? `${material.videoFrameCount} פריימים מוכנים לניתוח` : "הווידאו נשמר; מכין פריימים";
   return "הקובץ נקרא ומוכן לצ'אט";
 }
 
@@ -813,6 +1018,13 @@ function formatFileSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+}
+
+function formatDuration(seconds) {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  const minutes = Math.floor(total / 60);
+  const remainder = total % 60;
+  return `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
 
 function formatMoney(value) {
@@ -853,6 +1065,17 @@ document.querySelector("#create-version-button").addEventListener("click", async
 document.querySelector("#connect-codex-button").addEventListener("click", () => elements.codexDialog.showModal());
 document.querySelector("#start-codex-login-button").addEventListener("click", connectCodex);
 document.querySelector("#print-button").addEventListener("click", () => window.print());
+document.querySelector("#document-focus-button").addEventListener("click", (event) => {
+  const active = document.body.classList.toggle("document-focus");
+  event.currentTarget.setAttribute("aria-pressed", String(active));
+  event.currentTarget.textContent = active ? "חזרה לסביבת העבודה" : "תצוגת מסמך מלאה";
+  requestAnimationFrame(() => {
+    fitDocumentPreview();
+    elements.documentStage.scrollLeft = 0;
+    window.scrollTo({ left: 0 });
+  });
+});
+window.addEventListener("resize", fitDocumentPreview);
 document.querySelector("#export-button").addEventListener("click", async (event) => {
   await runAction(event.currentTarget, "מייצא...", exportHtml);
 });
@@ -1024,13 +1247,65 @@ document.querySelector("#download-material-button").addEventListener("click", ()
   if (selectedMaterialId) downloadMaterial(selectedMaterialId);
 });
 
+document.querySelector("#save-material-content-button").addEventListener("click", async (event) => {
+  if (!selectedMaterialId) return;
+  const result = await runAction(event.currentTarget, "שומר תיקון...", async () => {
+    const response = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(selectedMaterialId)}/content`, {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: elements.materialContentEditor.value }),
+    });
+    replaceProject(response.project);
+    renderMaterials();
+    showMaterialContent(response.content);
+  });
+  if (result.ok) showToast("התיקון נשמר וישמש את צ׳אט הפרויקט בעדיפות ראשונה");
+});
+
+document.querySelector("#reset-material-content-button").addEventListener("click", async (event) => {
+  if (!selectedMaterialId) return;
+  const result = await runAction(event.currentTarget, "מחזיר מקור...", async () => {
+    const response = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(selectedMaterialId)}/content`, {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: null }),
+    });
+    replaceProject(response.project);
+    renderMaterials();
+    showMaterialContent(response.content);
+  });
+  if (result.ok) showToast("התיקון הוסר והקריאה המקורית שוב פעילה");
+});
+
+document.querySelector("#analyze-material-button").addEventListener("click", async (event) => {
+  if (!selectedMaterialId) return;
+  const result = await runAction(event.currentTarget, "Codex מפענח...", async () => {
+    const response = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(selectedMaterialId)}/analyze`, { method: "POST" });
+    replaceProject(response.project);
+    renderMaterials();
+    showMaterialContent(response.content);
+  });
+  if (result.ok) showToast("החומר פוענח. אפשר לבדוק ולתקן את התוצאה לפני השימוש בצ׳אט.", "success", 5000);
+});
+
+document.querySelector("#discuss-material-button").addEventListener("click", () => {
+  const material = getActiveProject().materials.find((item) => item.id === selectedMaterialId);
+  if (!material) return;
+  const prompt = `אני רוצה לדון בחומר „${material.name}”. הסתמך על התוכן שנקרא ועל התיקונים ששמרתי, הסבר מה מובן ממנו, אילו עבודות מפורשות ואילו עבודות נדרשות במשתמע.`;
+  elements.chatInput.value = prompt;
+  elements.materialDialog.close();
+  if (window.matchMedia("(max-width: 900px)").matches) document.querySelector('.mobile-nav [data-mobile-view="chat"]').click();
+  elements.chatInput.focus();
+  elements.chatInput.setSelectionRange(prompt.length, prompt.length);
+});
+
 document.querySelector("#reprocess-material-button").addEventListener("click", async (event) => {
   if (!selectedMaterialId) return;
   const result = await runAction(event.currentTarget, "קורא מחדש...", async () => {
     const { project } = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/materials/${encodeURIComponent(selectedMaterialId)}/reprocess`, { method: "POST" });
     replaceProject(project);
     renderMaterials();
-    elements.materialDialog.close();
+    const material = project.materials.find((item) => item.id === selectedMaterialId);
+    if (material) {
+      elements.materialDialog.close();
+      await openMaterialDialog(material.id);
+    }
   });
   if (result.ok) showToast("הקובץ נקרא מחדש והחומר עודכן");
 });
@@ -1158,7 +1433,7 @@ elements.dekelLines.addEventListener("click", async (event) => {
 elements.dekelLines.addEventListener("change", async (event) => {
   const lineElement = event.target.closest("[data-dekel-line]");
   if (!lineElement) return;
-  const body = event.target.matches("[data-dekel-select]")
+  const body = event.target.matches("[data-dekel-code]")
     ? { selectedCode: event.target.value }
     : event.target.matches("[data-dekel-quantity]")
       ? { quantity: Number(event.target.value) }
@@ -1177,7 +1452,7 @@ elements.dekelLines.addEventListener("change", async (event) => {
 elements.dekelApplyButton.addEventListener("click", async (event) => {
   const confirmed = await requestConfirmation({
     title: "החלת בחירת DEKEL",
-    message: "השורות שנבחרו יעדכנו את כתב הכמויות במחירי יחידה ללא מע״מ. לפני השינוי תישמר גרסה מלאה של המסמך.",
+    message: "השורות שנבחרו יעדכנו את כתב הכמויות במחירי יחידה ללא מע״מ. שורות שהוצאו יימחקו מכתב הכמויות. לפני השינוי תישמר גרסה מלאה של המסמך.",
     confirmLabel: "החלה ושמירת גרסה",
     tone: "primary",
   });
@@ -1207,22 +1482,25 @@ elements.versionsList.addEventListener("click", async (event) => {
   if (result.ok) showToast("הגרסה שוחזרה והמצב הקודם נשמר");
 });
 
-elements.chatForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const message = elements.chatInput.value.trim();
-  if (!message) return;
-  elements.chatInput.value = "";
-  addChatMessage("user", message);
+async function sendProjectChat({ message = "", retryOfMessageId = "" }) {
+  if (chatSending) return;
+  if (!codexConnected) {
+    elements.codexDialog.showModal();
+    return;
+  }
+  if (!message && !retryOfMessageId) return;
+  if (message) addChatMessage("user", message);
+  if (retryOfMessageId) getActiveProject().chat = getActiveProject().chat.filter((item) => !(item.role === "assistant" && item.status === "failed" && item.retryOfMessageId === retryOfMessageId));
   const pendingId = crypto.randomUUID();
-  getActiveProject().chat.push({ id: pendingId, role: "assistant", text: "קורא את חומרי הפרויקט וחושב...", createdAt: new Date().toISOString() });
+  getActiveProject().chat.push({ id: pendingId, role: "assistant", text: retryOfMessageId ? "קורא שוב את ההקשר המלא של הפרויקט..." : "קורא את חומרי הפרויקט וחושב...", createdAt: new Date().toISOString(), status: "pending" });
   renderChat();
-  elements.chatInput.disabled = true;
+  chatSending = true;
   const sendButton = elements.chatForm.querySelector("button[type=submit]");
-  sendButton.disabled = true;
+  syncChatAvailability();
   sendButton.setAttribute("aria-busy", "true");
   try {
     const { project } = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/chat`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(retryOfMessageId ? { retryOfMessageId } : { message }),
     });
     replaceProject(project);
     renderAll();
@@ -1237,11 +1515,19 @@ elements.chatForm.addEventListener("submit", async (event) => {
     }
     showToast(error.message, "error", 6000);
   } finally {
-    elements.chatInput.disabled = false;
-    sendButton.disabled = false;
+    chatSending = false;
     sendButton.removeAttribute("aria-busy");
+    syncChatAvailability();
     elements.chatInput.focus();
   }
+}
+
+elements.chatForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const message = elements.chatInput.value.trim();
+  if (!message) return;
+  elements.chatInput.value = "";
+  await sendProjectChat({ message });
 });
 
 elements.chatInput.addEventListener("keydown", (event) => {
@@ -1252,20 +1538,24 @@ elements.chatInput.addEventListener("keydown", (event) => {
 });
 
 elements.chatMessages.addEventListener("click", async (event) => {
+  const retry = event.target.closest("[data-retry-chat]");
+  if (retry) {
+    await sendProjectChat({ retryOfMessageId: retry.dataset.retryChat });
+    return;
+  }
   const apply = event.target.closest("[data-apply-proposal]");
   const reject = event.target.closest("[data-reject-proposal]");
-  const global = event.target.closest("[data-global-proposal]");
-  const id = apply?.dataset.applyProposal || reject?.dataset.rejectProposal || global?.dataset.globalProposal;
+  const id = apply?.dataset.applyProposal || reject?.dataset.rejectProposal;
   if (!id) return;
-  if (global) {
-    const confirmed = await requestConfirmation({ title: "אישור כלל לכל הפרויקטים", message: "הכלל יחול גם על פרויקטים קיימים וחדשים. שינוי במסמך עצמו עדיין ידרוש אישור נפרד.", confirmLabel: "אישור כלל כללי" });
+  if (apply) {
+    const confirmed = await requestConfirmation({ title: "אישור הצעת הצ׳אט", message: "השינוי יחול רק בפרויקט הנוכחי. לפני שינוי במסמך תישמר גרסה מלאה, ולא ניתן לשנות מכאן כללים כלליים של המערכת.", confirmLabel: "אישור והחלה", tone: "primary" });
     if (!confirmed) return;
   }
   const action = reject ? "reject" : "apply";
-  const actionButton = apply || reject || global;
+  const actionButton = apply || reject;
   const result = await runAction(actionButton, "שומר...", async () => {
     const { project } = await requestJson(`/local/projects/${encodeURIComponent(activeProjectId)}/proposals/${encodeURIComponent(id)}/${action}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(global ? { scope: "global", confirmGlobal: true } : { scope: "project" }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scope: "project" }),
     });
     replaceProject(project);
     renderAll();
@@ -1336,17 +1626,34 @@ function renderFatalError(error) {
 async function refreshCodexStatus() {
   try {
     const status = await requestJson("/local/codex/status");
-    const connected = status.connected;
-    elements.codexStatus.textContent = connected ? "מחובר" : "נדרש קישור";
-    elements.codexStatus.className = `status-badge ${connected ? "connected" : "pending"}`;
-    document.querySelector("#connect-codex-button").hidden = connected;
-    document.querySelector("#codex-dialog-status").textContent = connected ? "החשבון הנוכחי מחובר. הצ'אט מוכן לקריאת חומרים ולשיחה." : "נדרש קישור חד־פעמי לחשבון ChatGPT/Codex.";
-    document.querySelector("#start-codex-login-button").hidden = connected;
+    codexConnected = Boolean(status.connected);
+    const unavailable = status.state === "unavailable";
+    elements.codexStatus.textContent = codexConnected ? "מחובר" : unavailable ? "לא זמין" : "נדרש קישור";
+    elements.codexStatus.className = `status-badge ${codexConnected ? "connected" : unavailable ? "error" : "pending"}`;
+    document.querySelector("#connect-codex-button").hidden = codexConnected;
+    codexConnectionMessage = codexConnected
+      ? "מחובר לחשבון הנוכחי. הצ׳אט קורא רק את הפרויקט הפעיל וכל שינוי דורש אישור."
+      : unavailable
+        ? "תהליך Codex המקומי אינו זמין כרגע. אפשר לבדוק שוב או להפעיל מחדש את MASHMAUET."
+        : "נדרש קישור חד־פעמי לחשבון ChatGPT/Codex הנוכחי — ללא שם משתמש או סיסמה בתוך MASHMAUET.";
+    document.querySelector("#codex-dialog-status").textContent = codexConnectionMessage;
+    document.querySelector("#start-codex-login-button").hidden = codexConnected || unavailable;
   } catch (error) {
+    codexConnected = false;
+    codexConnectionMessage = "לא ניתן לבדוק את Codex. השרת המקומי ממשיך לשמור את הפרויקט ואפשר לנסות שוב.";
     elements.codexStatus.textContent = "לא זמין";
     elements.codexStatus.className = "status-badge error";
     document.querySelector("#connect-codex-button").hidden = false;
   }
+  syncChatAvailability();
+}
+
+function syncChatAvailability() {
+  const sendButton = elements.chatForm.querySelector("button[type=submit]");
+  elements.chatInput.disabled = !codexConnected || chatSending;
+  sendButton.disabled = !codexConnected || chatSending;
+  elements.chatStateMessage.textContent = chatSending ? "Codex קורא את חומרי הפרויקט, המסמך והשיחה..." : codexConnectionMessage;
+  elements.chatStateMessage.className = `chat-state-message ${codexConnected ? "ready" : "blocked"}`;
 }
 
 async function connectCodex() {
@@ -1364,6 +1671,8 @@ async function connectCodex() {
 }
 
 function replaceProject(project) {
+  expandLegacyBoqDescriptions(project.document?.boqRows);
+  ensureDocumentEvidence(project.document);
   const index = projects.findIndex((item) => item.id === project.id);
   if (index >= 0) projects[index] = project;
   else projects.unshift(project);
@@ -1381,13 +1690,20 @@ async function requestJson(url, options = {}) {
     const knownMessages = {
       validation_error: "חלק מהנתונים אינם תקינים. בדוק את השדות ונסה שוב.",
       file_too_large: "הקובץ גדול מ־100 MB ולא ניתן להוסיף אותו.",
-      unsupported_file_type: "סוג הקובץ אינו נתמך. אפשר להוסיף PDF, XLSX, DOCX, טקסט או תמונה.",
+      unsupported_file_type: "סוג הקובץ אינו נתמך. אפשר להוסיף PDF, XLSX, DOCX, טקסט, תמונה או וידאו.",
       file_signature_mismatch: "תוכן הקובץ אינו תואם לסיומת שלו. שמור אותו מחדש ונסה שוב.",
       codex_unavailable: "Codex לא ענה כרגע. ההודעה נשמרה ואפשר לנסות שוב.",
       last_project: "לא ניתן להעביר לארכיון את הפרויקט הפעיל היחיד.",
       invalid_backup: "הגיבוי פגום או ריק ולכן לא בוצע שחזור.",
       rate_limit: "בוצעו פעולות רבות בזמן קצר. המתן מעט ונסה שוב.",
       request_too_large: "הבקשה גדולה מדי ולא נשמרה.",
+      material_analysis_failed: "Codex לא הצליח לפענח את החומר. הקובץ המקורי וכל תוכן שכבר נקרא נשמרו.",
+      material_not_ready_for_analysis: "החומר עדיין אינו מוכן לניתוח. בווידאו יש להמתין להכנת הפריימים.",
+      invalid_dekel_selection: "הקוד שהוזן אינו קיים במחירון DEKEL הגלובלי הקבוע.",
+      stale_dekel_review: "כתב הכמויות השתנה מאז בדיקת DEKEL. יש להריץ התאמה מחדש לפני ההחלה.",
+      dekel_review_incomplete: "לא לכל השורות הכלולות נבחר קוד DEKEL עם יחידת מידה תואמת.",
+      empty_dekel_selection: "לא נבחרו שורות DEKEL להחלה.",
+      financial_audit_failed: "הביקורת הכספית לא עברה ולכן ההחלה נחסמה.",
     };
     const error = new Error(knownMessages[body.code] || body.error || `הפעולה נכשלה (HTTP ${response.status})`);
     error.code = body.code;

@@ -39,6 +39,9 @@ export async function extractMaterial(filePath: string, derivedDirectory: string
     if ([".jpg", ".jpeg", ".png", ".webp"].includes(extension)) {
       return { ...material, status: "ready", details: "Изображение готово для визуального анализа", visionImagePaths: [filePath] };
     }
+    if ([".mp4", ".m4v", ".mov", ".webm"].includes(extension)) {
+      return { ...material, status: "ready", details: "Видео сохранено; локальная страница подготовит ключевые кадры для анализа", visionImagePaths: [], videoFrameCount: 0 };
+    }
     if (extension === ".xls") return { ...material, status: "unsupported", details: "Старый формат .xls: пересохраните файл как .xlsx" };
     return { ...material, status: "unsupported", details: "Формат сохранён, но автоматическое чтение пока не поддерживается" };
   } catch (error) {

@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { LocalProjectStore } from "../src/modules/local-workspace/local-project-store.ts";
 import { extractMaterial } from "../src/modules/local-workspace/material-extractor.ts";
 import { createProposals, parseCodexAnswer } from "../src/modules/local-workspace/local-workspace-service.ts";
+import { CodexAppServerClient } from "../src/modules/local-workspace/codex-app-server-client.ts";
 
 test("локальные проекты сохраняются между экземплярами хранилища", async () => {
   const root = await mkdtemp(join(tmpdir(), "mashmauet-store-"));
@@ -93,6 +94,76 @@ test("Codex может предложить обновление доказат�
   assert.equal(proposals.length, 1);
   assert.equal(proposals[0].path, "evidenceNotes");
   assert.deepEqual(proposals[0].value, note);
+});
+
+test("проектный чат не может подменить DEKEL и применяет взаимосвязанные изменения одной операцией", async () => {
+  const root = await mkdtemp(join(tmpdir(), "mashmauet-chat-proposal-"));
+  try {
+    const store = new LocalProjectStore(root);
+    await store.initialize();
+    const project = (await store.list())[0];
+    const currentRows = structuredClone(project.document.boqRows) as Array<Record<string, unknown>>;
+    const proposedRows = structuredClone(currentRows);
+    proposedRows[0].code = "FAKE.CODE";
+    proposedRows[0].unitPrice = 999_999;
+    proposedRows[0].quantity = Number(proposedRows[0].quantity) + 1;
+    proposedRows.push({ id: "chat-new-row", code: "FAKE.NEW", description: "עבודה נלווית חדשה", unit: "יח׳", quantity: 2, unitPrice: 555, category: "עבודות משלימות" });
+    const proposedNotes = [...structuredClone(project.document.evidenceNotes) as Array<Record<string, unknown>>, {
+      id: "note-chat-new", anchorType: "boqRow", anchorId: "chat-new-row", kind: "inference",
+      title: "עבודה נלווית", explanation: "נוספה לפי ההקשר", reason: "נדרשת להשלמת העבודה", confidence: "medium",
+    }];
+    const warnings: string[] = [];
+    const proposals = createProposals(parseCodexAnswer(JSON.stringify({
+      answer: "הכנתי שינוי",
+      proposedChanges: [
+        { path: "boqRows", valueJson: JSON.stringify(proposedRows), reason: "עדכון כתב כמויות" },
+        { path: "evidenceNotes", valueJson: JSON.stringify(proposedNotes), reason: "קישור ההנחה" },
+      ],
+      proposedProjectRules: [], needsMoreInformation: [],
+    })), project.document, warnings);
+    assert.deepEqual(warnings, []);
+    assert.equal(proposals.length, 1);
+    assert.deepEqual(proposals[0].changes?.map((change) => change.path), ["boqRows", "evidenceNotes"]);
+    const rows = proposals[0].changes?.find((change) => change.path === "boqRows")?.value as Array<Record<string, unknown>>;
+    assert.equal(rows[0].code, currentRows[0].code);
+    assert.equal(rows[0].unitPrice, currentRows[0].unitPrice);
+    assert.equal(rows.at(-1)?.code, "");
+    assert.equal(rows.at(-1)?.unitPrice, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("проектный чат отклоняет сноску без существующей строки כתב כמויות", async () => {
+  const root = await mkdtemp(join(tmpdir(), "mashmauet-chat-evidence-"));
+  try {
+    const store = new LocalProjectStore(root);
+    await store.initialize();
+    const project = (await store.list())[0];
+    const warnings: string[] = [];
+    const proposals = createProposals(parseCodexAnswer(JSON.stringify({
+      answer: "הכנתי הערה",
+      proposedChanges: [{ path: "evidenceNotes", valueJson: JSON.stringify([{
+        id: "bad-note", anchorType: "boqRow", anchorId: "missing-row", kind: "inference",
+        title: "הערה", explanation: "הסבר", reason: "סיבה", confidence: "low",
+      }]), reason: "בדיקה" }],
+      proposedProjectRules: [], needsMoreInformation: [],
+    })), project.document, warnings);
+    assert.equal(proposals.length, 0);
+    assert.match(warnings.join("\n"), /отсутствующую строку/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("временное error-уведомление Codex не завершает локальный сервер", () => {
+  const client = new CodexAppServerClient();
+  const internal = client as unknown as { handleLine(line: string): void };
+  assert.doesNotThrow(() => internal.handleLine(JSON.stringify({
+    method: "error",
+    params: {
+      error: { message: "Reconnecting... 1/2" },
+      willRetry: true,
+      threadId: "thread-1",
+      turnId: "turn-1",
+    },
+  })));
 });
 
 function material(name: string, type: string) {

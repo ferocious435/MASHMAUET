@@ -83,8 +83,9 @@
             <button id="versions-button" class="secondary-button" type="button">גרסאות</button>
             <button id="dekel-review-button" class="secondary-button dekel-toolbar-button" type="button">בדיקת DEKEL</button>
             <button id="edit-button" class="secondary-button" type="button">עריכה</button>
+            <button id="document-focus-button" class="secondary-button" type="button" aria-pressed="false">תצוגת מסמך מלאה</button>
             <button id="export-button" class="secondary-button" type="button">ייצוא HTML</button>
-            <button id="print-button" class="primary-button" type="button">הדפסה / PDF</button>
+            <button id="print-button" class="primary-button" type="button">הדפסה / שמירה כ־PDF</button>
           </div>
         </header>
         <div id="document-stage" class="document-stage" aria-live="polite">
@@ -101,18 +102,19 @@
           <span id="codex-status" class="status-badge pending">טרם קושר</span>
         </div>
         <div class="scope-notice">
-          הצ'אט יראה רק את התיאור, החומרים והמסמך של הפרויקט הזה. שינוי במסמך ידרוש אישור.
+          הצ׳אט רואה רק את התיאור, החומרים, השיחה והמסמך של הפרויקט הזה. שינוי במסמך או בלוגיקת הפרויקט דורש אישור; אין לו אפשרות לשנות את המערכת או כללים כלליים.
         </div>
         <button id="connect-codex-button" class="connect-button" type="button">
           קישור חד־פעמי לחשבון Codex
         </button>
+        <p id="chat-state-message" class="chat-state-message" role="status">בודק את החיבור לחשבון הנוכחי...</p>
         <div id="chat-messages" class="chat-messages" aria-live="polite">
           <div class="chat-skeleton" aria-hidden="true"></div>
           <div class="chat-skeleton short" aria-hidden="true"></div>
         </div>
         <form id="chat-form" class="chat-composer">
           <label for="chat-input" class="sr-only">הודעה לצ'אט</label>
-          <textarea id="chat-input" rows="3" placeholder="שאל, דייק או בקש שינוי במסמך..."></textarea>
+          <textarea id="chat-input" rows="3" placeholder="שאל, דייק או בקש שינוי במסמך..." disabled></textarea>
           <div>
             <span>Enter לשליחה · Shift+Enter לשורה חדשה</span>
             <button class="send-button" type="submit" aria-label="שליחת הודעה">
@@ -131,7 +133,7 @@
         </div>
         <label>שם הפרויקט<input id="project-name" required maxlength="90" /></label>
         <label>תיאור העבודה<textarea id="project-description" required rows="5"></textarea></label>
-        <label class="file-drop">חומרים ראשוניים<input id="project-files" type="file" multiple /><span>PDF, Excel, מסמכים ותמונות — נשמרים בפרויקט זה בלבד</span></label>
+        <label class="file-drop">חומרים ראשוניים<input id="project-files" type="file" multiple /><span>PDF, Excel, מסמכים, תמונות ווידאו — נשמרים בפרויקט זה בלבד</span></label>
         <div class="dialog-actions"><button class="secondary-button dialog-close" type="button">ביטול</button><button class="primary-button" type="submit">פתיחת הפרויקט</button></div>
       </form>
     </dialog>
@@ -163,13 +165,27 @@
       </form>
     </dialog>
 
-    <dialog id="material-dialog" class="app-dialog compact-dialog">
+    <dialog id="material-dialog" class="app-dialog wide-dialog material-dialog">
       <div class="dialog-title-row">
         <div><span class="eyebrow">חומר בפרויקט</span><h2 id="material-dialog-title">פרטי הקובץ</h2></div>
         <button class="icon-button dialog-close" type="button" aria-label="סגירה">×</button>
       </div>
       <dl id="material-details" class="details-grid"></dl>
       <p id="material-dialog-message" class="inline-notice"></p>
+      <div id="material-preview" class="material-preview" hidden></div>
+      <section class="material-content-section" aria-labelledby="material-content-title">
+        <div class="material-content-heading">
+          <div><h3 id="material-content-title">תוכן שנקרא</h3><p id="material-content-status">טוען את התוכן...</p></div>
+          <button id="analyze-material-button" class="secondary-button" type="button">פענוח וניתוח עם Codex</button>
+        </div>
+        <textarea id="material-content-editor" dir="auto" rows="14" maxlength="1500000" spellcheck="false" placeholder="התוכן שחולץ מהקובץ יוצג כאן. אפשר לתקן או להוסיף טקסט שחסר."></textarea>
+        <p class="field-hint">טקסט שתשמור כאן יקבל עדיפות בצ׳אט על הקריאה האוטומטית. המקור המקורי נשמר ואפשר לחזור אליו.</p>
+        <div class="material-content-actions">
+          <button id="save-material-content-button" class="primary-button" type="button">שמירת תיקון</button>
+          <button id="reset-material-content-button" class="secondary-button" type="button">חזרה לקריאה המקורית</button>
+          <button id="discuss-material-button" class="secondary-button" type="button">דיון בחומר בצ׳אט</button>
+        </div>
+      </section>
       <div class="dialog-actions material-actions">
         <button id="download-material-button" class="primary-button" type="button">הורדת המקור</button>
         <button id="reprocess-material-button" class="secondary-button" type="button">קריאה מחדש</button>
@@ -186,8 +202,9 @@
         <div><span>מחירון ברירת המחדל הקבוע של המערכת</span><strong id="dekel-catalog-status">טוען את מחירון DEKEL...</strong></div>
         <button id="dekel-analyze-button" class="secondary-button" type="button">הרצת התאמה מחדש</button>
       </section>
-      <p class="inline-notice dekel-rule-notice">קובץ DEKEL נמצא תמיד בתיקייה הגלובלית של המערכת ואינו מועלה לכל פרויקט. זהו מקור הקודים והמחירים היחיד כברירת מחדל. כל מחירון אחר יישאר מחוץ לחישוב גם אם הוא שמור בתיקייה גלובלית או בתיקיית פרויקט, אלא אם בעל המערכת יציין במפורש את שם הקובץ ויבקש להשתמש דווקא בו. המערכת לא תשאל ולא תציע להחליף מחירון. היא בוחרת התאמת DEKEL מומלצת וממשיכה; אפשר לתקן קוד, כמות או להוציא שורה לפני ההחלה. כל מחירי היחידה נשמרים ללא מע״מ.</p>
+      <p class="inline-notice dekel-rule-notice">קובץ DEKEL הקבוע נבחר במניפסט המערכת ונמצא תמיד בתיקייה הגלובלית; הוא אינו מועלה לכל פרויקט. זהו מקור הקודים והמחירים היחיד כברירת מחדל. כל מחירון אחר יישאר מחוץ לחישוב גם אם הוא שמור בתיקייה גלובלית או בתיקיית פרויקט, אלא אם בעל המערכת יציין במפורש את שם הקובץ ויבקש להשתמש דווקא בו. המערכת לא תשאל ולא תציע להחליף מחירון. היא בוחרת התאמה מומלצת וממשיכה; אפשר להזין כל קוד שקיים בקובץ DEKEL הקבוע, לתקן כמות או להוציא שורה. שורה שהוצאה תימחק מכתב הכמויות בעת ההחלה. כל מחירי היחידה נשמרים ללא מע״מ.</p>
       <div id="dekel-warnings" class="dekel-warnings" aria-live="polite"></div>
+      <section id="dekel-financial-audit" class="dekel-financial-audit" aria-live="polite"></section>
       <div id="dekel-lines" class="dekel-lines" aria-live="polite">
         <div class="management-skeleton" aria-hidden="true"></div>
         <div class="management-skeleton" aria-hidden="true"></div>

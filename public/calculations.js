@@ -49,28 +49,69 @@ export function groupEstimate(rows) {
     const remainderNet = roundMoney(
       result.slice(4).reduce((total, group) => total + group.net, 0),
     );
-    result = [
-      ...primary,
-      { category: "עבודות משלימות", net: remainderNet, sourceRows: remainderRows },
-    ];
+    const existingRemainder = primary.find((group) => group.category === "עבודות משלימות");
+    if (existingRemainder) {
+      existingRemainder.net = roundMoney(existingRemainder.net + remainderNet);
+      existingRemainder.sourceRows.push(...remainderRows);
+      result = primary;
+    } else {
+      result = [...primary, { category: "עבודות משלימות", net: remainderNet, sourceRows: remainderRows }];
+    }
   }
 
-  return result.map((group, index) => ({
-    ...group,
-    serialNumber: index + 1,
-    vat: roundMoney(group.net * VAT_RATE),
-    totalWithVat: roundMoney(group.net * (1 + VAT_RATE)),
-  }));
+  const allocatedVat = allocateVatByLargestRemainder(result, calculated.vat);
+  return result.map((group, index) => {
+    const vat = allocatedVat[index];
+    return {
+      ...group,
+      serialNumber: index + 1,
+      vat,
+      totalWithVat: roundMoney(group.net + vat),
+    };
+  });
+}
+
+function allocateVatByLargestRemainder(groups, totalVat) {
+  const targetCents = Math.round(totalVat * 100);
+  const allocations = groups.map((group, index) => {
+    const rawCents = group.net * VAT_RATE * 100;
+    const baseCents = Math.floor(rawCents + Number.EPSILON);
+    return { index, baseCents, remainder: rawCents - baseCents };
+  });
+  let remaining = targetCents - allocations.reduce((sum, item) => sum + item.baseCents, 0);
+  const order = [...allocations].sort((left, right) => right.remainder - left.remainder || left.index - right.index);
+  for (let index = 0; index < remaining; index += 1) order[index % order.length].baseCents += 1;
+  return allocations.sort((left, right) => left.index - right.index).map((item) => item.baseCents / 100);
 }
 
 export function calculateProjectSummary(rows) {
   const boq = calculateBoq(rows);
+  const groups = groupEstimate(rows);
   const fees = FEE_ROWS.map((fee) => ({
     ...fee,
     amount: roundMoney(boq.totalWithVat * fee.rate),
   }));
   const feesTotal = roundMoney(fees.reduce((total, fee) => total + fee.amount, 0));
   const grandTotal = roundMoney(boq.totalWithVat + feesTotal);
+  const audit = buildFinancialAudit({ boq, groups, fees, feesTotal, grandTotal });
+  if (!audit.valid) throw new Error(`Financial audit failed: ${audit.failedChecks.join(", ")}`);
 
-  return { boq, groups: groupEstimate(rows), fees, feesTotal, grandTotal };
+  return { boq, groups, fees, feesTotal, grandTotal, audit };
+}
+
+function buildFinancialAudit({ boq, groups, fees, feesTotal, grandTotal }) {
+  const checks = {
+    rowAmountsEqualNet: roundMoney(boq.rows.reduce((sum, row) => sum + row.amount, 0)) === boq.subtotalNet,
+    vatIsExactly18Percent: roundMoney(boq.subtotalNet * VAT_RATE) === boq.vat,
+    grossEqualsNetPlusVat: roundMoney(boq.subtotalNet + boq.vat) === boq.totalWithVat,
+    estimateNetEqualsBoqNet: roundMoney(groups.reduce((sum, group) => sum + group.net, 0)) === boq.subtotalNet,
+    estimateVatEqualsBoqVat: roundMoney(groups.reduce((sum, group) => sum + group.vat, 0)) === boq.vat,
+    estimateGrossEqualsBoqGross: roundMoney(groups.reduce((sum, group) => sum + group.totalWithVat, 0)) === boq.totalWithVat,
+    feesUseVatInclusiveBase: fees.every((fee) => fee.amount === roundMoney(boq.totalWithVat * fee.rate)),
+    feesTotalMatches: roundMoney(fees.reduce((sum, fee) => sum + fee.amount, 0)) === feesTotal,
+    grandTotalMatches: roundMoney(boq.totalWithVat + feesTotal) === grandTotal,
+    onlyApprovedFees: fees.length === FEE_ROWS.length && fees.every((fee, index) => fee.key === FEE_ROWS[index].key && fee.rate === FEE_ROWS[index].rate),
+  };
+  const failedChecks = Object.entries(checks).filter(([, passed]) => !passed).map(([name]) => name);
+  return { valid: failedChecks.length === 0, checks, failedChecks, difference: 0 };
 }

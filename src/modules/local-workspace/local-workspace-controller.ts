@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { open, rm } from "node:fs/promises";
-import { basename } from "node:path";
+import { basename, extname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
@@ -12,7 +12,7 @@ import type { LocalWorkspaceLogger } from "./local-workspace-logger.ts";
 import { setSecurityHeaders } from "../../app/local-request-security.ts";
 import {
   backupCreateSchema, chatSchema, confirmationSchema, createProjectSchema, dekelAnalyzeSchema, dekelLineUpdateSchema,
-  proposalActionSchema, updateProjectSchema, validate, versionSchema,
+  materialContentSchema, proposalActionSchema, updateProjectSchema, validate, versionSchema, videoFrameSchema,
 } from "./local-workspace-validation.ts";
 
 export class LocalWorkspaceController {
@@ -103,6 +103,25 @@ export class LocalWorkspaceController {
     const materialMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/materials\/([a-zA-Z0-9-]+)$/);
     if (materialMatch && method === "GET") return await this.downloadMaterial(response, materialMatch[1], materialMatch[2]);
     if (materialMatch && method === "DELETE") return this.json(response, 200, { project: await this.service.deleteMaterial(materialMatch[1], materialMatch[2]) });
+    const materialPreviewMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/materials\/([a-zA-Z0-9-]+)\/preview$/);
+    if (materialPreviewMatch && method === "GET") return await this.downloadMaterial(response, materialPreviewMatch[1], materialPreviewMatch[2], true);
+    const materialContentMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/materials\/([a-zA-Z0-9-]+)\/content$/);
+    if (materialContentMatch && method === "GET") return this.json(response, 200, { content: await this.service.getMaterialContent(materialContentMatch[1], materialContentMatch[2]) });
+    if (materialContentMatch && method === "PUT") {
+      const input = validate(materialContentSchema, await readJson(request, this.config.maxDocumentJsonBytes));
+      return this.json(response, 200, await this.service.updateMaterialContent(materialContentMatch[1], materialContentMatch[2], input.text));
+    }
+    const materialAnalyzeMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/materials\/([a-zA-Z0-9-]+)\/analyze$/);
+    if (materialAnalyzeMatch && method === "POST") return this.json(response, 200, await this.service.analyzeMaterial(materialAnalyzeMatch[1], materialAnalyzeMatch[2]));
+    const videoFrameMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/materials\/([a-zA-Z0-9-]+)\/video-frames$/);
+    if (videoFrameMatch && method === "POST") {
+      const input = validate(videoFrameSchema, {
+        timestampSeconds: Number(url.searchParams.get("timestampSeconds")),
+        durationSeconds: Number(url.searchParams.get("durationSeconds")),
+      });
+      const bytes = await readBinary(request, 3 * 1024 * 1024);
+      return this.json(response, 201, { project: await this.service.addVideoFrame(videoFrameMatch[1], videoFrameMatch[2], bytes, input.timestampSeconds, input.durationSeconds) });
+    }
     const reprocessMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/materials\/([a-zA-Z0-9-]+)\/reprocess$/);
     if (reprocessMatch && method === "POST") return this.json(response, 200, { project: await this.service.reprocessMaterial(reprocessMatch[1], reprocessMatch[2]) });
 
@@ -117,12 +136,12 @@ export class LocalWorkspaceController {
     const chatMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/chat$/);
     if (chatMatch && method === "POST") {
       const input = validate(chatSchema, await readJson(request, this.config.maxJsonBytes));
-      return this.json(response, 200, await this.service.chat(chatMatch[1], input.message));
+      return this.json(response, 200, await this.service.chat(chatMatch[1], input.message, input.retryOfMessageId));
     }
     const proposalMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/proposals\/([a-zA-Z0-9-]+)\/(apply|reject)$/);
     if (proposalMatch && method === "POST") {
       const input = validate(proposalActionSchema, await readJson(request, this.config.maxJsonBytes));
-      return this.json(response, 200, { project: await this.service.handleProposal(proposalMatch[1], proposalMatch[2], proposalMatch[3] as "apply" | "reject", input.scope, input.confirmGlobal) });
+      return this.json(response, 200, { project: await this.service.handleProposal(proposalMatch[1], proposalMatch[2], proposalMatch[3] as "apply" | "reject", input.scope) });
     }
     throw new LocalWorkspaceError(404, "route_not_found", "Локальный маршрут не найден");
   }
@@ -150,16 +169,16 @@ export class LocalWorkspaceController {
     }
     await handle.close();
     if (received === 0) { await rm(sourcePath, { force: true }); throw new LocalWorkspaceError(400, "empty_file", "Файл пустой"); }
-    const material: LocalMaterial = { id: materialId, name, size: received, type: String(request.headers["content-type"] ?? "application/octet-stream").slice(0, 200), addedAt: new Date().toISOString(), status: "processing", sourcePath };
+    const material: LocalMaterial = { id: materialId, name, size: received, type: normalizeMaterialContentType(name, request.headers["content-type"]), addedAt: new Date().toISOString(), status: "processing", sourcePath };
     return this.json(response, 201, await this.service.registerUploadedMaterial(projectId, material));
   }
 
-  private async downloadMaterial(response: ServerResponse, projectId: string, materialId: string): Promise<true> {
+  private async downloadMaterial(response: ServerResponse, projectId: string, materialId: string, inline = false): Promise<true> {
     const material = await this.service.getMaterial(projectId, materialId);
     response.statusCode = 200;
     setSecurityHeaders(response);
     response.setHeader("Content-Type", material.type || "application/octet-stream");
-    response.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(material.name)}`);
+    response.setHeader("Content-Disposition", `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(material.name)}`);
     await pipeline(createReadStream(material.sourcePath!), response);
     return true;
   }
@@ -172,6 +191,19 @@ export class LocalWorkspaceController {
     response.end(JSON.stringify(body));
     return true;
   }
+}
+
+async function readBinary(request: IncomingMessage, maxSize: number): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of request) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += buffer.length;
+    if (size > maxSize) throw new LocalWorkspaceError(413, "request_too_large", "Запрос слишком большой");
+    chunks.push(buffer);
+  }
+  if (size === 0) throw new LocalWorkspaceError(400, "empty_file", "Файл пустой");
+  return Buffer.concat(chunks);
 }
 
 async function readJson(request: IncomingMessage, maxSize: number): Promise<Record<string, unknown>> {
@@ -199,6 +231,17 @@ function decodeFileName(header: string | string[] | undefined): string {
   const name = basename(decoded).trim();
   if (!name || name.length > 220) throw new LocalWorkspaceError(400, "invalid_file_name", "Некорректное имя файла");
   return name;
+}
+
+function normalizeMaterialContentType(name: string, header: string | string[] | undefined): string {
+  const declared = String(Array.isArray(header) ? header[0] : header ?? "").split(";", 1)[0].trim().slice(0, 200);
+  if (declared && declared !== "application/octet-stream") return declared;
+  return ({
+    ".mp4": "video/mp4", ".m4v": "video/x-m4v", ".mov": "video/quicktime", ".webm": "video/webm",
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
+    ".pdf": "application/pdf", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  } as Record<string, string>)[extname(name).toLowerCase()] ?? "application/octet-stream";
 }
 
 class LocalRateLimiter {

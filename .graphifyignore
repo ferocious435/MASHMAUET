@@ -1,0 +1,14 @@
+.git/
+.codex/
+skill-system/
+node_modules/
+local-data/
+graphify-out/
+tmp/
+artifacts/
+dist/
+.vendor/
+*.jpg
+*.jpeg
+*.png
+*.webp

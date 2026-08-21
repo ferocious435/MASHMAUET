@@ -239,10 +239,16 @@ export class LocalProjectStore {
       const derivedDirectory = join(this.derivedPath(project.id), material.id);
       const textPath = join(derivedDirectory, "content.txt");
       material.extractedTextPath = await exists(textPath) ? textPath : undefined;
+      const analysisTextPath = join(derivedDirectory, "analysis.txt");
+      material.analysisTextPath = await exists(analysisTextPath) ? analysisTextPath : undefined;
+      const correctedTextPath = join(derivedDirectory, "corrected.txt");
+      material.correctedTextPath = await exists(correctedTextPath) ? correctedTextPath : undefined;
       const derivedEntries = await readdir(derivedDirectory).catch(() => [] as string[]);
       const renderedPages = derivedEntries.filter((name) => /^page-\d+\.png$/i.test(name)).sort((a, b) => Number(a.match(/\d+/)?.[0]) - Number(b.match(/\d+/)?.[0])).map((name) => join(derivedDirectory, name));
+      const videoFrames = derivedEntries.filter((name) => /^frame-\d+\.jpe?g$/i.test(name)).sort((a, b) => Number(a.match(/\d+/)?.[0]) - Number(b.match(/\d+/)?.[0])).map((name) => join(derivedDirectory, name));
       if (/^image\//i.test(material.type) && material.sourcePath) material.visionImagePaths = [material.sourcePath];
-      else material.visionImagePaths = renderedPages;
+      else material.visionImagePaths = [...renderedPages, ...videoFrames];
+      if (/^video\//i.test(material.type)) material.videoFrameCount = videoFrames.length;
     }
   }
   private async ensureDailyBackup(): Promise<void> {

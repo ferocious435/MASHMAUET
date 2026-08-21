@@ -1,4 +1,4 @@
-import { readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { PricebookItem } from "../domain/reference-schemas.ts";
@@ -23,12 +23,14 @@ export interface DekelWorkbookSummary {
 export class DekelCatalogService {
   private readonly configuredWorkbookPath: string | null;
   private readonly workbookDirectoryPath: string;
+  private readonly manifestPath: string;
   private cache?: { workbookPath: string; fingerprint: string; rows: DekelWorkbookRow[]; items: PricebookItem[] };
 
   public constructor(options?: { workbookPath?: string; workbookDirectoryPath?: string }) {
     this.configuredWorkbookPath = options?.workbookPath ?? null;
     this.workbookDirectoryPath =
       options?.workbookDirectoryPath ?? path.join(process.cwd(), "HOMER", "DEKEL");
+    this.manifestPath = path.join(this.workbookDirectoryPath, "default-dekel.json");
   }
 
   public async getWorkbookSummary(): Promise<DekelWorkbookSummary> {
@@ -106,19 +108,27 @@ export class DekelCatalogService {
     }
 
     try {
+      const manifest = JSON.parse(await readFile(this.manifestPath, "utf8")) as { fileName?: unknown };
+      if (typeof manifest.fileName !== "string" || path.basename(manifest.fileName) !== manifest.fileName || path.extname(manifest.fileName).toLowerCase() !== ".xlsx") {
+        return null;
+      }
+      return path.join(this.workbookDirectoryPath, manifest.fileName);
+    } catch { /* compatibility fallback for installations created before the manifest */ }
+
+    try {
       const directoryEntries = await readdir(this.workbookDirectoryPath, {
         withFileTypes: true,
       });
-      const candidateEntry = directoryEntries.find(
+      const candidates = directoryEntries.filter(
         (entry) =>
-          entry.isFile() && path.extname(entry.name).toLowerCase() === ".xlsx",
+          entry.isFile() && path.extname(entry.name).toLowerCase() === ".xlsx" && !entry.name.startsWith("~$") && /(?:דקל|dekel)/iu.test(entry.name),
       );
 
-      if (!candidateEntry) {
+      if (candidates.length !== 1) {
         return null;
       }
 
-      return path.join(this.workbookDirectoryPath, candidateEntry.name);
+      return path.join(this.workbookDirectoryPath, candidates[0].name);
     } catch {
       return null;
     }

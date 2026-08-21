@@ -91,16 +91,29 @@ export class CodexAppServerClient implements CodexGateway {
         if (turn.status === "failed") rejectPromise(new Error(extractTurnError(turn)));
         else resolvePromise(messages.at(-1) ?? "");
       };
+      const onCodexError = (params: JsonObject) => {
+        if (params.turnId !== turnId || params.willRetry === true) return;
+        cleanup();
+        rejectPromise(new Error(extractNotificationError(params)));
+      };
+      const onProcessError = (error: Error) => {
+        cleanup();
+        rejectPromise(error);
+      };
       const timer = setTimeout(() => { cleanup(); rejectPromise(new Error("Codex не ответил за отведённое время")); }, 300_000);
       const cleanup = () => {
         clearTimeout(timer);
         this.events.off("item/completed", onItem);
         this.events.off("turn/completed", onCompleted);
+        this.events.off("codex/error", onCodexError);
+        this.events.off("process/error", onProcessError);
         this.completedItems.delete(turnId);
         this.completedTurns.delete(turnId);
       };
       this.events.on("item/completed", onItem);
       this.events.on("turn/completed", onCompleted);
+      this.events.on("codex/error", onCodexError);
+      this.events.on("process/error", onProcessError);
       const alreadyCompleted = this.completedTurns.get(turnId);
       if (alreadyCompleted) queueMicrotask(() => onCompleted({ turn: alreadyCompleted }));
     });
@@ -171,7 +184,10 @@ export class CodexAppServerClient implements CodexGateway {
         const turn = params.turn as JsonObject | undefined;
         if (typeof turn?.id === "string") this.completedTurns.set(turn.id, turn);
       }
-      this.events.emit(message.method, params);
+      // EventEmitter treats the literal "error" event as a fatal exception when
+      // it has no listener. Codex uses that method name for recoverable stream
+      // notifications too, so route it through an ordinary internal event.
+      this.events.emit(message.method === "error" ? "codex/error" : message.method, params);
       if (this.completedTurns.size > 100) this.completedTurns.delete(this.completedTurns.keys().next().value!);
       if (this.completedItems.size > 100) this.completedItems.delete(this.completedItems.keys().next().value!);
     }
@@ -194,6 +210,7 @@ export class CodexAppServerClient implements CodexGateway {
     this.pending.clear();
     this.child = undefined;
     this.startPromise = undefined;
+    this.events.emit("process/error", error);
   }
 }
 
@@ -218,6 +235,11 @@ function extractRpcError(error: unknown): string {
 function extractTurnError(turn: JsonObject): string {
   const error = turn.error;
   return error && typeof error === "object" && "message" in error ? String((error as { message: unknown }).message) : "Ответ Codex завершился ошибкой";
+}
+function extractNotificationError(params: JsonObject): string {
+  const error = params.error;
+  if (error && typeof error === "object" && "message" in error) return String((error as { message: unknown }).message);
+  return "Связь с Codex прервалась до завершения ответа";
 }
 function approvalDecline(method: string): JsonObject {
   const normalized = method.toLowerCase();

@@ -56,9 +56,19 @@ export const updateProjectSchema = z.object({
   document: documentSchema.optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, "Нет полей для обновления");
 
-export const chatSchema = z.object({ message: z.string().trim().min(1).max(30_000) }).strict();
+export const chatSchema = z.object({
+  message: z.string().trim().min(1).max(30_000).optional(),
+  retryOfMessageId: z.string().trim().min(1).max(120).optional(),
+}).strict().refine((value) => Boolean(value.message) !== Boolean(value.retryOfMessageId), "Укажите сообщение или запрос для повтора");
+export const materialContentSchema = z.object({
+  text: z.string().max(1_500_000).nullable(),
+}).strict();
+export const videoFrameSchema = z.object({
+  timestampSeconds: z.number().finite().nonnegative().max(86_400),
+  durationSeconds: z.number().finite().positive().max(86_400),
+}).strict();
 export const versionSchema = z.object({ label: z.string().trim().min(1).max(100).optional() }).strict();
-export const proposalActionSchema = z.object({ scope: z.enum(["project", "global"]).optional(), confirmGlobal: z.boolean().optional() }).strict();
+export const proposalActionSchema = z.object({ scope: z.literal("project").optional() }).strict();
 export const backupCreateSchema = z.object({ label: z.string().trim().min(1).max(120).optional() }).strict();
 export const confirmationSchema = z.object({ confirm: z.literal(true) }).strict();
 export const dekelAnalyzeSchema = z.object({}).strict();

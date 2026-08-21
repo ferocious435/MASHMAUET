@@ -56,6 +56,8 @@ test("planning, management and supervision fees use the VAT-inclusive base", () 
   assert.equal(summary.fees.find((fee) => fee.key === "management").amount, 19.12);
   assert.equal(summary.fees.find((fee) => fee.key === "supervision").amount, 9.56);
   assert.equal(summary.grandTotal, 408.88);
+  assert.equal(summary.audit.valid, true);
+  assert.ok(Object.values(summary.audit.checks).every(Boolean));
 });
 
 test("more than five categories are reduced to five estimate rows", () => {
@@ -74,4 +76,26 @@ test("more than five categories are reduced to five estimate rows", () => {
     groups.reduce((total, group) => total + group.net, 0),
     calculateBoq(manyRows).subtotalNet,
   );
+});
+
+test("VAT allocation across estimate groups never drifts by one agora", () => {
+  const fractionalRows = [0.03, 0.03, 0.03, 0.03, 0.01].map((unitPrice, index) => ({
+    code: String(index), description: `fraction ${index}`, unit: "unit", quantity: 1, unitPrice, category: `group ${index}`,
+  }));
+  const summary = calculateProjectSummary(fractionalRows);
+  assert.equal(summary.boq.subtotalNet, 0.13);
+  assert.equal(summary.boq.vat, 0.02);
+  assert.equal(summary.groups.reduce((sum, group) => sum + group.vat, 0), 0.02);
+  assert.equal(Math.round(summary.groups.reduce((sum, group) => sum + group.totalWithVat, 0) * 100) / 100, 0.15);
+  assert.ok(summary.groups.every((group) => group.vat >= 0));
+  assert.equal(summary.audit.valid, true);
+});
+
+test("financial audit allows only the approved 7.4%, 5.4% and 2.7% fees", () => {
+  const summary = calculateProjectSummary(rows);
+  assert.deepEqual(summary.fees.map((fee) => [fee.key, fee.rate]), [
+    ["planning", 0.074], ["management", 0.054], ["supervision", 0.027],
+  ]);
+  assert.equal(summary.audit.checks.onlyApprovedFees, true);
+  assert.equal(summary.audit.checks.estimateGrossEqualsBoqGross, true);
 });
