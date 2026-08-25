@@ -2,7 +2,9 @@ export const BOQ_PAGE_CAPACITY = 42;
 export const BOQ_TOTALS_RESERVE = 9;
 
 export function boqRowWeight(row) {
-  return Math.max(2.4, 1.25 + Math.ceil(String(row?.description || "").length / 50));
+  const descriptionWeight = 1.25 + Math.ceil(String(row?.description || "").length / 50);
+  const evidenceWeight = Number(row?.evidenceCount) > 0 ? 1.35 : 0;
+  return Math.max(2.4, descriptionWeight + evidenceWeight);
 }
 
 export function boqPageWeight(rows) {

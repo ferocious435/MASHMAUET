@@ -5,8 +5,243 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { LocalProjectStore } from "../src/modules/local-workspace/local-project-store.ts";
 import { extractMaterial } from "../src/modules/local-workspace/material-extractor.ts";
-import { buildPricedBoqDescription, createProposals, expandCompositeBoqRowsForDekel, parseCodexAnswer, refreshEstimateNotesAfterDekel } from "../src/modules/local-workspace/local-workspace-service.ts";
+import { applyClosestDekelFallbacks, applyDekelDecompositions, buildLocalDekelCandidates, buildPricedBoqDescription, createProposals, deriveHourlyBasisForReview, expandCompositeBoqRowsForDekel, normalizeBoqUnitForDocument, parseCodexAnswer, refreshEstimateNotesAfterDekel, stripDekelPriceAppendix } from "../src/modules/local-workspace/local-workspace-service.ts";
 import { CodexAppServerClient } from "../src/modules/local-workspace/codex-app-server-client.ts";
+import { auditScopeIntegrity, sanitizeScopeInventory } from "../src/modules/local-workspace/boq-scope-completeness.ts";
+
+test("единицы измерения כתב כמויות всегда выводятся в едином профессиональном формате на иврите", () => {
+  const cases = new Map([
+    ["unit", "יח׳"], ["יחידה", "יח׳"], ["m", "מ׳"], ["מטר", "מ׳"],
+    ["m2", "מ״ר"], ["מ\"ר", "מ״ר"], ["m3", "מ״ק"], ["קומ", "קומפ׳"],
+    ["נק", "נק׳"], ["נקודה", "נק׳"], ["hour", "שעה"], ["kg", "ק״ג"],
+  ]);
+  for (const [raw, expected] of cases) assert.equal(normalizeBoqUnitForDocument(raw), expected, raw);
+});
+
+test("повторный подбор DEKEL не самоподтверждает ранее добавленное описание цены", () => {
+  assert.equal(
+    stripDekelPriceAppendix("שיפוץ לוח חשמל קיים\nתכולת סעיף DEKEL 95.08.57.0057: מבנה לוח מתח גבוה 24kV SF6"),
+    "שיפוץ לוח חשמל קיים",
+  );
+});
+
+test("чужой существующий код DEKEL повторно проверяется по смыслу и исключается", () => {
+  const item = {
+    itemId: "foreign", pricebookId: "dekel-live", code: "95.08.57.0057",
+    description: "מבנה לוח מתח גבוה מודולארי 24kV עם מפסק SF6",
+    normalizedDescription: "מבנה לוח מתח גבוה מודולארי 24kv עם מפסק sf6",
+    unit: "unit", unitPrice: 91_500, section: "08", subsection: "57",
+    tagsJson: [], synonymsJson: [], activeFlag: true,
+    metadataJson: { dekel_chapter_code: "08", source_row: "100" },
+  };
+  const candidates = buildLocalDekelCandidates("שיפוץ לוח חשמל ראשי קיים עד 36 מאמ״תים", item.code, "יח׳", [item]);
+  assert.ok(candidates.every((candidate) => candidate.code !== item.code));
+});
+
+test("работа без подходящей строки DEKEL раскладывается на измеряемые подработы без выдуманных цен", () => {
+  const document = {
+    subject: "בדיקה", background: "", objective: "", scope: [], estimateNotes: [], scheduleRows: [], scheduleNotes: "", riskRows: [], additionalNotes: "", evidenceNotes: [],
+    boqRows: [{ id: "boq-complex", code: "", description: "עבודה מורכבת", unit: "קומפ׳", quantity: 1, unitPrice: 0, category: "כללי" }],
+  };
+  const result = applyDekelDecompositions(document, [{
+    sourceBoqRowId: "boq-complex",
+    rows: [
+      { id: "boq-complex-a", description: "פירוק רכיב קיים", unit: "יח׳", quantity: 2, category: "פירוק" },
+      { id: "boq-complex-b", description: "אספקה והתקנת רכיב חדש", unit: "יח׳", quantity: 2, category: "התקנה" },
+    ],
+  }]);
+  const rows = result.boqRows as Array<Record<string, unknown>>;
+  assert.ok(rows.every((row) => String(row.id).startsWith("boq-complex-dekel-part-")));
+  assert.ok(rows.every((row) => row.code === "" && row.unitPrice === 0));
+});
+
+test("после разложения выбирается ближайшая совместимая строка DEKEL и сохраняется объяснение", () => {
+  const review = {
+    lines: [{
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      selectionMethod: undefined, semanticConfidence: undefined, selectionReason: undefined,
+      candidates: [
+        { code: "95.01", score: 0.39, unitCompatibility: "mismatch" },
+        { code: "95.02", score: 0.54, unitCompatibility: "compatible" },
+      ],
+    }],
+  } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 1);
+  const line = (review as { lines: Array<Record<string, unknown>> }).lines[0];
+  assert.equal(line.selectedCode, "95.02");
+  assert.equal(line.semanticConfidence, "medium");
+  assert.match(String(line.selectionReason), /DEKEL/u);
+});
+
+test("почасовая ставка не заменяет основную установленную работу DEKEL", () => {
+  const review = {
+    lines: [{
+      workDescription: "אספקה והתקנת לוח חשמל חדש",
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [
+        { code: "95.hour", description: "חשמלאי מקצועי לפי שעות עבודה", unit: "hour", score: 0.58, unitCompatibility: "compatible" },
+        { code: "95.install", description: "אספקה והתקנת לוח חשמל קומפלט", unit: "unit", score: 0.46, unitCompatibility: "compatible" },
+      ],
+    }],
+  } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 1);
+  assert.equal((review as { lines: Array<Record<string, unknown>> }).lines[0].selectedCode, "95.install");
+});
+
+test("непочасовая работа не заменяется единственным найденным почасовым סעיף DEKEL", () => {
+  const review = {
+    lines: [{
+      workDescription: "תיקון מקומי של מסגרת דלת",
+      originalUnit: "יח׳",
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [
+        { code: "95.hour", description: "מסגר מקצועי לפי שעות עבודה", unit: "hour", score: 0.91, unitCompatibility: "compatible" },
+      ],
+    }],
+  } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 0);
+  assert.equal((review as { lines: Array<Record<string, unknown>> }).lines[0].selectedCode, null);
+});
+
+test("предварительная единица модели не блокирует измеримую строку DEKEL и не делает часы приоритетом", () => {
+  const review = { lines: [{
+    workDescription: "אספקה והתקנת מזגן מיני מרכזי 40000 BTU כולל חיבורים והפעלה",
+    originalUnit: "שעה", hourlyBasis: "unverified",
+    included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+    candidates: [
+      { code: "95.hour", description: "טכנאי מיזוג לפי שעות עבודה", unit: "hour", score: 0.95, unitCompatibility: "exact" },
+      { code: "95.install", description: "אספקה והתקנת מזגן מיני מרכזי 41000 BTU/HR", unit: "unit", score: 0.82, unitCompatibility: "unknown" },
+    ],
+  }] } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 1);
+  assert.equal((review as { lines: Array<Record<string, unknown>> }).lines[0].selectedCode, "95.install");
+});
+
+test("описание модели не доказывает почасовую оплату без прямой фразы в проверенном источнике", () => {
+  const basis = deriveHourlyBasisForReview({
+    originalUnit: "שעה",
+    description: "עבודה לפי שעות עבודה",
+    quantityEvidence: [{ kind: "source", quantityBasis: "documented", source: { excerpt: "נדרש לבצע תיקון מקומי בדלת" } }],
+    candidates: [],
+  });
+  assert.equal(basis, "unverified");
+});
+
+test("поддельный id разложения не создаёт право на почасовую оплату", () => {
+  const basis = deriveHourlyBasisForReview({
+    originalUnit: "שעה",
+    description: "תיקון מקומי נקודתי",
+    pricingBasis: undefined,
+    quantityEvidence: [],
+    candidates: [{ code: "95.hour", description: "מסגר לפי שעה", unit: "hour", unitPrice: 200, score: 0.8, matchReason: "", sourceRow: "1", sourceActivityNumber: null, sourceChapterCode: "60", priceIncludesVat: false, unitCompatibility: "exact" }],
+  });
+  assert.equal(basis, "unverified");
+});
+
+test("системный остаток допускает DEKEL שעה только после отсутствия измеримого кандидата", () => {
+  const hourlyCandidate = { code: "95.hour", description: "מסגר לפי שעה", unit: "hour", unitPrice: 200, score: 0.8, matchReason: "", sourceRow: "1", sourceActivityNumber: null, sourceChapterCode: "60", priceIncludesVat: false, unitCompatibility: "exact" } as const;
+  assert.equal(deriveHourlyBasisForReview({
+    originalUnit: "שעה", description: "תיקון מקומי נקודתי", pricingBasis: "system_decomposed_residual", quantityEvidence: [], candidates: [hourlyCandidate],
+  }), "decomposed_residual");
+  assert.equal(deriveHourlyBasisForReview({
+    originalUnit: "שעה", description: "תיקון מקומי נקודתי", pricingBasis: "system_decomposed_residual", quantityEvidence: [], candidates: [hourlyCandidate, { ...hourlyCandidate, code: "95.unit", description: "תיקון דלת לפי יחידה", unit: "unit", score: 0.7, unitCompatibility: "unknown" }],
+  }), "unverified");
+});
+
+test("реальная почасовая работа допускает 3 минуты, 4.5 или 13 часов без искусственных порогов", () => {
+  for (const quantity of [0.05, 4.5, 13]) {
+    const review = {
+      lines: [{
+        workDescription: "עבודת מסגר לפי שעה לתיקון מקומי",
+        originalUnit: "שעה", quantity, hourlyBasis: "decomposed_residual",
+        included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+        candidates: [
+          { code: "95.hour", description: "מסגר מקצועי לפי שעות עבודה", unit: "hour", score: 0.91, unitCompatibility: "exact" },
+        ],
+      }],
+    } as never;
+    assert.equal(applyClosestDekelFallbacks(review), 1);
+    const line = (review as { lines: Array<Record<string, unknown>> }).lines[0];
+    assert.equal(line.selectedCode, "95.hour");
+    assert.equal(line.quantity, quantity);
+  }
+});
+
+test("измеримая основная работа не превращается в часы из-за ошибочной единицы или неудачного поиска", () => {
+  const review = {
+    lines: [{
+      workDescription: "אספקה והתקנת ציוד כולל חיבורים והפעלה",
+      originalUnit: "שעה", quantity: 18,
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [
+        { code: "95.hour", description: "טכנאי מיזוג לפי שעות עבודה", unit: "hour", score: 0.95, unitCompatibility: "exact" },
+      ],
+    }],
+  } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 0);
+  assert.equal((review as { lines: Array<Record<string, unknown>> }).lines[0].selectedCode, null);
+});
+
+test("явно заданная повременная оплата остаётся допустимой независимо от вида и масштаба работы", () => {
+  const review = {
+    lines: [{
+      workDescription: "עבודת התקנה לפי שעות עבודה בהתאם לתנאי האתר",
+      originalUnit: "שעה", quantity: 18, quantitySource: "material", hourlyBasis: "source_explicit",
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [
+        { code: "95.hour", description: "מתקין מקצועי לפי שעות עבודה", unit: "hour", score: 0.95, unitCompatibility: "exact" },
+      ],
+    }],
+  } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 1);
+  assert.equal((review as { lines: Array<Record<string, unknown>> }).lines[0].selectedCode, "95.hour");
+});
+
+test("одной фразы про часы недостаточно, если количество является системным предположением основной работы", () => {
+  const review = {
+    lines: [{
+      workDescription: "אספקה והתקנת מערכת מלאה לפי שעות עבודה",
+      originalUnit: "שעה", quantity: 500, quantitySource: "estimated", hourlyBasis: "unverified",
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [
+        { code: "95.hour", description: "מתקין מקצועי לפי שעות עבודה", unit: "hour", score: 0.95, unitCompatibility: "exact" },
+      ],
+    }],
+  } as never;
+  assert.equal(applyClosestDekelFallbacks(review), 0);
+});
+
+test("системное разложение ремонта двери не создаёт фиксированные часы специалистов", () => {
+  const document = {
+    subject: "בדיקה", background: "", objective: "", scope: [], estimateNotes: [], scheduleRows: [], scheduleNotes: "", riskRows: [], additionalNotes: "", evidenceNotes: [],
+    boqRows: [{ id: "boq-door", code: "", description: "שיקום דלת כניסה דו־כנפית כולל יישור, פרזול, קורוזיה ואיטום", unit: "יח׳", quantity: 2, unitPrice: 0, category: "מסגרות" }],
+  };
+  const expanded = expandCompositeBoqRowsForDekel(document);
+  const rows = expanded.boqRows as Array<Record<string, unknown>>;
+  assert.ok(rows.every((row) => row.unit !== "שעה"));
+  assert.ok(rows.every((row) => !/הונחו\s+\d+\s+שעות/u.test(String(row.description))));
+});
+
+test("нейтральный аудит полноты блокирует операцию без проверяемой связи с כתב כמויות", () => {
+  const inventory = sanitizeScopeInventory([{ id: "roof-test", packageId: "roof", packageTitle: "קירוי", stage: "testing_handover", title: "בדיקת אטימות", reason: "נדרש למסירה", dekelQuerySeeds: ["בדיקת אטימות גג"] }]);
+  const result = auditScopeIntegrity({ inventory, resolutions: [], boqRows: [{ id: "roof-cover" }], sourceFingerprint: "source", boqFingerprint: "boq" });
+  assert.equal(result.status, "needs_review");
+  assert.deepEqual(result.unresolvedOperationIds, ["roof-test"]);
+});
+
+test("полнота подтверждается только существующей и оценённой строкой DEKEL", () => {
+  const inventory = sanitizeScopeInventory([{ id: "pipe-test", packageId: "pipe", packageTitle: "צנרת", stage: "testing_handover", title: "בדיקת לחץ", reason: "נדרש לפני מסירה", dekelQuerySeeds: ["בדיקת לחץ לצנרת"] }]);
+  const resolutions = [{ operationId: "pipe-test", disposition: "separate_boq_row" as const, boqRowIds: ["row-test"], reason: "משולם בנפרד" }];
+  const blocked = auditScopeIntegrity({ inventory, resolutions, boqRows: [{ id: "row-test" }], selectedDekelByRowId: new Map(), sourceFingerprint: "source", boqFingerprint: "boq" });
+  assert.equal(blocked.status, "needs_review");
+  const complete = auditScopeIntegrity({ inventory, resolutions, boqRows: [{ id: "row-test" }], selectedDekelByRowId: new Map([["row-test", "95.01"]]), sourceFingerprint: "source", boqFingerprint: "boq" });
+  assert.equal(complete.status, "complete");
+});
+
+test("название помещения само не создаёт акустику, доступность или другие специальные работы", async () => {
+  const source = await readFile(resolve("src/modules/local-workspace/boq-scope-completeness.ts"), "utf8");
+  assert.doesNotMatch(source, /חדר\s+כושר|אולם\s+ספורט|\bgym\b|accessibility_readiness|acoustic_readiness/iu);
+});
 
 test("составные работы разделяются на отдельные измеряемые позиции DEKEL", () => {
   const document = {

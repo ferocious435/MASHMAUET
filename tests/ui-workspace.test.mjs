@@ -147,6 +147,10 @@ test("כתב כמויות печатается как читаемый A4 с п�
   assert.match(styles, /\.boq-table \.boq-description[^}]*white-space:\s*normal/);
   assert.match(styles, /\.boq-table \.description-input[^}]*field-sizing:\s*content/);
   assert.match(styles, /\.boq-table \.description-input[^}]*overflow-y:\s*hidden/);
+  assert.match(script, /function formatBoqUnit/);
+  assert.match(script, /class="boq-description-text"/);
+  assert.match(script, /class="boq-evidence-list"/);
+  assert.match(styles, /\.boq-evidence-list[^}]*display:\s*flex/);
 });
 
 test("לוח הזמנים отображается как графический календарный план, а не обычная таблица", () => {
@@ -185,6 +189,12 @@ test("страница A4 не перегружается несколькими
   }));
   const pages = documentLayout.paginateBoqRows(rows);
   assert.ok(pages.every((page) => page.length <= 5), "на одной A4 должно оставаться не более пяти столь длинных строк");
+});
+
+test("отдельная строка сносок учитывается при разбиении כתב כמויות на A4", () => {
+  const plain = documentLayout.boqRowWeight({ description: "תיאור קצר", evidenceCount: 0 });
+  const annotated = documentLayout.boqRowWeight({ description: "תיאור קצר", evidenceCount: 2 });
+  assert.ok(annotated > plain);
 });
 
 test("очень длинная строка כתב כמויות не вытесняет итоги за границы A4", () => {

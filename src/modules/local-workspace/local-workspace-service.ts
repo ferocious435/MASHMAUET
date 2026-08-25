@@ -20,8 +20,10 @@ import { calculateProjectSummary } from "../../../public/calculations.js";
 import type { FinancialRow } from "../../../public/calculations.js";
 import { documentSchema } from "./local-workspace-validation.ts";
 import type { AudioTranscriptionGateway } from "./media-audio-transcription.ts";
+import { auditScopeIntegrity, inventoryAsScopeGaps, sanitizeScopeInventory, sanitizeScopeResolutions, type BoqScopeGap, type ScopeCompletenessAudit, type ScopeInventoryOperation, type ScopeResolution } from "./boq-scope-completeness.ts";
 
 export const ALLOWED_DOCUMENT_PATHS = new Set(["subject", "background", "objective", "scope", "estimateNotes", "scheduleRows", "scheduleNotes", "riskRows", "additionalNotes", "boqRows", "evidenceNotes"]);
+const HOURLY_PRICING_POLICY = "ЕДИНОЕ ПРАВИЛО ОПЛАЧИВАЕМОЙ ЕДИНИЦЫ: не решай заранее, что работа почасовая. Сначала определи физический результат и полный технологический состав операций из материалов проекта; затем каждую операцию ищи по всему DEKEL с учётом материала, размера и условий. Именно подходящий סעיף DEKEL определяет оплачиваемую единицу. Если измеримая работа не найдена, разложи её на более точные подработы и повтори поиск. שעה допустима без числовых лимитов только когда материалы владельца прямо задают повременную оплату либо после разложения остаётся локальная операция, для которой DEKEL действительно даёт почасовой סעיף и не даёт подходящей измеримой строки; трудоёмкость должна быть рассчитана и объяснена. Отсутствие совпадения, название профессии или первоначальная единица модели никогда не являются разрешением заменить работу часами.";
 const DEFAULT_PRICING_POLICY = "DEKEL — постоянный глобальный прайс-лист системы и единственный разрешённый источник кодов и цен по умолчанию для всех проектов. Он всегда читается из системной папки HOMER/DEKEL и никогда не загружается в отдельный проект. Любой другой прайс-лист полностью игнорируй при ценообразовании независимо от того, где он сохранён — в проекте, глобальной папке или другом каталоге. Не используй его как источник, альтернативу или резервный вариант, пока владелец сам прямо не назовёт конкретный файл и не потребует использовать именно его. Никогда не спрашивай и не предлагай сменить прайс-лист.";
 
 export class LocalWorkspaceService {
@@ -120,9 +122,10 @@ export class LocalWorkspaceService {
         throw new LocalWorkspaceError(409, "processing_document_changed", "Документ проекта изменился во время обработки");
       }
       const processedSourceFingerprint = await sourceFingerprint(snapshot);
-      const instruction = "ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ из всех прочитанных материалов. Весь текст итогового документа пиши на иврите. На этом этапе верни proposedChanges для всех полей документа, кроме evidenceNotes: subject, background, objective, scope, estimateNotes, scheduleRows, scheduleNotes, riskRows, additionalNotes и полный boqRows без демонстрационных строк. Формат scheduleRows строго: {stage, duration, notes}; формат riskRows строго: {risk, response, owner}; не добавляй в них id или другие поля. Каждая строка boqRows обязана иметь только поля {id, code, description, unit, quantity, unitPrice, category}; используй category, а не chapter. evidenceNotes оставь пустым. До проверки DEKEL оставь code пустым и unitPrice 0. Формируй כתב כמויות по ОТДЕЛЬНО ОПЛАЧИВАЕМЫМ видам работ и ожидаемому составу расценок DEKEL: не дроби одну комплексную расценку на искусственные строки поставки, монтажа, крепежа, подрезки, проверки или пуска, если эти операции обычно входят в цену одной работы. Но обязательно разделяй реально разные סעיפי DEKEL: например, электрическую точку и сам светильник; основное оборудование кондиционирования и отдельно измеряемые питание, дренаж или трубопровод; вентилятор и воздуховоды; огнетушитель и знак выхода. Не объединяй несколько разных единиц измерения в одну строку קומפלט. Нельзя объединять одним סעיף и одним количеством: розетки/выключатели с кабелями/лотками; окраску металлической двери с ремонтом замка и часами слесаря; механизмы окна с погонным уплотнением; ремонт электрощита с маркировкой цепей, балансировкой фаз и заменой УЗО; взаимоисключающие сценарии «ремонт или замена». В таких случаях выбери профессиональный базовый сценарий и создай отдельную строку на каждый реально оплачиваемый סעיף DEKEL. Площадные работы задавай в מ״ר, линейные — в מ׳, оборудование — в יח׳, почасовые работы — в שעה, вывоз отходов — в מ״ק; для вывоза при отсутствии измерения допустимо консервативно принять минимальный оплачиваемый объём DEKEL и пометить допущение. Работы по стали и антикоррозионной окраске измеряй площадью поверхности, а не строкой קומפלט. Не добавляй строки проектирования, управления, надзора или контроля: они уже рассчитываются надбавками 7.4%, 5.4% и 2.7% после НДС. Стремись к профессионально достаточному, но компактному כתב כמויות примерно из 15–45 строк, а не к механическому перечислению каждого действия. Описание каждой строки должно быть ПОЛНЫМ: укажи ключевые материал, способ выполнения, размер/мощность и все известные включённые операции, чтобы строку можно было точно сопоставить с סעיף DEKEL и показать без сокращения. Количество должно следовать измерениям из материалов; если точной спецификации не хватает, выбери консервативное типовое исполнение как явно помеченное профессиональное допущение, не задавая владельцу вопрос.";
+      const scopeInventory = await this.buildIndependentScopeInventory(snapshot);
+      const instruction = "ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ из всех прочитанных материалов. Весь текст итогового документа пиши на иврите. На этом этапе верни proposedChanges для всех полей документа, кроме evidenceNotes: subject, background, objective, scope, estimateNotes, scheduleRows, scheduleNotes, riskRows, additionalNotes и полный boqRows без демонстрационных строк. Формат scheduleRows строго: {stage, duration, notes}; формат riskRows строго: {risk, response, owner}; не добавляй в них id или другие поля. Каждая строка boqRows обязана иметь только поля {id, code, description, unit, quantity, unitPrice, category}; используй category, а не chapter. evidenceNotes оставь пустым. До проверки DEKEL оставь code пустым и unitPrice 0. СНАЧАЛА составь независимый перечень рабочих пакетов из материалов и назначения объекта. Для каждого пакета проверь цепочку: демонтаж существующего → подготовка основания/места → основная отдельно оплачиваемая работа → подключения, крепления и доступ → восстановление нарушенной отделки → испытания, пуск и сдача. Отсутствующие профессионально необходимые звенья добавляй как допущения, не задавая владельцу вопрос. Формируй כתב כמויות по ОТДЕЛЬНО ОПЛАЧИВАЕМЫМ видам работ и ожидаемому составу расценок DEKEL: не дроби одну комплексную расценку на искусственные строки поставки, монтажа, крепежа, подрезки, проверки или пуска, если эти операции обычно входят в цену одной работы. Но обязательно разделяй реально разные סעיפי DEKEL: например, электрическую точку и сам светильник; основное оборудование кондиционирования и отдельно измеряемые питание, дренаж или трубопровод; вентилятор и воздуховоды; огнетушитель и знак выхода. Не объединяй несколько разных единиц измерения в одну строку קומפלט. Нельзя объединять одним סעיף и одним количеством: розетки/выключатели с кабелями/лотками; окраску металлической двери с ремонтом замка и часами слесаря; механизмы окна с погонным уплотнением; ремонт электрощита с маркировкой цепей, балансировкой фаз и заменой УЗО; взаимоисключающие сценарии «ремонт или замена». В таких случаях выбери профессиональный базовый сценарий и создай отдельную строку на каждый реально оплачиваемый סעיף DEKEL. Площадные работы задавай в מ״ר, линейные — в מ׳, оборудование — в יח׳, почасовые работы — в שעה, вывоз отходов — в מ״ק; для вывоза при отсутствии измерения допустимо консервативно принять минимальный оплачиваемый объём DEKEL и пометить допущение. ЗАПРЕЩЕНО использовать часы как запасной способ оценки основной работы: строка שעה допустима только когда сама работа действительно задана как локальная почасовая операция, а количество часов рассчитано из объёма, состава звена и трудоёмкости и будет объяснено в сноске. Работы по стали и антикоррозионной окраске измеряй площадью поверхности, а не строкой קומפלט. Не добавляй строки проектирования, управления, надзора или контроля: они уже рассчитываются надбавками 7.4%, 5.4% и 2.7% после НДС. Полнота важнее количества строк: допустимо 15–100 строк, если все отдельно оплачиваемые работы нужны для полного результата. Описание каждой строки должно быть ПОЛНЫМ: укажи ключевые материал, способ выполнения, размер/мощность и все известные включённые операции, чтобы строку можно было точно сопоставить с סעיף DEKEL и показать без сокращения. Количество должно следовать измерениям из материалов; если точной спецификации не хватает, выбери консервативное типовое исполнение как явно помеченное профессиональное допущение, не задавая владельцу вопрос.";
       const promptSnapshot = { ...snapshot, document: synthesisPromptDocument(snapshot) };
-      const built = await this.buildPrompt(promptSnapshot, instruction, randomUUID());
+      const built = await this.buildPrompt(promptSnapshot, `${instruction}\n\nОБЯЗАТЕЛЬНЫЙ НЕЗАВИСИМЫЙ SCOPE INVENTORY:\n${JSON.stringify(scopeInventory)}\n\n${HOURLY_PRICING_POLICY}`, randomUUID());
       const documentThreadId = await this.codex.startThread(this.store.projectPath(projectId));
       const parsedDocument = parseCodexAnswer(await this.codex.runTurn(documentThreadId, this.store.projectPath(projectId), built.prompt, []));
       await this.updateProcessingStage(projectId, runId, "understanding_work", 52);
@@ -138,17 +141,21 @@ export class LocalWorkspaceService {
         if (!requiredDocumentPaths.includes(change.path)) continue;
         candidate[change.path] = JSON.parse(change.valueJson);
       }
-      const documentDraft = expandCompositeBoqRowsForDekel(normalizeGeneratedDocument(candidate));
+      let documentDraft = expandCompositeBoqRowsForDekel(normalizeGeneratedDocument(candidate));
       const draftRows = documentDraft.boqRows as Array<Record<string, unknown>>;
       if (draftRows.length === 0 || draftRows.some((row) => String(row.id ?? "").startsWith("boq-example-"))) {
         throw new LocalWorkspaceError(409, "generated_boq_invalid", "Анализ не сформировал рабочий כתב כמויות без демонстрационных строк");
       }
 
+      const scopeCompletion = await this.completeScopeAgainstFullDekel(snapshot, documentDraft, scopeInventory);
+      documentDraft = scopeCompletion.document;
+      documentDraft = await this.resolveBoqRepresentabilityThroughDekel(snapshot, documentDraft);
+
       await this.updateProcessingStage(projectId, runId, "quantifying", 58);
       const generatedEvidence = await this.generateEvidenceNotesInBatches(snapshot, documentDraft);
       const evidenceThreadId = generatedEvidence.threadId;
       documentDraft.evidenceNotes = generatedEvidence.notes;
-      const validated = normalizeGeneratedDocument(documentDraft);
+      const validated = normalizeGeneratedDocument(documentDraft, true);
       const evidenceWarningCodes = [...new Set([
         ...generatedEvidence.warningCodes,
         ...await sanitizeGeneratedEvidenceSources(validated, snapshot.materials),
@@ -159,7 +166,18 @@ export class LocalWorkspaceService {
       await this.updateProcessingStage(projectId, runId, "matching_dekel", 72);
       const review = await this.buildDekelReview(validated);
       await this.refineDekelReviewWithCodex(review, projectId);
-      const dekelNeedsReview = reviewHasAutomaticBlockers(review);
+      applyClosestDekelFallbacks(review);
+      refreshDekelReview(review);
+      const selectedDekelByRowId = new Map(review.lines.filter((line) => line.included && line.selectedCode).map((line) => [line.sourceBoqRowId, line.selectedCode!]));
+      const finalScopeAudit = auditScopeIntegrity({
+        inventory: scopeCompletion.audit.inventory,
+        resolutions: scopeCompletion.audit.resolutions,
+        boqRows: validated.boqRows as Array<Record<string, unknown>>,
+        selectedDekelByRowId,
+        sourceFingerprint: processedSourceFingerprint,
+        boqFingerprint: fingerprintBoq(validated.boqRows as Array<Record<string, unknown>>),
+      });
+      const dekelNeedsReview = reviewHasAutomaticBlockers(review) || finalScopeAudit.status !== "complete";
       const finalDocument = dekelNeedsReview
         ? applyVerifiedDekelSelectionsToDocument(validated, review)
         : applyDekelReviewToDocument(validated, review);
@@ -180,9 +198,10 @@ export class LocalWorkspaceService {
           throw new LocalWorkspaceError(409, "financial_validation_failed", "Проверка DEKEL или финансовых итогов не завершена");
         }
         const now = new Date().toISOString();
-        const requiresReview = audioWarningCodes.length > 0 || evidenceWarningCodes.length > 0 || dekelNeedsReview;
+        const requiresReview = audioWarningCodes.length > 0 || evidenceWarningCodes.length > 0 || finalScopeAudit.status !== "complete" || dekelNeedsReview;
         current.document = finalDocument;
         current.dekelReview = review;
+        current.scopeCompleteness = { ...finalScopeAudit, boqFingerprint: fingerprintBoq(finalDocument.boqRows as Array<Record<string, unknown>>) };
         current.codexThreadId = evidenceThreadId;
         current.processing = {
           ...current.processing,
@@ -194,7 +213,7 @@ export class LocalWorkspaceService {
           validatedDocumentFingerprint: requiresReview ? null : fingerprintDocument(finalDocument),
           updatedAt: now,
           completedAt: now,
-          warningCodes: [...new Set([...current.processing.warningCodes.filter((code) => !["legacy_demo_detected", "dekel_matches_require_review", "dekel_review_required", "evidence_source_downgraded"].includes(code)), ...audioWarningCodes, ...evidenceWarningCodes, ...(dekelNeedsReview ? ["dekel_review_required"] : [])])],
+          warningCodes: [...new Set([...current.processing.warningCodes.filter((code) => !["legacy_demo_detected", "dekel_matches_require_review", "dekel_review_required", "evidence_source_downgraded", "scope_completeness_review_required"].includes(code)), ...audioWarningCodes, ...evidenceWarningCodes, ...(finalScopeAudit.status !== "complete" ? ["scope_completeness_review_required"] : []), ...(dekelNeedsReview ? ["dekel_review_required"] : [])])],
           error: undefined,
         };
         await this.store.save(current);
@@ -231,6 +250,127 @@ export class LocalWorkspaceService {
     }
   }
 
+  private async buildIndependentScopeInventory(snapshot: LocalProject): Promise<ScopeInventoryOperation[]> {
+    const instruction = `SCOPE_INVENTORY_BEFORE_BOQ
+Проанализируй все материалы проекта независимо от существующего документа и будущего כתב כמויות. Сначала выдели физические рабочие пакеты, затем для каждого пакета перечисли только применимые операции по стадиям: demolition_enabling, preparation, primary_work, interfaces_connections, reinstatement, testing_handover. Не создавай работы только из названия помещения, нормативного предположения или типового проекта: каждая операция должна вытекать из материала либо быть профессионально неизбежной для явно требуемого физического результата. Не включай неприменимые стадии. Не определяй единицу оплаты и не используй цены. Верни ровно одно proposedChanges path=scopeInventory. valueJson — массив объектов {id,packageId,packageTitle,stage,title,reason,dekelQuerySeeds}. id и packageId стабильные латинские идентификаторы; title, packageTitle, reason и запросы — на иврите; dekelQuerySeeds содержит 2–5 предметных описаний физической работы для поиска по всему DEKEL. Перечень должен быть достаточным для сантехники, кровли, конструкций, земляных, дорожных, инженерных и отделочных работ без специальных правил под конкретное помещение.`;
+    const promptSnapshot = { ...snapshot, document: synthesisPromptDocument(snapshot) };
+    const built = await this.buildPrompt(promptSnapshot, instruction, randomUUID());
+    const threadId = await this.codex.startThread(this.store.projectPath(snapshot.id));
+    const parsed = parseCodexAnswer(await this.codex.runTurn(threadId, this.store.projectPath(snapshot.id), built.prompt, []));
+    const change = parsed.proposedChanges.find((item) => item.path === "scopeInventory" && typeof item.valueJson === "string");
+    let raw: unknown = [];
+    try { raw = change ? JSON.parse(change.valueJson) : []; } catch { raw = []; }
+    const inventory = sanitizeScopeInventory(raw);
+    if (inventory.length === 0) throw new LocalWorkspaceError(502, "scope_inventory_empty", "Независимый анализ не сформировал проверяемый перечень физических операций");
+    return inventory;
+  }
+
+  private async completeScopeAgainstFullDekel(
+    snapshot: LocalProject,
+    initialDocument: Record<string, unknown>,
+    inventory: ScopeInventoryOperation[],
+  ): Promise<{ document: Record<string, unknown>; audit: ScopeCompletenessAudit }> {
+    const initialRows = initialDocument.boqRows as Array<Record<string, unknown>>;
+    const gaps = inventoryAsScopeGaps(inventory);
+    const allDekelItems = await this.dekelCatalog.getAllPricebookItems();
+    const catalogCoverage = buildFullDekelScopeCoverage(gaps, allDekelItems);
+    const instruction = `DEKEL_FULL_CATALOG_SCOPE_CLOSURE
+Проверь полный כתב כמויות против независимого перечня физических операций. По каждой операции система уже выполнила поиск по всем ${allDekelItems.length} строкам постоянного DEKEL. Сначала реши, оплачивается ли операция отдельной строкой либо доказуемо входит в цену реального переданного кандидата DEKEL. Не удаляй существующие работы. Не создавай строки по одной только профессии или названию помещения. Не придумывай код, цену, количество или единицу. Если нужна отдельная строка, создай её с реальным измеримым результатом, единицей найденного кандидата, обоснованным количеством, пустым code и unitPrice=0. Если операция включена в комплексную цену, укажи конкретный реальный dekelCode и строку BOQ, которая её включает.
+
+Верни ровно два proposedChanges:
+1) path=boqRows — полный массив {id,code,description,unit,quantity,unitPrice,category};
+2) path=scopeResolutions — массив ровно по одной записи на каждую operation: {operationId,disposition,boqRowIds,dekelCode,reason}, где disposition только separate_boq_row или included_in_dekel_price. Для separate_boq_row dekelCode не нужен; для included_in_dekel_price он обязателен и должен быть среди переданных кандидатов этой операции. Нельзя помечать операцию закрытой без существующего boqRowId. Если уверенного решения нет, не выдумывай resolution — система явно оставит операцию на проверку.
+
+INVENTORY И КАНДИДАТЫ DEKEL:
+${JSON.stringify(catalogCoverage)}\n\n${HOURLY_PRICING_POLICY}`;
+    if (allDekelItems.length === 0) {
+      return { document: initialDocument, audit: auditScopeIntegrity({ inventory, resolutions: [], boqRows: initialRows, sourceFingerprint: null, boqFingerprint: fingerprintBoq(initialRows) }) };
+    }
+    const built = await this.buildPrompt({ ...snapshot, document: initialDocument }, instruction, randomUUID());
+    const threadId = await this.codex.startThread(this.store.projectPath(snapshot.id));
+    const parsed = parseCodexAnswer(await this.codex.runTurn(threadId, this.store.projectPath(snapshot.id), built.prompt, []));
+    const rowsChange = parsed.proposedChanges.find((item) => item.path === "boqRows" && typeof item.valueJson === "string");
+    const resolutionsChange = parsed.proposedChanges.find((item) => item.path === "scopeResolutions" && typeof item.valueJson === "string");
+    let proposedRows: unknown = [];
+    let proposedResolutions: unknown = [];
+    try { proposedRows = rowsChange ? JSON.parse(rowsChange.valueJson) : []; } catch { proposedRows = []; }
+    try { proposedResolutions = resolutionsChange ? JSON.parse(resolutionsChange.valueJson) : []; } catch { proposedResolutions = []; }
+    const previousById = new Map(initialRows.map((row) => [String(row.id ?? ""), row]));
+    const sanitizedRows: Array<Record<string, unknown>> = Array.isArray(proposedRows)
+      ? proposedRows.filter((row): row is Record<string, unknown> => Boolean(row && typeof row === "object")).map((row) => ({ ...row, code: "", unitPrice: 0 }))
+      : [];
+    const proposedIds = new Set(sanitizedRows.map((row) => String(row.id ?? "")).filter(Boolean));
+    for (const [id, row] of previousById) if (id && !proposedIds.has(id)) sanitizedRows.push(structuredClone(row));
+    const candidate = structuredClone(initialDocument);
+    candidate.boqRows = sanitizedRows.length > 0 ? sanitizedRows : initialRows;
+    candidate.evidenceNotes = [];
+    const completed = expandCompositeBoqRowsForDekel(normalizeGeneratedDocument(candidate));
+    const allowedCodesByOperation = new Map(catalogCoverage.map((entry) => [entry.key, new Set(entry.candidates.map((candidateItem) => candidateItem.code))]));
+    const resolutions = sanitizeScopeResolutions(proposedResolutions, inventory).filter((resolution) => resolution.disposition !== "included_in_dekel_price" || allowedCodesByOperation.get(resolution.operationId)?.has(resolution.dekelCode ?? ""));
+    const completedRows = completed.boqRows as Array<Record<string, unknown>>;
+    const audit = auditScopeIntegrity({ inventory, resolutions, boqRows: completedRows, sourceFingerprint: null, boqFingerprint: fingerprintBoq(completedRows) });
+    await this.logger.write("info", "full_dekel_scope_coverage_completed", { projectId: snapshot.id, scannedCatalogRows: allDekelItems.length, inventoryOperations: inventory.length, unresolved: audit.unresolvedOperationIds, initialBoqRows: initialRows.length, completedBoqRows: completedRows.length });
+    return { document: completed, audit };
+  }
+
+  private async resolveBoqRepresentabilityThroughDekel(
+    snapshot: LocalProject,
+    initialDocument: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    let document = initialDocument;
+    for (let round = 0; round < 4; round += 1) {
+      const review = await this.buildDekelReview(document);
+      await this.refineDekelReviewWithCodex(review, snapshot.id);
+      const unresolved = review.lines.filter((line) => {
+        if (!line.included || !line.selectedCode) return true;
+        const candidate = line.candidates.find((item) => item.code === line.selectedCode);
+        return !candidate
+          || candidate.unitCompatibility === "mismatch"
+          || (isGenericHourlyDekelCandidate(candidate) && !isProvisionallyHourlyBoqLine(line));
+      });
+      if (unresolved.length === 0) return document;
+      const payload = unresolved.map((line) => ({
+        sourceBoqRowId: line.sourceBoqRowId,
+        workDescription: line.workDescription,
+        unit: line.originalUnit,
+        quantity: line.quantity,
+        category: line.category,
+        closestRealDekelCandidates: line.candidates.map((candidate) => ({
+          code: candidate.code,
+          description: candidate.description,
+          unit: candidate.unit,
+          chapter: candidate.sourceChapterCode,
+        })),
+      }));
+      const instruction = `DEKEL_UNMATCHED_WORK_DECOMPOSITION
+Все работы итогового כתב כמויות должны быть рассчитаны только через постоянный DEKEL. Переданные ниже строки пока не получили профессионально допустимого соответствия. Для каждой строки выбери одно из двух решений: (1) сохрани её как одну измеряемую работу, уточнив описание и единицу так, чтобы она соответствовала максимально близкой реальной строке DEKEL; или (2) разложи её на полный набор отдельно измеряемых подработ, которые можно независимо найти в DEKEL. Нельзя удалять объём работ, заменять его более дешёвой работой, придумывать цену или код. Учитывай демонтаж, подготовку, монтаж, отдельно оплачиваемые подключения, восстановление и испытания. Почасовые ставки специалистов допустимы только для явно локальной остаточной операции и не могут заменять основную поставку, установленное изделие или комплексную работу. Не превращай основную работу в набор часов, если в DEKEL существует измеряемая работа или изделие с монтажом. При неполной спецификации выбери консервативное типовое исполнение и продолжай без вопроса владельцу.
+
+Верни JSON стандартного ответа Codex. В proposedChanges должна быть ровно одна запись path=dekelDecompositions, valueJson — массив {sourceBoqRowId, rows:[{id,description,unit,quantity,category}]}. Верни решение для каждой строки. Новые id должны быть стабильными и начинаться с исходного sourceBoqRowId. Это проход ${round + 1} из 4.
+
+Неподобранные работы и реальные кандидаты, полученные поиском по всему DEKEL:
+${JSON.stringify(payload)}`;
+      const built = await this.buildPrompt({ ...snapshot, document }, `${instruction}\n\n${HOURLY_PRICING_POLICY}`, randomUUID());
+      const threadId = await this.codex.startThread(this.store.projectPath(snapshot.id));
+      const parsed = parseCodexAnswer(await this.codex.runTurn(threadId, this.store.projectPath(snapshot.id), built.prompt, []));
+      const change = parsed.proposedChanges.find((item) => item.path === "dekelDecompositions" && typeof item.valueJson === "string");
+      if (!change) break;
+      let raw: unknown;
+      try { raw = JSON.parse(change.valueJson); } catch { break; }
+      if (!Array.isArray(raw)) break;
+      const allowed = new Set(unresolved.map((line) => line.sourceBoqRowId));
+      const decompositions = raw.filter((item): item is { sourceBoqRowId: string; rows: Array<Record<string, unknown>> } => (
+        Boolean(item && typeof item === "object")
+        && allowed.has(String((item as Record<string, unknown>).sourceBoqRowId ?? ""))
+        && Array.isArray((item as Record<string, unknown>).rows)
+      )).map((item) => ({ sourceBoqRowId: String(item.sourceBoqRowId), rows: item.rows }));
+      if (decompositions.length === 0) break;
+      const previousFingerprint = fingerprintBoq(document.boqRows as Array<Record<string, unknown>>);
+      document = expandCompositeBoqRowsForDekel(normalizeGeneratedDocument(applyDekelDecompositions(document, decompositions), true));
+      if (fingerprintBoq(document.boqRows as Array<Record<string, unknown>>) === previousFingerprint) break;
+    }
+    return document;
+  }
+
   private async generateEvidenceNotesInBatches(
     snapshot: LocalProject,
     documentDraft: Record<string, unknown>,
@@ -245,7 +385,7 @@ export class LocalWorkspaceService {
         const index = nextBatch;
         nextBatch += 1;
         const batch = batches[index];
-        const evidenceInstruction = `СФОРМИРУЙ ТОЛЬКО evidenceNotes для переданной партии boqRows (${index + 1} из ${batches.length}). Весь текст сносок пиши на иврите. Верни ровно одно proposedChanges с path=evidenceNotes. Для каждой и только каждой строки этой партии создай одну проверяемую сноску с тем же anchorId и только полями id, anchorType=boqRow, kind, title, explanation, reason, confidence, quantityBasis и при наличии source. quantityBasis: documented, calculated или inferred; для inferred обязательно kind=inference. Реальный источник указывай только если он есть в прочитанных материалах; ничего не выдумывай. Не меняй ни одно другое поле документа.`;
+        const evidenceInstruction = `СФОРМИРУЙ ТОЛЬКО evidenceNotes для переданной партии boqRows (${index + 1} из ${batches.length}). Весь текст сносок пиши на иврите. Верни ровно одно proposedChanges с path=evidenceNotes. Для каждой и только каждой строки этой партии создай одну проверяемую сноску с тем же anchorId и только полями id, anchorType=boqRow, kind, title, explanation, reason, confidence, quantityBasis и при наличии source. quantityBasis: documented, calculated или inferred; для inferred обязательно kind=inference. Для строки с единицей שעה обязательно объясни, почему работа по своей природе или по материалам проекта оплачивается по времени, и раскрой основание трудоёмкости: объём/условия, состав исполнителей и продолжительность. Нельзя объяснять часы отсутствием найденной предметной расценки. Реальный источник указывай только если он есть в прочитанных материалах; ничего не выдумывай. Не меняй ни одно другое поле документа.`;
         const evidenceSnapshot = { ...snapshot, document: synthesisEvidencePromptDocument({ boqRows: batch }) };
         const evidenceBuilt = await this.buildPrompt(evidenceSnapshot, evidenceInstruction, randomUUID());
         const threadId = await this.codex.startThread(this.store.projectPath(snapshot.id));
@@ -751,6 +891,8 @@ export class LocalWorkspaceService {
     });
     const review = await this.buildDekelReview(projectSnapshot.document);
     await this.refineDekelReviewWithCodex(review, projectId);
+    applyClosestDekelFallbacks(review);
+    refreshDekelReview(review);
     return await this.dataMutex.run("__data__", async () => {
       const project = await this.store.get(projectId);
       assertProcessingIdle(project);
@@ -764,7 +906,8 @@ export class LocalWorkspaceService {
         review.sourceBoqFingerprint = fingerprintBoq(project.document.boqRows as Array<Record<string, unknown>>);
       }
       project.dekelReview = review;
-      const fullyVerified = review.financialAudit.valid && review.lines.every((line) => line.included && Boolean(line.selectedCode));
+      const scopeVerified = refreshStoredScopeAudit(project, review, project.materials.length ? await sourceFingerprint(project) : project.processing.sourceFingerprint);
+      const fullyVerified = scopeVerified && review.financialAudit.valid && !reviewHasAutomaticBlockers(review) && review.lines.every((line) => line.included && Boolean(line.selectedCode));
       if (fullyVerified) markProcessingReadyAfterDekel(project, project.materials.length ? await sourceFingerprint(project) : project.processing.sourceFingerprint);
       else invalidateProcessing(project, "dekel_review_changed");
       await this.store.save(project);
@@ -783,13 +926,44 @@ export class LocalWorkspaceService {
     }
     const workbookFileName = basename(summary.workbookPath);
     const rows = Array.isArray(document.boqRows) ? document.boqRows as Array<Record<string, unknown>> : [];
+    const evidenceNotes = Array.isArray(document.evidenceNotes) ? document.evidenceNotes as Array<Record<string, unknown>> : [];
     if (rows.length === 0) throw new LocalWorkspaceError(409, "empty_boq", "В כתב כמויות нет работ для подбора DEKEL");
     const lines = rows.map((row) => {
-      const description = String(row.description ?? "").trim();
+      const description = stripDekelPriceAppendix(String(row.description ?? ""));
       const originalCode = String(row.code ?? "").trim();
       const originalUnit = String(row.unit ?? "").trim();
       const candidates = buildLocalDekelCandidates(description, originalCode, originalUnit, items);
       const quantityIsDocumented = Number.isFinite(Number(row.quantity)) && Number(row.quantity) > 0;
+      const quantityEvidence = evidenceNotes.filter((note) => String(note.anchorId ?? "") === String(row.id ?? ""));
+      const quantityBasis = quantityEvidence.some((note) => note.quantityBasis === "inferred")
+        ? "inferred"
+        : quantityEvidence.some((note) => note.quantityBasis === "calculated")
+          ? "calculated"
+          : quantityEvidence.some((note) => note.quantityBasis === "documented")
+            ? "documented"
+            : null;
+      const hourlyWithoutEvidence = compareDekelUnits(originalUnit, "hour", false) === "exact" && quantityBasis === null;
+      const quantitySource = !quantityIsDocumented || quantityBasis === "inferred" || hourlyWithoutEvidence
+        ? "estimated" as const
+        : quantityBasis === "calculated"
+          ? "material" as const
+          : "document" as const;
+      const quantitySourceReason = quantitySource === "estimated"
+        ? quantityBasis === "inferred"
+          ? "הכמות מסומנת כהנחה מקצועית בסימוכין של שורת כתב הכמויות"
+          : hourlyWithoutEvidence
+            ? "לכמות השעות אין עדיין אסמכתה או חישוב כוח־אדם וזמן"
+            : "בשורה לא הייתה כמות חיובית; הונחה כמות מקצועית זמנית 1 עד לתיקון"
+        : quantitySource === "material"
+          ? "הכמות נגזרה בחישוב מתועד בסימוכין של שורת כתב הכמויות"
+          : "הכמות מתועדת בחומר או בסימוכין של שורת כתב הכמויות";
+      const hourlyBasis = deriveHourlyBasisForReview({
+        originalUnit,
+        description,
+        pricingBasis: row.pricingBasis,
+        quantityEvidence,
+        candidates,
+      });
       const selected = candidates.find((candidate) => candidate.unitCompatibility !== "mismatch") ?? candidates[0];
       const professionalDefault = findProfessionalDefaultDekelCandidate(description, candidates);
       const automaticallyVerified = Boolean(
@@ -808,8 +982,9 @@ export class LocalWorkspaceService {
         originalCode,
         originalUnit,
         quantity: quantityIsDocumented ? Number(row.quantity) : 1,
-        quantitySource: quantityIsDocumented ? "document" as const : "estimated" as const,
-        quantitySourceReason: quantityIsDocumented ? "הכמות נלקחה מהשורה הנוכחית בכתב הכמויות" : "בשורה לא הייתה כמות חיובית; הונחה כמות מקצועית זמנית 1 עד לתיקון",
+        quantitySource,
+        quantitySourceReason,
+        hourlyBasis,
         included: includedByDefault,
         ownerExcluded: false,
         ownerConfirmed: false,
@@ -856,7 +1031,7 @@ export class LocalWorkspaceService {
               sourceRow: candidate.sourceRow,
             })),
           }));
-          const prompt = `DEKEL_CANDIDATE_SELECTION\nТы выполняешь ограниченный профессиональный выбор только из переданных кандидатов постоянного מחירון DEKEL. Для каждой работы выбери лучший סעיף, учитывая полный состав цены, материал, способ выполнения и единицу измерения. Не дроби комплексную расценку на поставку и монтаж, когда выбранный סעיף уже включает их. Нельзя придумывать код, цену или описание.\n\nУровни уверенности: high — точное соответствие описанию; medium — профессионально приемлемая консервативная типовая расценка для предварительного бюджета при неполной или явно אומדני/טיפוסי спецификации; low — ненадёжное совпадение, которое нельзя применять. Если точная спецификация не документирована владельцем, предпочти наиболее близкую типовую строку как medium, а не оставляй существенную работу без цены. Если ни один кандидат не представляет работу даже как разумное профессиональное допущение, selectedCode должен быть null.\n\nВерни JSON стандартного ответа Codex. В proposedChanges должна быть ровно одна запись path=dekelSelections, а valueJson — JSON-массив объектов {sourceBoqRowId, selectedCode, confidence, reason}. Обязательно верни отдельное решение для КАЖДОЙ переданной работы, включая null. Это проход ${round + 1} из 2.\n\nПартия ${index + 1} из ${batches.length}:\n${JSON.stringify(payload)}`;
+          const prompt = `DEKEL_CANDIDATE_SELECTION\nТы выполняешь ограниченный профессиональный выбор только из переданных кандидатов постоянного מחירון DEKEL. Для каждой работы выбери лучший סעיף, учитывая полный состав цены, материал, способ выполнения и единицу измерения. Не дроби комплексную расценку на поставку и монтаж, когда выбранный סעיף уже включает их. Нельзя придумывать код, цену или описание. Сначала определи природу оплаты исходной работы: измеримый результат, комплексная работа или действительно повременная услуга. Для измеримого результата ищи предметный סעיף; отсутствие точного совпадения не разрешает переходить к часам. Почасовой סעיף допустим только если материалы прямо задают повременную оплату либо это по сути локальная вспомогательная операция с отдельно рассчитанной трудоёмкостью. Масштаб и сложность объекта влияют на эту трудоёмкость; числовых лимитов нет.\n\nУровни уверенности: high — точное соответствие описанию; medium — профессионально приемлемая консервативная типовая расценка для предварительного бюджета при неполной или явно אומדני/טיפוסי спецификации; low — ненадёжное совпадение, которое нельзя применять. Если точная спецификация не документирована владельцем, предпочти наиболее близкую типовую строку как medium, а не оставляй существенную работу без цены. Если ни один кандидат не представляет работу даже как разумное профессиональное допущение, selectedCode должен быть null.\n\nВерни JSON стандартного ответа Codex. В proposedChanges должна быть ровно одна запись path=dekelSelections, а valueJson — JSON-массив объектов {sourceBoqRowId, selectedCode, confidence, reason}. Обязательно верни отдельное решение для КАЖДОЙ переданной работы, включая null. Это проход ${round + 1} из 2.\n\nПартия ${index + 1} из ${batches.length}:\n${JSON.stringify(payload)}`;
           const threadId = await this.codex.startThread(this.store.projectPath(projectId));
           const parsed = parseCodexAnswer(await this.codex.runTurn(threadId, this.store.projectPath(projectId), prompt, []));
           const change = parsed.proposedChanges.find((item) => item?.path === "dekelSelections" && typeof item.valueJson === "string");
@@ -880,7 +1055,7 @@ export class LocalWorkspaceService {
         const confidence = value.confidence === "high" || value.confidence === "medium" || value.confidence === "low" ? value.confidence : "low";
         if (!line || !selectedCode) continue;
         const candidate = line.candidates.find((item) => item.code === selectedCode);
-        if (!candidate || !["exact", "compatible"].includes(candidate.unitCompatibility)) continue;
+        if (!candidate || candidate.unitCompatibility === "mismatch") continue;
         line.selectionMethod = "codex_constrained";
         line.semanticConfidence = confidence;
         line.selectionReason = String(value.reason ?? "").slice(0, 2_000);
@@ -942,7 +1117,9 @@ export class LocalWorkspaceService {
       project.versions.push({ id: randomUUID(), label: "גרסה לפני החלת DEKEL", createdAt: new Date().toISOString(), document: structuredClone(project.document) });
       project.document = applyDekelReviewToDocument(project.document, review);
       const appliedRows = review.lines.filter((line) => line.included).length;
-      markProcessingReadyAfterDekel(project, project.materials.length ? await sourceFingerprint(project) : project.processing.sourceFingerprint);
+      const verifiedSource = project.materials.length ? await sourceFingerprint(project) : project.processing.sourceFingerprint;
+      refreshStoredScopeAudit(project, review, verifiedSource);
+      markProcessingReadyAfterDekel(project, verifiedSource);
       await this.store.save(project);
       await this.logger.write("info", "dekel_review_applied", { projectId, reviewId: review.id, appliedRows });
       return { project: toPublicProject(project), review, appliedRows };
@@ -1119,13 +1296,60 @@ function publicDekelSummary(summary: Awaited<ReturnType<DekelCatalogService["get
   };
 }
 
-function buildLocalDekelCandidates(description: string, originalCode: string, originalUnit: string, items: PricebookItem[]): LocalDekelCandidate[] {
+type FullDekelScopeCoverage = {
+  key: string;
+  requiredWork: string;
+  reason: string;
+  catalogQueries: string[];
+  candidates: Array<{ code: string; description: string; unit: string; chapter: string; sourceRow: string }>;
+};
+
+function buildFullDekelScopeCoverage(gaps: BoqScopeGap[], items: PricebookItem[]): FullDekelScopeCoverage[] {
+  return gaps.map((gap) => {
+    const byCode = new Map<string, ReturnType<typeof buildDekelCandidateMatchesForCase>[number]>();
+    for (const query of gap.searchQueries) {
+      for (const match of buildDekelCandidateMatchesForCase({ description: query }, items, 8)) {
+        const existing = byCode.get(match.code);
+        if (!existing || match.score > existing.score) byCode.set(match.code, match);
+      }
+    }
+    const toCandidate = (match: ReturnType<typeof buildDekelCandidateMatchesForCase>[number]) => ({
+      code: match.code,
+      description: match.description,
+      unit: match.unit,
+      chapter: match.metadataJson.dekel_chapter_code ?? "",
+      sourceRow: match.metadataJson.source_row ?? "",
+    });
+    const candidates = [...byCode.values()]
+      .sort((left, right) => right.score - left.score)
+      .slice(0, 12)
+      .map(toCandidate);
+    return {
+      key: gap.key,
+      requiredWork: gap.label,
+      reason: gap.reason,
+      catalogQueries: gap.searchQueries,
+      candidates,
+    };
+  });
+}
+
+export function stripDekelPriceAppendix(description: string): string {
+  return description.split(/\n\s*תכולת סעיף DEKEL\s+[^:]+:/u, 1)[0].trim();
+}
+
+export function buildLocalDekelCandidates(description: string, originalCode: string, originalUnit: string, items: PricebookItem[]): LocalDekelCandidate[] {
+  const cleanDescription = stripDekelPriceAppendix(description);
   const exact = originalCode ? items.find((item) => item.code === originalCode) : undefined;
-  const exactChapter = exact?.metadataJson.dekel_chapter_code?.trim();
+  const exactMatch = exact
+    ? buildDekelCandidateMatchesForCase({ description: cleanDescription }, [exact], 1).find((match) => match.code === exact.code)
+    : undefined;
+  const exactAllowed = Boolean(exact && exactMatch && isHardSpecificationCompatible(cleanDescription, buildCandidateFromItem(exact, exactMatch.score, exactMatch.matchReason, originalUnit, originalCode)));
+  const exactChapter = exactAllowed ? exact?.metadataJson.dekel_chapter_code?.trim() : undefined;
   const searchPool = exactChapter
     ? items.filter((item) => item.metadataJson.dekel_chapter_code?.trim() === exactChapter)
     : items;
-  const searchQueries = buildDekelSearchQueries(description);
+  const searchQueries = buildDekelSearchQueries(cleanDescription);
   const matchesByCode = new Map<string, ReturnType<typeof buildDekelCandidateMatchesForCase>[number]>();
   for (const query of searchQueries) {
     for (const match of buildDekelCandidateMatchesForCase({ description: query }, searchPool, 10)) {
@@ -1135,8 +1359,8 @@ function buildLocalDekelCandidates(description: string, originalCode: string, or
   }
   const matches = [...matchesByCode.values()].sort((left, right) => right.score - left.score);
   const ordered: Array<{ item?: PricebookItem; match?: ReturnType<typeof buildDekelCandidateMatchesForCase>[number] }> = [];
-  if (exact) ordered.push({ item: exact });
-  const domainFallbacks = buildDomainFallbackDekelItems(description, searchPool);
+  if (exactAllowed && exact) ordered.push({ item: exact });
+  const domainFallbacks = buildDomainFallbackDekelItems(cleanDescription, searchPool);
   const domainCodes = new Set(domainFallbacks.map((item) => item.code));
   for (const item of domainFallbacks) {
     if (!ordered.some((entry) => (entry.item?.code ?? entry.match?.code) === item.code)) ordered.push({ item });
@@ -1146,11 +1370,10 @@ function buildLocalDekelCandidates(description: string, originalCode: string, or
     const source = item ?? items.find((candidate) => candidate.code === match!.code)!;
     const isExactOriginal = Boolean(item && item.code === originalCode);
     return buildCandidateFromItem(source, isExactOriginal ? 1 : match?.score ?? 0.25, isExactOriginal ? "Совпадение по коду существующей строки" : match?.matchReason ?? "Профессиональный отраслевой резервный поиск внутри постоянного DEKEL", originalUnit, originalCode);
-  }).filter((candidate) => isHardSpecificationCompatible(description, candidate)).sort((left, right) => {
+  }).filter((candidate) => isHardSpecificationCompatible(cleanDescription, candidate)).sort((left, right) => {
     const exactCodePriority = Number(right.code === originalCode) - Number(left.code === originalCode);
     return exactCodePriority
       || Number(domainCodes.has(right.code)) - Number(domainCodes.has(left.code))
-      || unitCompatibilityRank(left.unitCompatibility) - unitCompatibilityRank(right.unitCompatibility)
       || right.score - left.score;
   }).slice(0, 14);
 }
@@ -1317,7 +1540,7 @@ function buildCandidateFromItem(item: PricebookItem, score: number, matchReason:
     priceIncludesVat: false,
     unitCompatibility: item.code === "95.07.10.0235" && normalizedOriginalUnit === "m"
       ? "compatible"
-      : compareDekelUnits(originalUnit, item.unit, explicitCode === item.code),
+      : unitCompatibilityAfterSemanticSearch(originalUnit, item.unit, explicitCode === item.code),
   };
 }
 
@@ -1377,6 +1600,11 @@ function compareDekelUnits(originalUnit: string, dekelUnit: string, codeConfirme
   if (original === selected) return "exact";
   if ((original === "unit" && selected === "complete") || (original === "complete" && selected === "unit")) return "compatible";
   return codeConfirmed ? "corrected_by_code" : "mismatch";
+}
+
+function unitCompatibilityAfterSemanticSearch(originalUnit: string, dekelUnit: string, codeConfirmed: boolean): LocalDekelCandidate["unitCompatibility"] {
+  const comparison = compareDekelUnits(originalUnit, dekelUnit, codeConfirmed);
+  return comparison === "mismatch" ? "unknown" : comparison;
 }
 
 function normalizeFinancialUnit(value: string): string | null {
@@ -1442,9 +1670,104 @@ function reviewHasAutomaticBlockers(review: LocalDekelReview): boolean {
     if (!line.included) return !line.ownerExcluded;
     const candidate = line.candidates.find((item) => item.code === line.selectedCode);
     if (!candidate || candidate.unitCompatibility === "mismatch") return true;
+    if (isGenericHourlyDekelCandidate(candidate) && !isExplicitHourlyBoqLine(line)) return true;
     if (candidate.score < 0.45 && !line.ownerConfirmed && !(line.selectionMethod === "codex_constrained" && ["high", "medium"].includes(line.semanticConfidence ?? ""))) return true;
     return line.quantitySource === "estimated" && !line.ownerConfirmed;
   });
+}
+
+export function applyClosestDekelFallbacks(review: LocalDekelReview): number {
+  let applied = 0;
+  for (const line of review.lines) {
+    if (line.ownerExcluded || (line.included && line.selectedCode)) continue;
+    const compatible = [...line.candidates]
+      .filter((item) => item.unitCompatibility !== "mismatch" && item.score >= 0.45)
+      .sort((left, right) => right.score - left.score);
+    const explicitHourlyWork = isExplicitHourlyBoqLine(line);
+    const installedWork = compatible.filter((candidate) => !isGenericHourlyDekelCandidate(candidate));
+    const candidate = explicitHourlyWork ? compatible[0] : installedWork[0];
+    if (!candidate) continue;
+    line.included = true;
+    line.selectedCode = candidate.code;
+    line.selectionMethod = "codex_constrained";
+    line.semanticConfidence = "medium";
+    line.selectionReason = `נבחר סעיף DEKEL הקרוב ביותר לאחר חיפוש מלא בקטלוג ובמידת הצורך פירוק מקצועי של העבודה; ההתאמה אינה מוצגת כזהות מלאה אלא כהנחת תמחור מקצועית שניתנת לתיקון בצ׳אט.`;
+    if (candidate.unit) applyDekelBillingQuantityRule(line, candidate);
+    applied += 1;
+  }
+  return applied;
+}
+
+function hasExplicitTimeBasis(description: string): boolean {
+  return /שעת\s+עבודה|שעות\s+עבודה|לפי\s+שעה|hourly|labor\s+hours?/iu.test(description);
+}
+
+function isLocalResidualDescription(description: string): boolean {
+  const localResidualOperation = /(?:תיקון|כיוון|התאמה|בדיקה|איתור|סיוע|עבודה).*(?:מקומי|נקודתי|בלתי\s+צפוי)/iu.test(description);
+  const measurablePrimaryWork = /אספקה|התקנה|הקמה|בנייה|יציקה|פירוק|החלפה|צביעה|איטום|ריצוף|חיפוי|supply|install|construct|replace|demolish|paint|seal|tile/iu.test(description);
+  return localResidualOperation && !measurablePrimaryWork;
+}
+
+function hasCredibleMeasurableCandidate(candidates: LocalDekelCandidate[]): boolean {
+  return candidates.some((candidate) => !isGenericHourlyDekelCandidate(candidate) && candidate.score >= 0.45);
+}
+
+export function deriveHourlyBasisForReview(input: {
+  originalUnit: string;
+  description: string;
+  pricingBasis?: unknown;
+  quantityEvidence: Array<Record<string, unknown>>;
+  candidates: LocalDekelCandidate[];
+}): LocalDekelReviewLine["hourlyBasis"] {
+  if (compareDekelUnits(input.originalUnit, "hour", false) !== "exact") return "unverified";
+  const sourceExplicit = input.quantityEvidence.some((note) => {
+    const source = note.source as Record<string, unknown> | undefined;
+    return note.kind === "source"
+      && ["documented", "calculated"].includes(String(note.quantityBasis ?? ""))
+      && hasExplicitTimeBasis(String(source?.excerpt ?? ""));
+  });
+  if (sourceExplicit) return "source_explicit";
+  if (input.pricingBasis === "system_decomposed_residual"
+    && isLocalResidualDescription(input.description)
+    && !hasCredibleMeasurableCandidate(input.candidates)) return "decomposed_residual";
+  return "unverified";
+}
+
+function isProvisionallyHourlyBoqLine(line: Pick<LocalDekelReview["lines"][number], "sourceBoqRowId" | "workDescription" | "originalUnit">): boolean {
+  const hourlyUnit = compareDekelUnits(String(line.originalUnit ?? ""), "hour", false) === "exact";
+  return hourlyUnit && (hasExplicitTimeBasis(String(line.workDescription ?? ""))
+    || (line.sourceBoqRowId.includes("-dekel-part-") && isLocalResidualDescription(String(line.workDescription ?? ""))));
+}
+
+function isExplicitHourlyBoqLine(line: Pick<LocalDekelReview["lines"][number], "hourlyBasis">): boolean {
+  return line.hourlyBasis === "source_explicit" || line.hourlyBasis === "decomposed_residual";
+}
+
+function isGenericHourlyDekelCandidate(candidate: Pick<LocalDekelCandidate, "description" | "unit">): boolean {
+  return compareDekelUnits(String(candidate.unit ?? ""), "hour", false) === "exact"
+    || /שעת\s+עבודה|לפי\s+שעה|עובד.*שעה|פועל.*שעה|hourly|labor\s+hour/iu.test(String(candidate.description ?? ""));
+}
+
+export function normalizeBoqUnitForDocument(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const normalized = raw
+    .toLowerCase()
+    .replace(/[׳']/gu, "'")
+    .replace(/[״]/gu, "\"")
+    .replace(/\s+/gu, " ");
+  if (/^(unit|units|יח|יח'|יחידה|יחידות)$/u.test(normalized)) return "יח׳";
+  if (/^(m|m1|meter|metre|meters|metres|מ|מ'|מטר|מטרים)$/u.test(normalized)) return "מ׳";
+  if (/^(m2|m²|sqm|מ"ר|מטר רבוע|מטרים רבועים)$/u.test(normalized)) return "מ״ר";
+  if (/^(m3|m³|cbm|מ"ק|מטר מעוקב|מטרים מעוקבים)$/u.test(normalized)) return "מ״ק";
+  if (/^(complete|com|קומ|קומפ|קומפ'|קומפלט)$/u.test(normalized)) return "קומפ׳";
+  if (/^(point|points|נק|נק'|נקודה|נקודות)$/u.test(normalized)) return "נק׳";
+  if (/^(hour|hours|hr|hrs|שעה|שעות)$/u.test(normalized)) return "שעה";
+  if (/^(day|days|יום|ימים)$/u.test(normalized)) return "יום";
+  if (/^(kg|kgs|קג|ק"ג|קילוגרם|קילוגרמים)$/u.test(normalized)) return "ק״ג";
+  if (/^(ton|tons|tonne|tonnes|טון|טונות)$/u.test(normalized)) return "טון";
+  if (/^(pair|pairs|זוג|זוגות)$/u.test(normalized)) return "זוג";
+  return raw;
 }
 
 function applyVerifiedDekelSelectionsToDocument(document: Record<string, unknown>, review: LocalDekelReview): Record<string, unknown> {
@@ -1455,12 +1778,13 @@ function applyVerifiedDekelSelectionsToDocument(document: Record<string, unknown
     if (!line.included || !line.selectedCode) continue;
     const candidate = line.candidates.find((item) => item.code === line.selectedCode);
     if (!candidate || candidate.unitCompatibility === "mismatch") continue;
+    if (isGenericHourlyDekelCandidate(candidate) && !isExplicitHourlyBoqLine(line)) continue;
     const row = rows.find((item) => String(item.id ?? "") === line.sourceBoqRowId);
     if (!row) continue;
     Object.assign(row, {
       code: candidate.code,
       description: buildPricedBoqDescription(line.workDescription, candidate.description, candidate.code),
-      unit: candidate.unit,
+      unit: normalizeBoqUnitForDocument(candidate.unit),
       quantity: line.quantity,
       unitPrice: candidate.unitPrice,
       category: line.category,
@@ -1471,7 +1795,6 @@ function applyVerifiedDekelSelectionsToDocument(document: Record<string, unknown
       anchorType: "boqRow",
       anchorId: line.sourceBoqRowId,
       kind: "source",
-      quantityBasis: line.quantitySource === "estimated" ? "inferred" : "documented",
       title: "מחיר ושורה ממחירון דקל",
       explanation: `השורה הותאמה לסעיף ${candidate.code} במחירון דקל. מחיר היחידה נשמר לפני מע״מ.`,
       reason: line.selectionReason || `נבחרה התאמה מקצועית מתוך מועמדים קיימים בלבד; ציון האחזור ${Math.round(candidate.score * 100)}%.`,
@@ -1507,7 +1830,7 @@ function applyDekelReviewToDocument(document: Record<string, unknown>, review: L
     const row = appliedRows.find((item) => item.id === line.sourceBoqRowId);
     if (!row) throw new LocalWorkspaceError(409, "dekel_source_row_missing", "Исходная строка כתב כמויות отсутствует; применение DEKEL остановлено");
     Object.assign(row, {
-      code: candidate.code, description: buildPricedBoqDescription(line.workDescription, candidate.description, candidate.code), unit: candidate.unit,
+      code: candidate.code, description: buildPricedBoqDescription(line.workDescription, candidate.description, candidate.code), unit: normalizeBoqUnitForDocument(candidate.unit),
       quantity: line.quantity, unitPrice: candidate.unitPrice, category: line.category,
     });
     const noteId = `evidence-dekel-${line.sourceBoqRowId}`;
@@ -1761,26 +2084,47 @@ function invalidateProcessing(project: LocalProject, reason: "document_changed" 
     warningCodes: [...new Set([...project.processing.warningCodes, reason])],
     error: undefined,
   };
+  if (project.scopeCompleteness) project.scopeCompleteness.status = "stale";
 }
 
 function markProcessingReadyAfterDekel(project: LocalProject, verifiedSourceFingerprint: string | null): void {
   const now = new Date().toISOString();
   const documentFingerprint = fingerprintDocument(project.document);
+  const scopeComplete = project.scopeCompleteness?.status === "complete"
+    && project.scopeCompleteness.boqFingerprint === fingerprintBoq(project.document.boqRows as Array<Record<string, unknown>>);
   project.processing = {
     ...project.processing,
     runId: null,
-    status: "ready",
+    status: scopeComplete ? "ready" : "needs_review",
     stage: "complete",
-    readyForExport: true,
+    readyForExport: scopeComplete,
     progressPercent: 100,
     sourceFingerprint: verifiedSourceFingerprint,
     baseDocumentFingerprint: documentFingerprint,
-    validatedDocumentFingerprint: documentFingerprint,
+    validatedDocumentFingerprint: scopeComplete ? documentFingerprint : null,
     completedAt: now,
     updatedAt: now,
-    warningCodes: project.processing.warningCodes.filter((code) => !["dekel_matches_require_review", "dekel_review_required", "dekel_review_changed", "document_changed"].includes(code)),
+    warningCodes: [
+      ...project.processing.warningCodes.filter((code) => !["dekel_matches_require_review", "dekel_review_required", "dekel_review_changed", "document_changed", "scope_completeness_review_required"].includes(code)),
+      ...(scopeComplete ? [] : ["scope_completeness_review_required"]),
+    ],
     error: undefined,
   };
+}
+
+function refreshStoredScopeAudit(project: LocalProject, review: LocalDekelReview, source: string | null): boolean {
+  if (!project.scopeCompleteness || project.scopeCompleteness.status === "stale") return false;
+  const rows = Array.isArray(project.document.boqRows) ? project.document.boqRows as Array<Record<string, unknown>> : [];
+  const selectedDekelByRowId = new Map(review.lines.filter((line) => line.included && line.selectedCode).map((line) => [line.sourceBoqRowId, line.selectedCode!]));
+  project.scopeCompleteness = auditScopeIntegrity({
+    inventory: project.scopeCompleteness.inventory,
+    resolutions: project.scopeCompleteness.resolutions,
+    boqRows: rows,
+    selectedDekelByRowId,
+    sourceFingerprint: source,
+    boqFingerprint: fingerprintBoq(rows),
+  });
+  return project.scopeCompleteness.status === "complete";
 }
 
 async function sourceInputFingerprint(project: LocalProject): Promise<string> {
@@ -1943,8 +2287,7 @@ export function expandCompositeBoqRowsForDekel(document: Record<string, unknown>
       const dimensions = description.match(/([0-9]+(?:\.[0-9]+)?)\s*[×xX]\s*([0-9]+(?:\.[0-9]+)?)/u);
       const paintedArea = dimensions ? Number(dimensions[1]) * Number(dimensions[2]) * count * 2 : 10.92 * count;
       return [
-        blank("metal-fitting", "עבודת מסגר מקצועי ליישור כנפי דלתות הכניסה הדו־כנפיות והמשקופים, חיזוק עיגונים, התאמת פרזול וכיוון פתיחה וסגירה; הונחו 6 שעות לכל פתח", "שעה", count * 6),
-        blank("welding", "עבודת רתך מקצועי לרבות רתכת ואלקטרודות לתיקוני חיבור וחיזוק מקומיים בדלתות הכניסה הקיימות; הונחו 2 שעות לכל פתח", "שעה", count * 2),
+        blank("metal-repair", "שיקום וכיוון של כנפי דלתות הכניסה הדו־כנפיות והמשקופים לפי פתח, לרבות חיזוק עיגונים, התאמת פרזול ובדיקת פתיחה וסגירה; תיקוני ריתוך מקומיים ייכללו רק אם יידרשו לפי בדיקת המצב הקיים", "יח׳", count),
         blank("paint", "חידוש צבע על דלתות הפח והמשקופים הקיימים, לרבות הסרת חלודה וצבע רופף, הכנת שטח, צבע יסוד ושתי שכבות גמר; המדידה לשני צדי הדלתות", "מ״ר", paintedArea),
         blank("cylinders", "החלפת מנעולי צילינדר פרפר בדלתות הפח הקיימות, לרבות פירוק המנעולים הקיימים, התקנה, התאמה ובדיקת פעולה", "יח׳", count),
       ];
@@ -1974,7 +2317,47 @@ export function expandCompositeBoqRowsForDekel(document: Record<string, unknown>
   return output;
 }
 
-function normalizeGeneratedDocument(candidate: Record<string, unknown>): Record<string, unknown> {
+export function applyDekelDecompositions(
+  document: Record<string, unknown>,
+  decompositions: Array<{ sourceBoqRowId: string; rows: Array<Record<string, unknown>> }>,
+): Record<string, unknown> {
+  const output = structuredClone(document);
+  const sourceRows = Array.isArray(output.boqRows) ? output.boqRows as Array<Record<string, unknown>> : [];
+  const bySourceId = new Map(decompositions
+    .filter((item) => item && typeof item.sourceBoqRowId === "string" && Array.isArray(item.rows) && item.rows.length > 0)
+    .map((item) => [item.sourceBoqRowId, item.rows]));
+  const replacedIds = new Set<string>();
+  output.boqRows = sourceRows.flatMap((row) => {
+    const sourceId = String(row.id ?? "");
+    const replacements = bySourceId.get(sourceId);
+    if (!replacements) return [row];
+    replacedIds.add(sourceId);
+    return replacements.map((replacement, index) => {
+      const description = String(replacement.description ?? "").trim();
+      const unit = normalizeBoqUnitForDocument(replacement.unit);
+      const id = `${sourceId}-dekel-part-${createHash("sha256").update(`${description}\u0000${unit}\u0000${index}`).digest("hex").slice(0, 10)}`;
+      return {
+        id,
+        code: "",
+        description,
+        unit,
+        quantity: Number(replacement.quantity) > 0 ? Number(replacement.quantity) : 1,
+        unitPrice: 0,
+        category: String(replacement.category ?? row.category ?? "עבודות כלליות").trim() || "עבודות כלליות",
+        ...(normalizeFinancialUnit(unit) === "hour" && isLocalResidualDescription(description)
+          ? { pricingBasis: "system_decomposed_residual" as const }
+          : {}),
+      };
+    }).filter((replacement) => replacement.description && replacement.unit);
+  });
+  if (replacedIds.size > 0 && Array.isArray(output.evidenceNotes)) {
+    output.evidenceNotes = (output.evidenceNotes as Array<Record<string, unknown>>)
+      .filter((note) => !replacedIds.has(String(note.anchorId ?? "")));
+  }
+  return output;
+}
+
+function normalizeGeneratedDocument(candidate: Record<string, unknown>, preserveInternalPricingBasis = false): Record<string, unknown> {
   const normalizedCandidate = structuredClone(candidate);
   if (Array.isArray(normalizedCandidate.scheduleRows)) {
     normalizedCandidate.scheduleRows = (normalizedCandidate.scheduleRows as Array<Record<string, unknown>>).map((row) => ({
@@ -1995,10 +2378,13 @@ function normalizeGeneratedDocument(candidate: Record<string, unknown>): Record<
       id: row.id,
       code: row.code ?? "",
       description: row.description ?? "",
-      unit: row.unit ?? "",
+      unit: normalizeBoqUnitForDocument(row.unit),
       quantity: row.quantity ?? 0,
       unitPrice: row.unitPrice ?? 0,
       category: row.category ?? row.chapter ?? "עבודות כלליות",
+      ...(preserveInternalPricingBasis && row.pricingBasis === "system_decomposed_residual"
+        ? { pricingBasis: "system_decomposed_residual" as const }
+        : {}),
     }));
   }
   if (Array.isArray(normalizedCandidate.evidenceNotes)) {

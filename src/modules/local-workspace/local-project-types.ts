@@ -1,3 +1,5 @@
+import type { ScopeCompletenessAudit } from "./boq-scope-completeness.ts";
+
 export type LocalMaterial = {
   id: string;
   name: string;
@@ -74,6 +76,7 @@ export type LocalDekelReviewLine = {
   quantity: number;
   quantitySource: "document" | "material" | "estimated";
   quantitySourceReason: string;
+  hourlyBasis?: "source_explicit" | "decomposed_residual" | "unverified";
   included: boolean;
   ownerExcluded?: boolean;
   ownerConfirmed?: boolean;
@@ -159,6 +162,7 @@ export type LocalProject = {
   rules: string[];
   codexThreadId?: string;
   dekelReview?: LocalDekelReview;
+  scopeCompleteness?: ScopeCompletenessAudit;
   processing: LocalProjectProcessing;
   document: Record<string, unknown>;
 };

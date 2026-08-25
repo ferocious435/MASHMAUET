@@ -248,12 +248,15 @@ test("большой כתב כמויות формирует доказатель
     });
     const current = await waitForProcessing(fixture.baseUrl, project.id);
     assert.equal(current.processing.status, "needs_review", JSON.stringify(current.processing));
-    assert.equal(current.document.boqRows.length, 23);
-    assert.equal(current.document.evidenceNotes.length, 23);
+    assert.ok(current.document.boqRows.length >= 23);
+    const rowIds = new Set(current.document.boqRows.map((row: any) => row.id));
+    const coveredIds = new Set(current.document.evidenceNotes.map((note: any) => note.anchorId));
+    assert.ok(current.document.boqRows.every((row: any) => coveredIds.has(row.id)));
+    assert.ok(current.document.evidenceNotes.every((note: any) => rowIds.has(note.anchorId)));
     assert.ok(current.processing.warningCodes.includes("evidence_assumption_fallback"));
     assert.equal(current.document.evidenceNotes.find((note: any) => note.anchorId === "batch-boq-23")?.kind, "inference");
     const evidencePrompts = codex.prompts.filter((prompt) => /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt));
-    assert.equal(evidencePrompts.length, 3);
+    assert.equal(evidencePrompts.length, Math.ceil(current.document.boqRows.length / 10));
     assert.ok(evidencePrompts.every((prompt) => new Set(prompt.match(/batch-boq-\d+/g) ?? []).size <= 10));
   } finally { await fixture.close(); }
 });
@@ -302,9 +305,9 @@ test("автоматический DEKEL сохраняет неподобран
     const current = await waitForProcessing(fixture.baseUrl, project.id);
     assert.equal(current.processing.status, "needs_review", JSON.stringify(current.processing));
     assert.equal(current.processing.readyForExport, false);
-    assert.equal(current.document.boqRows.length, 1);
-    assert.equal(current.document.boqRows[0].id, "boq-unmatched");
-    assert.equal(current.document.boqRows[0].unitPrice, 0);
+    const unmatched = current.document.boqRows.find((row: any) => row.id === "boq-unmatched");
+    assert.ok(unmatched);
+    assert.equal(unmatched.unitPrice, 0);
     assert.match(current.dekelReview.warnings.join("\n"), /בדיקה|ביטחון|התאמה|יחידת/);
   } finally { await fixture.close(); }
 });
@@ -509,8 +512,9 @@ test("DEKEL проходит полный путь внутри локально
     assert.equal(analyzed.body.review.financialAudit.estimateRows <= 5, true);
     assert.deepEqual(analyzed.body.review.financialAudit.fees.map((fee: any) => fee.rate), [0.074, 0.054, 0.027]);
     if (analyzed.body.review.lines.every((line: any) => line.included && line.selectedCode) && analyzed.body.review.financialAudit.valid) {
-      assert.equal(analyzed.body.project.processing.status, "ready");
-      assert.equal(analyzed.body.project.processing.readyForExport, true);
+      assert.equal(analyzed.body.project.processing.status, "idle");
+      assert.equal(analyzed.body.project.processing.readyForExport, false);
+      assert.ok(analyzed.body.project.processing.warningCodes.includes("dekel_review_changed"));
     }
 
     const foreignCandidate = analyzed.body.review.lines.flatMap((line: any) => line.candidates).find((candidate: any) => !reviewLine.candidates.some((item: any) => item.code === candidate.code));
@@ -529,17 +533,21 @@ test("DEKEL проходит полный путь внутри локально
       body: { selectedCode: selected.code, quantity: 2.5, included: true },
     });
     assert.equal(updated.body.review.lines.find((line: any) => line.id === reviewLine.id).quantity, 2.5);
+    for (const line of updated.body.review.lines.filter((item: any) => item.id !== reviewLine.id)) {
+      await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/lines/${line.id}`, { method: "PUT", body: line.selectedCode ? { selectedCode: line.selectedCode, quantity: line.quantity, included: true } : { included: false } });
+    }
 
     const unapplied = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/apply`, { method: "POST", body: {} });
     assert.equal(unapplied.response.status, 400);
 
     const applied = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/apply`, { method: "POST", body: { confirm: true } });
-    assert.equal(applied.response.status, 200);
+    assert.equal(applied.response.status, 200, JSON.stringify(applied.body));
     assert.ok(applied.body.appliedRows >= 1);
     assert.equal(applied.body.review.status, "applied");
     assert.equal(applied.body.review.financialAudit.valid, true);
-    assert.equal(applied.body.project.processing.status, "ready");
-    assert.equal(applied.body.project.processing.readyForExport, true);
+    assert.equal(applied.body.project.processing.status, "needs_review");
+    assert.equal(applied.body.project.processing.readyForExport, false);
+    assert.ok(applied.body.project.processing.warningCodes.includes("scope_completeness_review_required"));
     assert.equal(applied.body.review.financialAudit.vat, Math.round(applied.body.review.financialAudit.subtotalNet * 18) / 100);
     assert.equal(applied.body.review.financialAudit.grandTotal, Math.round((applied.body.review.financialAudit.totalWithVat + applied.body.review.financialAudit.feesTotal) * 100) / 100);
     const boqRow = applied.body.project.document.boqRows.find((row: any) => row.id === reviewLine.sourceBoqRowId);
@@ -574,8 +582,11 @@ test("DEKEL блокирует устаревшую проверку и удал
     const excluded = analyzed.body.review.lines.at(-1);
     const updated = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/lines/${excluded.id}`, { method: "PUT", body: { included: false } });
     assert.match(updated.body.review.warnings.join("\n"), /תימחק מכתב הכמויות/);
+    for (const line of updated.body.review.lines.filter((item: any) => item.id !== excluded.id)) {
+      await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/lines/${line.id}`, { method: "PUT", body: line.selectedCode ? { selectedCode: line.selectedCode, quantity: line.quantity, included: true } : { included: false } });
+    }
     const applied = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/apply`, { method: "POST", body: { confirm: true } });
-    assert.equal(applied.response.status, 200);
+    assert.equal(applied.response.status, 200, JSON.stringify(applied.body));
     assert.equal(applied.body.project.document.boqRows.some((row: any) => row.id === excluded.sourceBoqRowId), false);
     assert.equal(applied.body.project.document.evidenceNotes.some((note: any) => note.anchorId === excluded.sourceBoqRowId), false);
     assert.equal(applied.body.review.financialAudit.valid, true);
@@ -654,6 +665,16 @@ class ProjectBuildingCodex extends FakeCodex {
     if (/точное профессиональное чтение одного материала/.test(prompt)) {
       return JSON.stringify({ answer: "מקור: требования.txt. נדרשת עבודת ניקיון יסודי לאחר שיפוץ בשטח 10 מ״ר.", proposedChanges: [], proposedProjectRules: [], needsMoreInformation: [] });
     }
+    if (prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ")) {
+      return JSON.stringify({ answer: "זוהתה עבודת ניקיון נדרשת.", proposedChanges: [{ path: "scopeInventory", valueJson: JSON.stringify([{ id: "cleaning-primary", packageId: "cleaning", packageTitle: "ניקיון", stage: "primary_work", title: "ניקיון יסודי לאחר שיפוץ", reason: "העבודה נדרשה בחומר", dekelQuerySeeds: ["ניקיון יסודי לאחר שיפוץ", "ניקיון לפני מסירה"] }]), reason: "מלאי עבודות עצמאי" }], proposedProjectRules: [], needsMoreInformation: [] });
+    }
+    if (prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) {
+      const row = { id: "boq-final-cleaning", code: "", description: "נקיון יסודי חד פעמי של מבנים לאחר שיפוץ ולפני איכלוס", unit: "מ״ר", quantity: 10, unitPrice: 0, category: "עבודות משלימות" };
+      return JSON.stringify({ answer: "היקף העבודה נסגר מול כתב הכמויות.", proposedChanges: [
+        { path: "boqRows", valueJson: JSON.stringify([row]), reason: "סגירת היקף" },
+        { path: "scopeResolutions", valueJson: JSON.stringify([{ operationId: "cleaning-primary", disposition: "separate_boq_row", boqRowIds: [row.id], reason: "העבודה משולמת בשורה נפרדת" }]), reason: "מיפוי היקף" },
+      ], proposedProjectRules: [], needsMoreInformation: [] });
+    }
     const sourceFileName = /объяснение\.mp4/.test(prompt) ? "объяснение.mp4" : "требования.txt";
     const sourceExcerpt = sourceFileName === "объяснение.mp4" ? "יש לבצע ניקיון יסודי לאחר השיפוץ" : "финальную уборку";
     const rowId = "boq-final-cleaning";
@@ -700,7 +721,7 @@ class BlockingProjectBuildingCodex extends ProjectBuildingCodex {
 class UnmatchedProjectBuildingCodex extends ProjectBuildingCodex {
   override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt)) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
     boq.valueJson = JSON.stringify([{ id: "boq-unmatched", code: "", description: "ZZZ_NONMATCH_987 עבודת חלל מיוחדת", unit: "парсек", quantity: 3, unitPrice: 0, category: "עבודות מיוחדות" }]);
@@ -713,7 +734,7 @@ class UnmatchedProjectBuildingCodex extends ProjectBuildingCodex {
 class InvalidEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
   override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt)) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const notes = parsed.proposedChanges.find((change: any) => change.path === "evidenceNotes");
     const value = JSON.parse(notes.valueJson);
@@ -740,7 +761,7 @@ class SemanticDekelProjectBuildingCodex extends ProjectBuildingCodex {
       });
     }
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt) || /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt)) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
     boq.valueJson = JSON.stringify([{ id: "boq-final-cleaning", code: "", description: "ניקוי סופי של אולם לאחר שיפוץ והכנתו למסירה", unit: "מ״ר", quantity: 10, unitPrice: 0, category: "ניקוי ומסירה" }]);
@@ -779,7 +800,7 @@ class BatchedEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
       return JSON.stringify({ answer: "אין התאמה אוטומטית.", proposedChanges: [{ path: "dekelSelections", valueJson: "[]", reason: "נדרשת בדיקה" }], proposedProjectRules: [], needsMoreInformation: [] });
     }
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt)) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
     boq.valueJson = JSON.stringify(Array.from({ length: 23 }, (_, index) => ({

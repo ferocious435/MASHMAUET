@@ -12,10 +12,10 @@
     "semantic_hash": "612e7681bd7911d34ca8b109f81e1269"
   },
   "public/app.js": {
-    "mtime": 1787652210.7077084,
-    "seen": 1787653594.695779,
-    "ast_hash": "7390adc3d7fa9c15b49832a7d5cb1057",
-    "semantic_hash": ""
+    "mtime": 1787654122.7167368,
+    "seen": 1787656249.7280385,
+    "ast_hash": "341153bffcc2c4cf76e18bff4d69810f",
+    "semantic_hash": "341153bffcc2c4cf76e18bff4d69810f"
   },
   "public/calculations.d.ts": {
     "mtime": 1787642261.4083035,
@@ -120,10 +120,10 @@
     "semantic_hash": "2575c392b6b5f2a8b02a1ca53d62150d"
   },
   "src/modules/local-workspace/local-project-types.ts": {
-    "mtime": 1787642445.4339528,
-    "seen": 1787648207.7053213,
-    "ast_hash": "7a5732a8c146dd537c02782e7d7e796c",
-    "semantic_hash": "7a5732a8c146dd537c02782e7d7e796c"
+    "mtime": 1787659346.6079972,
+    "seen": 1787660011.85786,
+    "ast_hash": "06bde50a99a4b49f5d98ac9dc6003304",
+    "semantic_hash": "06bde50a99a4b49f5d98ac9dc6003304"
   },
   "src/modules/local-workspace/local-workspace-controller.ts": {
     "mtime": 1787479111.6822636,
@@ -144,16 +144,16 @@
     "semantic_hash": "4493fec2e65f2649646c320d8ea5b6fc"
   },
   "src/modules/local-workspace/local-workspace-service.ts": {
-    "mtime": 1787653499.8192656,
-    "seen": 1787653594.695779,
-    "ast_hash": "e658531b9f6c517c0b961462fdda912a",
-    "semantic_hash": ""
+    "mtime": 1787659908.668881,
+    "seen": 1787660011.85786,
+    "ast_hash": "d796fc366b166d122b8e22ecfd16956d",
+    "semantic_hash": "d796fc366b166d122b8e22ecfd16956d"
   },
   "src/modules/local-workspace/local-workspace-validation.ts": {
-    "mtime": 1787482555.4788117,
-    "seen": 1787648207.7053213,
-    "ast_hash": "d6f313b4c35bc1667da0746c722fe8b3",
-    "semantic_hash": "d6f313b4c35bc1667da0746c722fe8b3"
+    "mtime": 1787659087.0481234,
+    "seen": 1787660011.85786,
+    "ast_hash": "c6c2074093e7149b5a7ab4b0837aa2d1",
+    "semantic_hash": "c6c2074093e7149b5a7ab4b0837aa2d1"
   },
   "src/modules/local-workspace/material-extractor.ts": {
     "mtime": 1787246487.021726,
@@ -306,16 +306,16 @@
     "semantic_hash": "1a6261b1bf006fff44978ebad66b9790"
   },
   "tests/local-workspace-api.test.ts": {
-    "mtime": 1787653473.9230638,
-    "seen": 1787653594.695779,
-    "ast_hash": "b1553dad5f2c42dcce943368009ab1d0",
-    "semantic_hash": ""
+    "mtime": 1787660166.8957305,
+    "seen": 1787660308.8702562,
+    "ast_hash": "7620330c0a13fb77e68f75b6c5816597",
+    "semantic_hash": "7620330c0a13fb77e68f75b6c5816597"
   },
   "tests/local-workspace.test.ts": {
-    "mtime": 1787652790.6595335,
-    "seen": 1787653594.695779,
-    "ast_hash": "2079dd1ea36bfb03cd493880a289157f",
-    "semantic_hash": ""
+    "mtime": 1787660098.0166106,
+    "seen": 1787660308.8702562,
+    "ast_hash": "bedcc110a79814e6d4f19989c5f2ced7",
+    "semantic_hash": "bedcc110a79814e6d4f19989c5f2ced7"
   },
   "tests/professional-knowledge.test.ts": {
     "mtime": 1787243904.839517,
@@ -336,10 +336,10 @@
     "semantic_hash": "451911ecb1a323dec1b3ba7de1d11f67"
   },
   "tests/ui-workspace.test.mjs": {
-    "mtime": 1787653297.783214,
-    "seen": 1787653594.695779,
-    "ast_hash": "86d65e1c3764bfdf712462c5090e0e76",
-    "semantic_hash": ""
+    "mtime": 1787654037.9538994,
+    "seen": 1787656249.7513075,
+    "ast_hash": "db9a79f54e5fdc66fbc19d97bc6be0f4",
+    "semantic_hash": "db9a79f54e5fdc66fbc19d97bc6be0f4"
   },
   "tsconfig.json": {
     "mtime": 1787232402.3777125,
@@ -942,10 +942,10 @@
     "semantic_hash": "889d99d9cfe0de10ecc0d0cba52899d2"
   },
   "public/document-layout.js": {
-    "mtime": 1787653308.1402152,
-    "seen": 1787653594.695779,
-    "ast_hash": "54bf37cdf782b2481489fe97c2b0ea4a",
-    "semantic_hash": ""
+    "mtime": 1787654106.5977612,
+    "seen": 1787656249.7280385,
+    "ast_hash": "d71953cf1dd87b6c8527973057409868",
+    "semantic_hash": "d71953cf1dd87b6c8527973057409868"
   },
   "tests/e2e/global-teardown.ts": {
     "mtime": 1787297737.8958354,
@@ -1000,5 +1000,11 @@
     "seen": 1787648207.7053213,
     "ast_hash": "9949eda41c9155b3c638db336b0aa2c2",
     "semantic_hash": "9949eda41c9155b3c638db336b0aa2c2"
+  },
+  "src/modules/local-workspace/boq-scope-completeness.ts": {
+    "mtime": 1787659338.7057154,
+    "seen": 1787660011.8573835,
+    "ast_hash": "c9a97735713bcf314898b4c4aaec61db",
+    "semantic_hash": "c9a97735713bcf314898b4c4aaec61db"
   }
 }

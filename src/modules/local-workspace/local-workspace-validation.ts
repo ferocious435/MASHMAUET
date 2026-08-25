@@ -10,6 +10,7 @@ const boqRowSchema = z.object({
   quantity: z.number().finite().nonnegative().max(1_000_000_000),
   unitPrice: z.number().finite().nonnegative().max(1_000_000_000),
   category: z.string().max(500),
+  pricingBasis: z.enum(["system_decomposed_residual"]).optional(),
 }).strict();
 
 const evidenceSourceSchema = z.object({

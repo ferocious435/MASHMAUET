@@ -239,6 +239,10 @@ body.document-focus .document-stage { padding-inline: 32px; }
 .boq-table td { overflow-wrap: anywhere; }
 .boq-table .boq-code { text-align: center; white-space: nowrap; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .boq-table .boq-description { text-align: right; white-space: normal; line-height: 1.38; overflow-wrap: anywhere; word-break: normal; }
+.boq-description-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.boq-evidence-list { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; justify-content: flex-start; margin-top: 4px; direction: rtl; }
+.boq-evidence-list:empty { display: none; }
+.boq-evidence-list .evidence-marker-wrap { margin: 0; vertical-align: middle; }
 .boq-table .description-input { field-sizing: content; min-height: 42px; overflow-y: hidden; resize: none; white-space: pre-wrap; }
 .evidence-marker-wrap { position: relative; display: inline-flex; margin-inline-start: 4px; vertical-align: super; }
 .evidence-marker { display: inline-grid; place-items: center; width: 19px; min-width: 19px; height: 19px; min-height: 19px; padding: 0; color: #fff; background: var(--blue); border: 1px solid #174aa8; border-radius: 999px; box-shadow: 0 1px 3px rgba(20, 55, 110, .22); cursor: pointer; font-size: 9px; font-weight: 800; line-height: 1; }

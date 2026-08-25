@@ -380,8 +380,12 @@ function renderDocument() {
   ensureDocumentEvidence(doc);
   const summary = calculateProjectSummary(doc.boqRows);
   const editable = editing ? 'contenteditable="true"' : "";
-  const boqPages = paginateBoqRows(editing ? summary.boq.rows : summary.pricing.pricedRows);
   const evidenceIndex = buildEvidenceIndex(doc);
+  const visibleBoqRows = editing ? summary.boq.rows : summary.pricing.pricedRows;
+  const boqPages = paginateBoqRows(visibleBoqRows.map((row) => ({
+    ...row,
+    evidenceCount: (evidenceIndex.get(row.id) || []).length,
+  })));
 
   elements.documentStage.innerHTML = `
     <article id="printable-document" aria-label="מסמך משמעויות">
@@ -624,8 +628,8 @@ function renderBoqPages(pages, summary, evidenceIndex) {
 function boqRow(row, index, evidenceIndex) {
   if (!editing) return `<tr>
     <td class="boq-code" dir="ltr">${escapeHtml(row.code)}</td>
-    <td class="boq-description"><span>${escapeHtml(row.description)}</span>${renderEvidenceMarkers(row.id, evidenceIndex)}</td>
-    <td class="center">${escapeHtml(row.unit)}</td>
+    <td class="boq-description"><span class="boq-description-text">${escapeHtml(row.description)}</span><span class="boq-evidence-list">${renderEvidenceMarkers(row.id, evidenceIndex)}</span></td>
+    <td class="center">${escapeHtml(formatBoqUnit(row.unit))}</td>
     <td class="boq-number">${formatQuantity(row.quantity)}</td>
     <td class="money">${formatMoney(row.unitPrice)}</td>
     <td class="money boq-amount">${formatMoney(row.amount)}</td>
@@ -634,7 +638,7 @@ function boqRow(row, index, evidenceIndex) {
   return `<tr class="boq-edit-row">
     <td><input dir="ltr" data-boq-index="${index}" data-boq-key="code" value="${escapeAttribute(row.code)}" aria-label="פריט SSC" /></td>
     <td><textarea class="description-input" rows="1" data-boq-index="${index}" data-boq-key="description" aria-label="תיאור מלא">${escapeHtml(row.description)}</textarea></td>
-    <td><input data-boq-index="${index}" data-boq-key="unit" value="${escapeAttribute(row.unit)}" aria-label="יחידת מידה" /></td>
+    <td><input data-boq-index="${index}" data-boq-key="unit" value="${escapeAttribute(formatBoqUnit(row.unit))}" aria-label="יחידת מידה" /></td>
     <td><input type="number" min="0" step="0.01" data-boq-index="${index}" data-boq-key="quantity" value="${row.quantity}" aria-label="כמות" /></td>
     <td><input type="number" min="0" step="0.01" data-boq-index="${index}" data-boq-key="unitPrice" value="${row.unitPrice}" aria-label="מחיר נטו" /></td>
     <td class="money">${formatMoney(row.amount)}</td>
@@ -940,7 +944,25 @@ function renderDekelFinancialAudit(audit) {
 }
 
 function formatDekelUnit(unit) {
-  return ({ m2: "מ״ר", m3: "מ״ק", m: "מטר", unit: "יח׳", complete: "קומפ׳", day: "יום", hour: "שעה", kg: "ק״ג", ton: "טון" })[unit] || unit || "—";
+  return formatBoqUnit(unit) || "—";
+}
+
+function formatBoqUnit(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const normalized = raw.toLowerCase().replace(/[׳']/gu, "'").replace(/[״]/gu, '"').replace(/\s+/gu, " ");
+  if (/^(unit|units|יח|יח'|יחידה|יחידות)$/u.test(normalized)) return "יח׳";
+  if (/^(m|m1|meter|metre|meters|metres|מ|מ'|מטר|מטרים)$/u.test(normalized)) return "מ׳";
+  if (/^(m2|m²|sqm|מ"ר|מטר רבוע|מטרים רבועים)$/u.test(normalized)) return "מ״ר";
+  if (/^(m3|m³|cbm|מ"ק|מטר מעוקב|מטרים מעוקבים)$/u.test(normalized)) return "מ״ק";
+  if (/^(complete|com|קומ|קומפ|קומפ'|קומפלט)$/u.test(normalized)) return "קומפ׳";
+  if (/^(point|points|נק|נק'|נקודה|נקודות)$/u.test(normalized)) return "נק׳";
+  if (/^(hour|hours|hr|hrs|שעה|שעות)$/u.test(normalized)) return "שעה";
+  if (/^(day|days|יום|ימים)$/u.test(normalized)) return "יום";
+  if (/^(kg|kgs|קג|ק"ג|קילוגרם|קילוגרמים)$/u.test(normalized)) return "ק״ג";
+  if (/^(ton|tons|tonne|tonnes|טון|טונות)$/u.test(normalized)) return "טון";
+  if (/^(pair|pairs|זוג|זוגות)$/u.test(normalized)) return "זוג";
+  return raw;
 }
 
 function dekelUnitCompatibilityLabel(value) {
