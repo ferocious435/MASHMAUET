@@ -492,6 +492,70 @@ async function testPipelineSupportingEvidencePolicy(): Promise<void> {
   );
 }
 
+async function testPipelineAcceptsPrecomputedAnalysisInputs(): Promise<void> {
+  const pipeline = buildPipeline();
+  const precomputedWorkItem: WorkItem = {
+    workItemId: "external-acoustic-ceiling-1",
+    caseId: "case-test-1",
+    workType: "acoustic_ceiling_replacement",
+    description: "Replace damaged acoustic ceiling panels",
+    quantity: 12,
+    unit: "m2",
+    derivedFrom: "codex-material-consolidation",
+    confidence: 0.92,
+    hiddenWorkFlag: false,
+    requiresClarification: false,
+  };
+
+  const result = await pipeline.run(
+    buildCaseRecord({
+      rawDescription: "General renovation scope.",
+      dimensions: { areaSquareMeters: 12 },
+    }),
+    {
+      precomputedWorkItems: [precomputedWorkItem],
+      evidence: [
+        {
+          evidenceId: "external-evidence-1",
+          sourceType: "typed",
+          format: "inline_text",
+          role: "supporting",
+          content: "The inspected material confirms acoustic ceiling replacement.",
+          extractedText: null,
+          normalizedContent:
+            "the inspected material confirms acoustic ceiling replacement.",
+          confidence: 0.95,
+          reviewStatus: "accepted",
+          usedInAnalysisFlag: true,
+        },
+      ],
+      assumptions: [
+        "The 12 m2 quantity was consolidated from the inspected project materials.",
+      ],
+    },
+  );
+
+  assert.deepEqual(result.analysis.workItems, [precomputedWorkItem]);
+  assert.equal(
+    result.normalizedDescription.includes(
+      "the inspected material confirms acoustic ceiling replacement",
+    ),
+    true,
+  );
+  assert.equal(
+    result.analysis.assumptions.includes(
+      "The 12 m2 quantity was consolidated from the inspected project materials.",
+    ),
+    true,
+  );
+  assert.equal(
+    result.supportingEvidence.some(
+      (item) => item.evidenceId === "external-evidence-1",
+    ),
+    true,
+  );
+}
+
 function testFlexibleIntakeDerivesDescriptionFromPrimaryDocument(): void {
   const parsed = validateCaseCreateInput({
     title: "Document-first case",
@@ -1195,6 +1259,149 @@ function testDekelMatchingKeepsPipeCandidateInsideExpandedIntermediatePool(): vo
 
   assert.equal(candidates[0].code, "95.57.30.0043");
   assert.equal(candidates.some((candidate) => candidate.code === "95.57.30.0043"), true);
+}
+
+function testDekelMatchingRejectsSemanticallyWrongConstructionItems(): void {
+  const item = (
+    code: string,
+    description: string,
+    unit: string,
+    chapterCode: string,
+  ): PricebookItem => ({
+    itemId: code,
+    pricebookId: "dekel-live",
+    code,
+    description,
+    normalizedDescription: description,
+    unit,
+    unitPrice: 100,
+    section: code.slice(0, 8),
+    subsection: "acceptance",
+    tagsJson: [],
+    synonymsJson: [],
+    activeFlag: true,
+    metadataJson: { dekel_chapter_code: chapterCode },
+  });
+  const items = [
+    item(
+      "95.24.20.0025",
+      "גידור ושילוט אתר לעבודות אסבסט על פי נוהלי המשרד להגנת הסביבה",
+      "קומ",
+      "24",
+    ),
+    item(
+      "95.00.10.0001",
+      "התארגנות באתר, גידור בטיחות זמני ושילוט אזהרה",
+      "קומ",
+      "00",
+    ),
+    item(
+      "95.08.57.0057",
+      "מבנה לוח מתח גבוה מודולארי 630A KV24 עם מפסק בגז SF6",
+      "unit",
+      "08",
+    ),
+    item(
+      "95.08.60.0100",
+      "בדיקה ושיקום לוח חשמל מתח נמוך קיים לרבות הגנות וסימון מעגלים",
+      "קומ",
+      "08",
+    ),
+    item(
+      "95.08.42.0356",
+      "התקנה וחיבור גוף תאורה על עמוד תאורה עירוני בגובה מעל 5 מטר",
+      "unit",
+      "08",
+    ),
+    item(
+      "95.08.42.0100",
+      "גוף תאורה מוגן לאולם ספורט להתקנה פנימית כולל חיבור",
+      "unit",
+      "08",
+    ),
+    item(
+      "95.15.50.0021",
+      "מנדף בישול למטבח הכולל גופי תאורה שקועים מוגנים מסוג לד",
+      "קומ",
+      "15",
+    ),
+    item(
+      "95.69.12.0007",
+      "שרות אחזקה שנתי למערכת מיזוג אוויר ללא חלקים",
+      "קומ",
+      "69",
+    ),
+    item(
+      "95.15.10.0100",
+      "אספקה והתקנת יחידת מיזוג אוויר מפוצלת לרבות הפעלה",
+      "unit",
+      "15",
+    ),
+    item(
+      "95.69.06.0005",
+      "איסוף פסולת מפוזרת באתר למכולה, לא כולל שכירות, הובלה ופינוי של המכולה",
+      "unit",
+      "69",
+    ),
+  ];
+
+  const siteSafety = buildDekelCandidateMatches(
+    "התארגנות באתר, אמצעי הגנה, שילוט וגידור נקודתי",
+    items,
+    5,
+  );
+  assert.equal(siteSafety[0]?.code, "95.00.10.0001");
+  assert.equal(siteSafety.some((candidate) => candidate.code === "95.24.20.0025"), false);
+
+  const electricalBoard = buildDekelCandidateMatches(
+    "בדיקה, התאמה ושיקום של לוח החשמל הקיים, לרבות הגנות וסימון מעגלים",
+    items,
+    5,
+  );
+  assert.equal(electricalBoard[0]?.code, "95.08.60.0100");
+  assert.equal(electricalBoard.some((candidate) => candidate.code === "95.08.57.0057"), false);
+
+  const indoorLighting = buildDekelCandidateMatches(
+    "גופי תאורה מוגנים המתאימים לשימוש באולם ספורט, כולל התקנה וחיבור",
+    items,
+    5,
+  );
+  assert.equal(indoorLighting[0]?.code, "95.08.42.0100");
+  assert.equal(indoorLighting.some((candidate) => candidate.code === "95.08.42.0356"), false);
+  assert.equal(indoorLighting.some((candidate) => candidate.code === "95.15.50.0021"), false);
+  assert.equal(
+    inferDekelRoutingHints("גופי תאורה מוגנים לאולם ספורט").chapterHints.includes("08"),
+    true,
+  );
+
+  const airConditioning = buildDekelCandidateMatches(
+    "אספקה והתקנת יחידות מיזוג אוויר מסחריות או מפוצלות",
+    items,
+    5,
+  );
+  assert.equal(airConditioning[0]?.code, "95.15.10.0100");
+  assert.equal(airConditioning.some((candidate) => candidate.code === "95.69.12.0007"), false);
+
+  const wasteHauling = buildDekelCandidateMatches(
+    "העמסה, הובלה ופינוי פסולת לאתר מורשה",
+    items,
+    5,
+  );
+  assert.equal(wasteHauling.some((candidate) => candidate.code === "95.69.06.0005"), false);
+
+  const noSemanticMatch = buildDekelCandidateMatches(
+    "תיק מסירה הכולל תכניות עדות, תוצאות בדיקות והוראות הפעלה",
+    [
+      item(
+        "95.15.60.0129",
+        "החלפת מדחס במערכת מיזוג לרבות הפעלה והרצה",
+        "unit",
+        "15",
+      ),
+    ],
+    5,
+  );
+  assert.deepEqual(noSemanticMatch, []);
 }
 
 function testDekelSearchQueryPlanPrefersPrimaryWorkItemsOverHiddenWork(): void {
@@ -4027,6 +4234,8 @@ async function main(): Promise<void> {
   console.log("PASS testPipelineTechnicalBlockersDoNotBecomeUserClarifications");
   await testPipelineSupportingEvidencePolicy();
   console.log("PASS testPipelineSupportingEvidencePolicy");
+  await testPipelineAcceptsPrecomputedAnalysisInputs();
+  console.log("PASS testPipelineAcceptsPrecomputedAnalysisInputs");
   testFlexibleIntakeDerivesDescriptionFromPrimaryDocument();
   console.log("PASS testFlexibleIntakeDerivesDescriptionFromPrimaryDocument");
   await testPipelineUnderstandsSewerLineDescription();
@@ -4057,6 +4266,8 @@ async function main(): Promise<void> {
   console.log("PASS testDekelMatchingPrefersPipeInstallationOverExcavationForSewerReplacement");
   testDekelMatchingKeepsPipeCandidateInsideExpandedIntermediatePool();
   console.log("PASS testDekelMatchingKeepsPipeCandidateInsideExpandedIntermediatePool");
+  testDekelMatchingRejectsSemanticallyWrongConstructionItems();
+  console.log("PASS testDekelMatchingRejectsSemanticallyWrongConstructionItems");
   testDekelSearchQueryPlanPrefersPrimaryWorkItemsOverHiddenWork();
   console.log("PASS testDekelSearchQueryPlanPrefersPrimaryWorkItemsOverHiddenWork");
   await testCaseEstimatePreviewFromDekelCandidates();

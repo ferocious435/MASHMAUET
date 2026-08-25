@@ -81,13 +81,29 @@
           <div class="toolbar-actions">
             <button id="project-settings-button" class="secondary-button" type="button">פרטי פרויקט</button>
             <button id="versions-button" class="secondary-button" type="button">גרסאות</button>
-            <button id="dekel-review-button" class="secondary-button dekel-toolbar-button" type="button">בדיקת DEKEL</button>
+            <button id="dekel-review-button" class="secondary-button dekel-toolbar-button" type="button" disabled>בדיקת DEKEL</button>
             <button id="edit-button" class="secondary-button" type="button">עריכה</button>
             <button id="document-focus-button" class="secondary-button" type="button" aria-pressed="false">תצוגת מסמך מלאה</button>
-            <button id="export-button" class="secondary-button" type="button">ייצוא HTML</button>
-            <button id="print-button" class="primary-button" type="button">הדפסה / שמירה כ־PDF</button>
+            <button id="export-button" class="secondary-button" type="button" disabled>ייצוא HTML</button>
+            <button id="print-button" class="primary-button" type="button" disabled>הדפסה / שמירה כ־PDF</button>
           </div>
         </header>
+        <section id="project-processing" class="project-processing" data-workflow-state="loading" aria-labelledby="processing-title" aria-live="polite">
+          <div class="processing-heading">
+            <div><span class="eyebrow">מצב עיבוד הפרויקט</span><strong id="processing-title">טוען את מצב הפרויקט...</strong></div>
+            <span id="document-readiness" class="document-readiness">המסמך עדיין אינו מוכן</span>
+          </div>
+          <div id="workflow-progress" class="workflow-progress" role="progressbar" aria-label="התקדמות עיבוד הפרויקט" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+          <ol class="workflow-stages" aria-label="שלבי עיבוד הפרויקט">
+            <li data-workflow-stage="materials">קריאת חומרים</li>
+            <li data-workflow-stage="analysis">ניתוח מקצועי</li>
+            <li data-workflow-stage="scope">בניית תכולה</li>
+            <li data-workflow-stage="dekel">התאמת DEKEL</li>
+            <li data-workflow-stage="document">בדיקת המסמך</li>
+          </ol>
+          <p id="workflow-error" class="workflow-error" role="alert" hidden></p>
+          <button id="retry-workflow-button" class="secondary-button" type="button" hidden>בדיקת מצב מחדש</button>
+        </section>
         <div id="a4-layout-warning" class="a4-layout-warning" role="alert" hidden></div>
         <div id="document-stage" class="document-stage" aria-live="polite">
           <div class="document-skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span></div>

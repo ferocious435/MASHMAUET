@@ -24,6 +24,7 @@ const evidenceNoteSchema = z.object({
   anchorType: z.literal("boqRow"),
   anchorId: z.string().trim().min(1).max(120),
   kind: z.enum(["inference", "source", "calculation"]),
+  quantityBasis: z.enum(["documented", "calculated", "inferred"]).optional(),
   title: z.string().trim().min(1).max(500),
   explanation: z.string().trim().min(1).max(5_000),
   reason: z.string().trim().min(1).max(5_000),
@@ -72,6 +73,10 @@ export const proposalActionSchema = z.object({ scope: z.literal("project").optio
 export const backupCreateSchema = z.object({ label: z.string().trim().min(1).max(120).optional() }).strict();
 export const confirmationSchema = z.object({ confirm: z.literal(true) }).strict();
 export const dekelAnalyzeSchema = z.object({}).strict();
+export const processingRunSchema = z.object({
+  mode: z.literal("full"),
+  replaceDocument: z.literal(true),
+}).strict();
 export const dekelLineUpdateSchema = z.object({
   selectedCode: z.string().trim().min(1).max(120).nullable().optional(),
   quantity: z.number().finite().positive().max(1_000_000_000).optional(),

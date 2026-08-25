@@ -5,7 +5,7 @@ import type { LocalBackupManifest, LocalProject } from "./local-project-types.ts
 import { documentSchema } from "./local-workspace-validation.ts";
 import { LocalWorkspaceError } from "./local-workspace-error.ts";
 
-const DEFAULT_DOCUMENT = {
+const DEMO_DOCUMENT = {
   subject: "מסמך משמעויות לפרויקט שיפוץ והתאמת מבנה",
   background: "בהמשך לסיור ולבחינת הצורך המבצעי, נדרש לבצע עבודות שיפוץ והתאמה במבנה הקיים, בהתאם לתכולה המפורטת במסמך זה ובכתב הכמויות המצורף.",
   objective: "הצגת משמעויות ראשוניות לפרויקט, לרבות תכולת העבודה, אומדן תקציבי, לוח זמנים עקרוני וניהול סיכונים, לצורך קבלת החלטה והמשך תכנון וביצוע.",
@@ -45,6 +45,22 @@ const DEFAULT_DOCUMENT = {
   }],
 };
 
+function blankDocument(name: string, description: string) {
+  return {
+    subject: `מסמך משמעויות לפרויקט ${name}`,
+    background: description,
+    objective: "",
+    scope: [],
+    estimateNotes: [],
+    scheduleRows: [],
+    scheduleNotes: "",
+    riskRows: [],
+    additionalNotes: "",
+    boqRows: [],
+    evidenceNotes: [],
+  };
+}
+
 export class LocalProjectStore {
   readonly rootPath: string;
   constructor(rootPath: string) { this.rootPath = rootPath; }
@@ -56,7 +72,8 @@ export class LocalProjectStore {
       mkdir(this.backupsPath(), { recursive: true }),
     ]);
     await this.recoverTemporaryFiles();
-    if ((await this.list()).length === 0) await this.create("שיפוץ מבנה — פרויקט לדוגמה", "שיפוץ והתאמת מבנה קיים לצרכים תפעוליים, כולל עבודות איטום, גמר, חשמל ומיזוג.");
+    await this.recoverInterruptedProcessingRuns();
+    if ((await this.list()).length === 0) await this.create("שיפוץ מבנה — פרויקט לדוגמה", "שיפוץ והתאמת מבנה קיים לצרכים תפעוליים, כולל עבודות איטום, גמר, חשמל ומיזוג.", true);
     await this.ensureDailyBackup();
   }
 
@@ -69,14 +86,26 @@ export class LocalProjectStore {
     return projects.filter((project): project is LocalProject => Boolean(project)).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
-  async create(name: string, description: string): Promise<LocalProject> {
+  async create(name: string, description: string, seedDemo = false): Promise<LocalProject> {
     const now = new Date().toISOString();
     const project: LocalProject = {
       schemaVersion: 1, revision: 0,
       id: randomUUID(), name, description, createdAt: now, updatedAt: now,
       materials: [], versions: [], proposals: [], rules: [],
       chat: [{ id: randomUUID(), role: "assistant", text: "הפרויקט נפתח. החומרים, המסמך והשיחה נשמרים בנפרד מכל פרויקט אחר.", createdAt: now }],
-      document: structuredClone(DEFAULT_DOCUMENT),
+      processing: {
+        runId: null,
+        status: seedDemo ? "needs_review" : "idle",
+        stage: "awaiting_materials",
+        readyForExport: false,
+        progressPercent: seedDemo ? 100 : 0,
+        sourceFingerprint: null,
+        baseDocumentFingerprint: null,
+        validatedDocumentFingerprint: null,
+        updatedAt: now,
+        warningCodes: seedDemo ? ["demo_project"] : [],
+      },
+      document: seedDemo ? structuredClone(DEMO_DOCUMENT) : blankDocument(name, description),
     };
     project.document.subject = `מסמך משמעויות לפרויקט ${name}`;
     project.document.background = description;
@@ -106,6 +135,27 @@ export class LocalProjectStore {
     const directory = this.projectPath(project.id);
     await mkdir(directory, { recursive: true });
     await this.writeJsonAtomic(this.projectJsonPath(project.id), project);
+  }
+
+  private async recoverInterruptedProcessingRuns(): Promise<void> {
+    const projects = await this.list();
+    for (const project of projects) {
+      if (project.processing.status !== "queued" && project.processing.status !== "running") continue;
+      project.processing = {
+        ...project.processing,
+        runId: null,
+        status: "failed",
+        readyForExport: false,
+        validatedDocumentFingerprint: null,
+        updatedAt: new Date().toISOString(),
+        error: {
+          code: "processing_interrupted",
+          message: "Обработка была прервана остановкой приложения. Исходные материалы и последний подтверждённый документ сохранены; запуск можно повторить.",
+          retryable: true,
+        },
+      };
+      await this.save(project);
+    }
   }
 
   projectPath(id: string): string { this.assertId(id); return join(this.projectsPath(), id); }
@@ -295,8 +345,67 @@ function migrateProject(raw: Partial<LocalProject>): LocalProject {
     rules: Array.isArray(raw.rules) ? raw.rules.filter((item): item is string => typeof item === "string") : [],
     codexThreadId: typeof raw.codexThreadId === "string" ? raw.codexThreadId : undefined,
     dekelReview: isLocalDekelReview(raw.dekelReview) ? raw.dekelReview : undefined,
+    processing: migrateProcessing(raw.processing, document, Array.isArray(raw.materials) ? raw.materials : [], raw.updatedAt),
     document,
   };
+}
+
+function migrateProcessing(
+  value: unknown,
+  document: Record<string, unknown>,
+  materials: LocalProject["materials"],
+  updatedAt: unknown,
+): LocalProject["processing"] {
+  const rows = Array.isArray(document.boqRows) ? document.boqRows : [];
+  const legacyDemoDetected = isLegacyDemoRows(rows);
+  if (value && typeof value === "object") {
+    const candidate = value as Partial<LocalProject["processing"]>;
+    const statuses = new Set<LocalProject["processing"]["status"]>([
+      "idle", "queued", "running", "needs_review", "ready", "failed", "stale",
+    ]);
+    const stages = new Set<LocalProject["processing"]["stage"]>([
+      "awaiting_materials", "extracting", "awaiting_video_frames", "transcribing_audio", "analyzing_materials",
+      "consolidating_evidence", "understanding_work", "quantifying", "matching_dekel", "building_document", "validating", "complete",
+    ]);
+    if (candidate.status && statuses.has(candidate.status)) return {
+      runId: typeof candidate.runId === "string" ? candidate.runId : null,
+      status: candidate.status,
+      stage: candidate.stage && stages.has(candidate.stage) ? candidate.stage : "awaiting_materials",
+      readyForExport: candidate.readyForExport === true && candidate.status === "ready" && !legacyDemoDetected,
+      progressPercent: Number.isFinite(candidate.progressPercent) ? Math.max(0, Math.min(100, Number(candidate.progressPercent))) : 0,
+      sourceFingerprint: typeof candidate.sourceFingerprint === "string" ? candidate.sourceFingerprint : null,
+      baseDocumentFingerprint: typeof candidate.baseDocumentFingerprint === "string" ? candidate.baseDocumentFingerprint : null,
+      validatedDocumentFingerprint: typeof candidate.validatedDocumentFingerprint === "string" ? candidate.validatedDocumentFingerprint : null,
+      startedAt: typeof candidate.startedAt === "string" ? candidate.startedAt : undefined,
+      updatedAt: typeof candidate.updatedAt === "string" ? candidate.updatedAt : typeof updatedAt === "string" ? updatedAt : new Date().toISOString(),
+      completedAt: typeof candidate.completedAt === "string" ? candidate.completedAt : undefined,
+      warningCodes: [...new Set([...(Array.isArray(candidate.warningCodes) ? candidate.warningCodes.filter((item): item is string => typeof item === "string") : []), ...(legacyDemoDetected ? ["legacy_demo_detected"] : [])])],
+      error: candidate.error && typeof candidate.error === "object" && typeof candidate.error.code === "string" && typeof candidate.error.message === "string"
+        ? { code: candidate.error.code, message: candidate.error.message, retryable: candidate.error.retryable === true }
+        : undefined,
+    };
+  }
+  const hasAnalyzedMaterials = materials.some((material) => Boolean(material.analyzedAt));
+  return {
+    runId: null,
+    status: legacyDemoDetected ? "needs_review" : "idle",
+    stage: materials.length === 0 ? "awaiting_materials" : hasAnalyzedMaterials ? "consolidating_evidence" : "extracting",
+    readyForExport: false,
+    progressPercent: materials.length === 0 ? 0 : hasAnalyzedMaterials ? 45 : 10,
+    sourceFingerprint: null,
+    baseDocumentFingerprint: null,
+    validatedDocumentFingerprint: null,
+    updatedAt: typeof updatedAt === "string" ? updatedAt : new Date().toISOString(),
+    warningCodes: legacyDemoDetected ? ["legacy_demo_detected"] : [],
+  };
+}
+
+function isLegacyDemoRows(rows: unknown[]): boolean {
+  const expected = new Set([
+    "boq-example-95-05-10-0045", "boq-example-95-10-20-0034", "boq-example-95-22-20-0049",
+    "boq-example-95-08-42-0210", "boq-example-95-08-50-0140", "boq-example-95-07-10-0235", "boq-example-95-69-04-0003",
+  ]);
+  return rows.length === expected.size && rows.every((row) => row && typeof row === "object" && expected.has(String((row as Record<string, unknown>).id ?? "")));
 }
 
 function isLocalDekelReview(value: unknown): value is NonNullable<LocalProject["dekelReview"]> {

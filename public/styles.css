@@ -143,6 +143,27 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .save-indicator.saving { color: var(--amber); }
 .save-indicator.error { color: var(--danger); }
 
+.project-processing { margin: 14px 24px 0; padding: 13px 15px; background: #fff; border: 1px solid var(--line); border-right: 5px solid var(--amber); border-radius: 10px; box-shadow: 0 5px 16px rgba(27, 39, 59, .06); }
+.processing-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.processing-heading strong { font-size: 13px; }
+.document-readiness { color: #805700; font-size: 11px; font-weight: 800; }
+.document-readiness.ready { color: var(--green); }
+.workflow-progress { height: 7px; margin-top: 10px; overflow: hidden; background: #e6eaf0; border-radius: 999px; }
+.workflow-progress > span { display: block; width: 0; height: 100%; background: var(--blue); border-radius: inherit; transition: width 220ms ease; }
+.workflow-stages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.workflow-stages li { position: relative; padding-top: 13px; color: var(--muted); font-size: 10px; text-align: center; }
+.workflow-stages li::before { content: ""; position: absolute; top: 0; right: calc(50% - 4px); width: 8px; height: 8px; background: #c7ced9; border-radius: 50%; }
+.workflow-stages li.active { color: var(--blue-dark); font-weight: 800; }
+.workflow-stages li.active::before { background: var(--blue); box-shadow: 0 0 0 4px var(--blue-soft); }
+.workflow-stages li.completed { color: var(--green); }
+.workflow-stages li.completed::before { background: var(--green); }
+.workflow-error { margin: 10px 0 0; color: var(--danger); font-size: 11px; font-weight: 700; }
+#retry-workflow-button { margin-top: 10px; }
+.project-processing[data-workflow-state="review_ready"] { border-right-color: var(--green); }
+.project-processing[data-workflow-state="review_ready"] .workflow-progress > span { background: var(--green); }
+.project-processing[data-workflow-state="failed"] { background: #fff8f7; border-color: #efb5b0; border-right-color: var(--danger); }
+.project-processing[data-workflow-state="failed"] .workflow-progress > span { background: var(--danger); }
+
 .document-stage { padding: 28px 24px 80px; overflow-x: auto; }
 .a4-layout-warning { margin: 14px 24px 0; padding: 11px 14px; color: #7a271a; background: #fff1ef; border: 1px solid #f0a59b; border-right: 5px solid var(--danger); border-radius: 8px; font-size: 12px; font-weight: 700; line-height: 1.55; }
 .exported-document { margin: 0; background: var(--canvas); }
@@ -468,6 +489,7 @@ body.document-focus .document-stage { padding-inline: 32px; }
   .local-status { margin-top: auto; }
   .chat-panel { min-height: calc(100dvh - 62px); }
   .workspace-toolbar { position: sticky; top: 62px; padding-inline: 16px; }
+  .project-processing { margin-inline: 12px; }
   .document-stage { padding: 16px 8px 30px; }
   .document-page { width: 100%; min-width: 0; min-height: 680px; padding: 38px 26px 58px; font-size: 14px; }
   .narrative-page { min-height: 680px; aspect-ratio: auto; overflow: visible; }
@@ -491,6 +513,10 @@ body.document-focus .document-stage { padding-inline: 32px; }
   .toolbar-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .save-indicator { white-space: normal; }
   .toolbar-actions button { min-height: 44px; }
+  .processing-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .workflow-stages { grid-template-columns: 1fr; gap: 4px; }
+  .workflow-stages li { min-height: 28px; padding: 6px 22px 6px 0; text-align: right; }
+  .workflow-stages li::before { top: 9px; right: 4px; }
   .document-page { padding: 30px 18px 54px; font-size: 13px; line-height: 1.65; }
   .document-page::before { display: none; }
   .document-subject { font-size: 16px; }
@@ -526,7 +552,7 @@ body.document-focus .document-stage { padding-inline: 32px; }
 @media print {
   :root, html, body, .workspace, .document-stage { background: #fff; }
   html, body, #printable-document { direction: ltr; }
-  .projects-panel, .chat-panel, .workspace-toolbar, .mobile-nav, .toast, dialog, .a4-layout-warning { display: none !important; }
+  .projects-panel, .chat-panel, .workspace-toolbar, .project-processing, .mobile-nav, .toast, dialog, .a4-layout-warning { display: none !important; }
   .app-shell, .workspace { display: block; }
   .document-stage { padding: 0; overflow: visible; }
   .document-page {

@@ -73,6 +73,8 @@ export function buildDekelCandidateMatches(
   limit = 5,
 ): DekelCandidateMatch[] {
   const queryTokens = tokenize(description);
+  const normalizedQuery = normalizeText(description);
+  const queryConcepts = detectSemanticConcepts(normalizedQuery);
   const totalQueryWeight = queryTokens.reduce(
     (sum, token) => sum + getTokenWeight(token),
     0,
@@ -84,7 +86,7 @@ export function buildDekelCandidateMatches(
   }
 
   return items
-    .map((item) => {
+    .flatMap((item) => {
       const itemTokens = tokenize(
         `${item.description} ${item.code} ${item.tagsJson.join(" ")}`,
       );
@@ -93,6 +95,32 @@ export function buildDekelCandidateMatches(
       const baseScore =
         uniqueSharedTokens.reduce((sum, token) => sum + getTokenWeight(token), 0) /
         totalQueryWeight;
+      if (baseScore <= 0) {
+        return [];
+      }
+      const normalizedItemDescription = normalizeText(
+        `${item.description} ${item.tagsJson.join(" ")}`,
+      );
+      const semanticGuard = evaluateSemanticGuard(
+        normalizedQuery,
+        normalizedItemDescription,
+        queryConcepts,
+      );
+      if (!semanticGuard.allowed) {
+        return [];
+      }
+      const highSignalSharedTokens = uniqueSharedTokens.filter(
+        (token) =>
+          !lowSignalTokens.has(token) &&
+          !genericConstructionTokens.has(token),
+      );
+      if (
+        baseScore < minimumLexicalCoverage &&
+        highSignalSharedTokens.length < 2 &&
+        semanticGuard.sharedConcepts.length === 0
+      ) {
+        return [];
+      }
       const itemChapterCode = inferItemChapterCode(item);
       const chapterBoost =
         itemChapterCode && routingHints.chapterHints.includes(itemChapterCode)
@@ -107,17 +135,27 @@ export function buildDekelCandidateMatches(
         reasons.push(`chapter boost: ${itemChapterCode}`);
       }
 
-      return {
+      if (semanticGuard.sharedConcepts.length > 0) {
+        reasons.push(
+          `semantic anchors: ${semanticGuard.sharedConcepts.join(", ")}`,
+        );
+      }
+
+      const semanticBoost = Math.min(
+        0.18,
+        semanticGuard.sharedConcepts.length * 0.06,
+      );
+
+      return [{
         code: item.code,
         description: item.description,
         unit: item.unit,
         unitPrice: item.unitPrice,
-        score: roundScore(baseScore + chapterBoost),
+        score: roundScore(Math.min(1, baseScore + chapterBoost + semanticBoost)),
         matchReason: reasons.join("; "),
         metadataJson: item.metadataJson,
-      };
+      }];
     })
-    .filter((candidate) => candidate.score > 0)
     .sort((left, right) => {
       if (right.score !== left.score) {
         return right.score - left.score;
@@ -789,10 +827,272 @@ function normalizeChapterCode(value: string): string | null {
   return match ? match[1] : null;
 }
 
+interface SemanticGuardResult {
+  allowed: boolean;
+  sharedConcepts: string[];
+}
+
+function evaluateSemanticGuard(
+  normalizedQuery: string,
+  normalizedCandidate: string,
+  queryConcepts: Set<string>,
+): SemanticGuardResult {
+  if (candidateExplicitlyExcludesRequestedWork(normalizedQuery, normalizedCandidate)) {
+    return { allowed: false, sharedConcepts: [] };
+  }
+
+  if (hasUnrequestedSpecialization(normalizedQuery, normalizedCandidate)) {
+    return { allowed: false, sharedConcepts: [] };
+  }
+
+  if (!hasMandatorySemanticAnchors(normalizedQuery, normalizedCandidate)) {
+    return { allowed: false, sharedConcepts: [] };
+  }
+
+  const candidateConcepts = detectSemanticConcepts(normalizedCandidate);
+  const sharedConcepts = [...queryConcepts].filter((concept) =>
+    candidateConcepts.has(concept),
+  );
+
+  if (queryConcepts.size > 0 && sharedConcepts.length === 0) {
+    return { allowed: false, sharedConcepts: [] };
+  }
+
+  return { allowed: true, sharedConcepts };
+}
+
+function candidateExplicitlyExcludesRequestedWork(query: string, candidate: string): boolean {
+  const exclusionClauses = [...candidate.matchAll(/(?:לא|אינו|אינה|אינם|אינן)\s+כולל(?:ת|ים|ות)?\s+([^.;]+)/gu)]
+    .map((match) => match[1] ?? "");
+  return explicitExclusionConceptRules.some((rule) =>
+    containsAny(query, rule.queryTerms) &&
+    exclusionClauses.some((clause) => containsAny(clause, rule.excludedTerms)),
+  );
+}
+
+function detectSemanticConcepts(value: string): Set<string> {
+  const concepts = new Set<string>();
+
+  for (const rule of semanticConceptRules) {
+    if (containsAny(value, rule.terms)) {
+      concepts.add(rule.concept);
+    }
+  }
+
+  return concepts;
+}
+
+function hasMandatorySemanticAnchors(query: string, candidate: string): boolean {
+  for (const rule of mandatorySemanticAnchorRules) {
+    if (!containsAny(query, rule.queryTerms)) {
+      continue;
+    }
+
+    if (!rule.candidateGroups.every((group) => containsAny(candidate, group))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function hasUnrequestedSpecialization(query: string, candidate: string): boolean {
+  for (const rule of semanticExclusionRules) {
+    if (
+      containsAny(candidate, rule.candidateTerms) &&
+      !containsAny(query, rule.allowedQueryTerms)
+    ) {
+      return true;
+    }
+  }
+
+  const queryRequestsNewInstallation =
+    containsAny(query, ["אספקה", "התקנת", "חדשות", "חדשים"]) &&
+    !containsAny(query, ["תחזוקה", "אחזקה", "שירות", "שרות"]);
+  if (
+    queryRequestsNewInstallation &&
+    containsAny(candidate, ["תחזוקה", "אחזקה", "שירות", "שרות שנתי"])
+  ) {
+    return true;
+  }
+
+  if (
+    containsAny(candidate, ["תחזוקה", "אחזקה", "שירות שנתי", "שרות שנתי"]) &&
+    !containsAny(query, ["תחזוקה", "אחזקה", "שירות", "שרות"])
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function containsAny(value: string, terms: readonly string[]): boolean {
+  return terms.some((term) => {
+    if (/\s/u.test(term)) {
+      return value.includes(term);
+    }
+
+    let pattern = semanticTermPatternCache.get(term);
+    if (!pattern) {
+      const prefixMatch = term.endsWith("*");
+      const literal = escapeRegularExpression(
+        prefixMatch ? term.slice(0, -1) : term,
+      );
+      pattern = new RegExp(
+        `(?:^|[^\\p{L}\\p{N}])[ובלכהש]?${literal}${prefixMatch ? "[\\p{L}\\p{N}]*" : ""}(?=$|[^\\p{L}\\p{N}])`,
+        "u",
+      );
+      semanticTermPatternCache.set(term, pattern);
+    }
+
+    return pattern.test(value);
+  });
+}
+
+function escapeRegularExpression(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+const semanticTermPatternCache = new Map<string, RegExp>();
+
+const minimumLexicalCoverage = 0.12;
+
+const semanticConceptRules: ReadonlyArray<{
+  concept: string;
+  terms: readonly string[];
+}> = [
+  { concept: "site_safety", terms: ["התארגנות", "גידור", "שילוט", "בטיחות"] },
+  { concept: "measurement", terms: ["מדידה", "מפלסים", "תיעוד מצב"] },
+  { concept: "demolition", terms: ["פירוק", "ניתוק"] },
+  { concept: "waste", terms: ["פסולת", "פינוי", "הטמנה"] },
+  { concept: "roof", terms: ["גג", "קירוי"] },
+  { concept: "waterproofing", terms: ["איטום", "אטימה", "חדירות", "תפרים"] },
+  { concept: "steel", terms: ["פלדה", "קונסטרוקצ*", "קורוז*", "חלודה"] },
+  { concept: "opening_closure", terms: ["סגירת פתח", "סגירה", "לוח מבודד"] },
+  { concept: "window", terms: ["חלונ*", "זיגוג"] },
+  { concept: "door", terms: ["דלת", "כניסות מתכת", "מנעול", "צירים"] },
+  { concept: "wall", terms: ["קיר", "טיח", "שפכטל"] },
+  { concept: "painting", terms: ["צביע*", "צבע"] },
+  { concept: "flooring", terms: ["ריצוף", "רצפה", "שיפולי", "פרופיל סף"] },
+  { concept: "rubber", terms: ["גומי"] },
+  { concept: "acoustic", terms: ["אקוסט*", "סופגי קול", "בידוד קול"] },
+  { concept: "electrical_board", terms: ["לוח החשמל", "לוח חשמל", "סימון מעגלים"] },
+  { concept: "lighting", terms: ["תאורה", "מאור"] },
+  { concept: "power_outlet", terms: ["שקע כוח", "שקעי כוח"] },
+  { concept: "emergency", terms: ["חירום"] },
+  { concept: "exit_sign", terms: ["שלטי יציאה", "שלט יציאה"] },
+  { concept: "fire_suppression", terms: ["כיבוי אש", "ארון כיבוי"] },
+  { concept: "fire_detection", terms: ["גילוי אש", "התרעת אש", "גלא*", "לחצנ*"] },
+  { concept: "air_conditioning", terms: ["מיזוג", "מזגן", "קירור"] },
+  { concept: "drainage", terms: ["ניקוז"] },
+  { concept: "ventilation", terms: ["אוורור", "אוויר צח", "פינוי אוויר", "מפוח*"] },
+  { concept: "electrical_testing", terms: ["רציפות הארקה", "בדיקות חשמל", "מפסקי מגן"] },
+  { concept: "commissioning", terms: ["הרצה", "איזון", "בדיקות תפקוד"] },
+  { concept: "cleaning", terms: ["ניקיון", "ניקוי"] },
+  { concept: "handover", terms: ["תיק מסירה", "תכניות עדות", "תוצאות בדיקות"] },
+  { concept: "sewer", terms: ["ביוב", "שפכים"] },
+  { concept: "gardening", terms: ["גינון", "השקיה"] },
+  { concept: "asbestos", terms: ["אסבסט"] },
+];
+
+const mandatorySemanticAnchorRules: ReadonlyArray<{
+  queryTerms: readonly string[];
+  candidateGroups: ReadonlyArray<readonly string[]>;
+}> = [
+  { queryTerms: ["מדידה מלאה", "תיעוד מצב קיים"], candidateGroups: [["מדידה", "מדידות", "סקר"], ["מפלס*", "מידות", "שטח", "מצב קיים"]] },
+  { queryTerms: ["התארגנות באתר", "גידור נקודתי"], candidateGroups: [["גידור"], ["שילוט"]] },
+  { queryTerms: ["גג", "קירוי"], candidateGroups: [["גג", "קירוי"]] },
+  { queryTerms: ["קונסטרוקציית פלדה", "פלדה גלויה"], candidateGroups: [["פלדה", "קונסטרוקצ*"]] },
+  { queryTerms: ["גומי"], candidateGroups: [["גומי"]] },
+  { queryTerms: ["טיפול אקוסטי", "סופגי קול"], candidateGroups: [["לוח אקוסט", "תקרה אקוסט", "בידוד אקוסט", "סופג קול", "סופגי קול"]] },
+  { queryTerms: ["חלונ*", "זיגוג"], candidateGroups: [["חלונ*", "זיגוג"]] },
+  { queryTerms: ["קורוז*", "חלודה"], candidateGroups: [["קורוז*", "חלודה"]] },
+  { queryTerms: ["שיקום או החלפת"], candidateGroups: [["שיקום", "חידוש", "החלפת", "תיקון", "צביע*"]] },
+  { queryTerms: ["שיקום שתי כניסות", "דו־כנפיות", "דו כנפיות"], candidateGroups: [["דלת", "כנפ*"], ["דו כנפיות", "דו כנפית", "דו-כנפיות", "דו-כנפית"], ["מתכת", "פח", "פלדה"]] },
+  { queryTerms: ["תיקוני קירות"], candidateGroups: [["תיקון", "שיקום"], ["קיר", "טיח"]] },
+  { queryTerms: ["צביעה פנימית"], candidateGroups: [["צביע*", "צבע"], ["קיר", "טיח"], ["פנים", "פנימי", "פנימיים"]] },
+  { queryTerms: ["ניקוי מכני", "תשתית הרצפה"], candidateGroups: [["רצפה", "ריצוף"], ["ניקוי", "הכנת"]] },
+  { queryTerms: ["ברצפת הבטון", "רצפת הבטון"], candidateGroups: [["רצפה", "ריצוף"], ["בטון"], ["תיקון", "סדק", "שיקום"]] },
+  { queryTerms: ["יישור והחלקת תשתית הרצפה"], candidateGroups: [["רצפה", "ריצוף"], ["מדה מתפלסת", "יישור רצפה", "יישור תשתית", "החלקת רצפה", "הכנת תשתית לריצוף"]] },
+  { queryTerms: ["לוח החשמל", "לוח חשמל"], candidateGroups: [["לוח"], ["חשמל"]] },
+  { queryTerms: ["נקודות מאור", "נקודת מאור"], candidateGroups: [["נקודת מאור", "נקודות מאור", "נקודת תאורה"]] },
+  { queryTerms: ["גופי תאורה", "גוף תאורה"], candidateGroups: [["גוף תאורה", "גופי תאורה"]] },
+  { queryTerms: ["שקע כוח", "שקעי כוח"], candidateGroups: [["שקע"]] },
+  { queryTerms: ["שלטי יציאה", "שלט יציאה"], candidateGroups: [["שלט"], ["יציאה", "חירום"]] },
+  { queryTerms: ["גילוי אש", "התרעת אש"], candidateGroups: [["אש"], ["גילוי", "התרעה", "גלא*", "לחצנ*"]] },
+  { queryTerms: ["מיזוג", "מזגן", "מזגנים"], candidateGroups: [["מיזוג", "מזגנ*"]] },
+  { queryTerms: ["נקודות ניקוז למזגנים", "נקודת ניקוז למזגן"], candidateGroups: [["נקודת ניקוז", "נקודות ניקוז"], ["מזגנ*", "מיזוג"]] },
+  { queryTerms: ["אוויר צח", "פינוי אוויר", "אוורור"], candidateGroups: [["אוויר", "אוורור", "מפוח*"]] },
+  { queryTerms: ["הרצה, איזון", "בדיקות תפקוד משולבות"], candidateGroups: [["הרצה", "איזון", "בדיקות תפקוד"]] },
+  { queryTerms: ["תיק מסירה", "תכניות עדות"], candidateGroups: [["תיק מסירה", "תכניות עדות", "מסירה"]] },
+];
+
+const semanticExclusionRules: ReadonlyArray<{
+  candidateTerms: readonly string[];
+  allowedQueryTerms: readonly string[];
+}> = [
+  { candidateTerms: ["אסבסט"], allowedQueryTerms: ["אסבסט"] },
+  { candidateTerms: ["מתח גבוה", "kv24", "24kv", "sf6"], allowedQueryTerms: ["מתח גבוה", "kv", "sf6"] },
+  { candidateTerms: ["עמוד תאורה עירוני", "עמוד חברת החשמל", "עמוד רחוב"], allowedQueryTerms: ["עמוד", "עירוני", "רחוב", "חוץ"] },
+  { candidateTerms: ["מערכת גיבוי חשמלית מרכזית"], allowedQueryTerms: ["מערכת גיבוי", "מרכזית"] },
+  { candidateTerms: ["פנל בקרה לתאורת חירום"], allowedQueryTerms: ["פנל בקרה", "מערכת בקרה"] },
+  { candidateTerms: ["מנדף בישול", "ציוד מטבח"], allowedQueryTerms: ["מנדף", "מטבח", "בישול"] },
+  { candidateTerms: ["חומר בלבד"], allowedQueryTerms: ["חומר בלבד", "אספקת חומר"] },
+  { candidateTerms: ["תוספת מחיר", "תוספת עבור", "התוספת הינה", "תוספת לעבודות"], allowedQueryTerms: ["תוספת מחיר", "תוספת עבור", "תוספת לעבודות"] },
+  { candidateTerms: ["מכון שאיבה"], allowedQueryTerms: ["מכון שאיבה"] },
+  { candidateTerms: ["אדני חלונות"], allowedQueryTerms: ["אדן חלון", "אדני חלונות"] },
+  { candidateTerms: ["קונסטרוקציית פלדה מגולוונת נוספת עבור התקנת"], allowedQueryTerms: ["קונסטרוקציית פלדה", "תמיכות פלדה"] },
+  { candidateTerms: ["גינון", "השקיה"], allowedQueryTerms: ["גינון", "השקיה"] },
+  { candidateTerms: ["ביוב", "שפכים"], allowedQueryTerms: ["ביוב", "שפכים"] },
+  { candidateTerms: ["נזקי שריפות"], allowedQueryTerms: ["שריפה", "פיח"] },
+  { candidateTerms: ["יועץ תרמי", "ת״י 5281", "ת''י 5281"], allowedQueryTerms: ["תרמי", "5281"] },
+  { candidateTerms: ["עוגן מוטות"], allowedQueryTerms: ["עוגן", "מוטות"] },
+  { candidateTerms: ["מדחס"], allowedQueryTerms: ["מדחס"] },
+];
+
+const explicitExclusionConceptRules: ReadonlyArray<{
+  queryTerms: readonly string[];
+  excludedTerms: readonly string[];
+}> = [
+  { queryTerms: ["הובלה"], excludedTerms: ["הובלה"] },
+  { queryTerms: ["פינוי"], excludedTerms: ["פינוי"] },
+  { queryTerms: ["הטמנה"], excludedTerms: ["הטמנה"] },
+  { queryTerms: ["אספקה"], excludedTerms: ["אספקה", "חומר"] },
+  { queryTerms: ["התקנה", "התקנת", "הרכבה"], excludedTerms: ["התקנה", "הרכבה"] },
+  { queryTerms: ["פירוק"], excludedTerms: ["פירוק"] },
+  { queryTerms: ["ניתוק"], excludedTerms: ["ניתוק"] },
+  { queryTerms: ["תיקון", "שיקום"], excludedTerms: ["תיקון", "שיקום"] },
+  { queryTerms: ["החלפה", "החלפת"], excludedTerms: ["החלפה"] },
+];
+
 const chapterRoutingRules = [
   {
     chapterCode: "40",
     triggerTerms: ["סלילה", "אספלט", "כביש", "מדרכה", "ריבוד", "קרצוף"],
+  },
+  {
+    chapterCode: "08",
+    triggerTerms: ["חשמל", "תאורה", "מאור", "שקע", "הארקה"],
+  },
+  {
+    chapterCode: "15",
+    triggerTerms: ["מיזוג", "מזגן", "אוורור"],
+  },
+  {
+    chapterCode: "10",
+    triggerTerms: ["ריצוף", "רצפה", "שיפולי", "סף"],
+  },
+  {
+    chapterCode: "06",
+    triggerTerms: ["דלת", "חלון", "חלונות", "זיגוג"],
+  },
+  {
+    chapterCode: "05",
+    triggerTerms: ["איטום"],
+  },
+  {
+    chapterCode: "19",
+    triggerTerms: ["גג", "קירוי", "פח"] ,
   },
 ] as const;
 
@@ -808,6 +1108,27 @@ const lowSignalTokens = new Set([
   "repair",
   "execution",
   "need",
+]);
+const genericConstructionTokens = new Set([
+  "אספקה",
+  "התקנה",
+  "התקנת",
+  "כולל",
+  "כוללים",
+  "לרבות",
+  "קיים",
+  "קיימת",
+  "קיימים",
+  "מערכת",
+  "מערכות",
+  "עבודה",
+  "עבודות",
+  "מלא",
+  "מלאה",
+  "כללי",
+  "בדיקה",
+  "בדיקות",
+  "חיבור",
 ]);
 const queryNoiseTokens = new Set([
   ...lowSignalTokens,

@@ -8,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { createApp } from "../src/app/create-app.ts";
 import type { CodexGateway } from "../src/modules/local-workspace/codex-app-server-client.ts";
 import type { ProfessionalKnowledgeContext, ProfessionalKnowledgeGateway } from "../src/modules/references/services/professional-knowledge-service.ts";
+import type { AudioTranscriptionGateway, AudioTranscriptionResult, MediaProbeResult } from "../src/modules/local-workspace/media-audio-transcription.ts";
 
 test("локальный API закрывает полный жизненный цикл данных", async () => {
   const fixture = await startFixture();
@@ -145,6 +146,201 @@ test("лимит запросов возвращает контролируем�
   } finally { await fixture.close(); }
 });
 
+test("API обработки проекта сообщает сохранённое состояние и не запускается без материалов", async () => {
+  const fixture = await startFixture();
+  try {
+    const created = (await json(fixture.baseUrl, "/local/projects", {
+      method: "POST",
+      body: { name: "Пустой объект", description: "Ожидает загрузку исходных материалов" },
+    })).body.project;
+    const status = await json(fixture.baseUrl, `/local/projects/${created.id}/processing`);
+    assert.equal(status.response.status, 200);
+    assert.equal(status.body.processing.status, "idle");
+    assert.equal(status.body.processing.stage, "awaiting_materials");
+    assert.equal(status.body.processing.readyForExport, false);
+
+    const started = await json(fixture.baseUrl, `/local/projects/${created.id}/processing-runs`, {
+      method: "POST",
+      body: { mode: "full", replaceDocument: true },
+    });
+    assert.equal(started.response.status, 409);
+    assert.equal(started.body.code, "project_has_no_materials");
+  } finally { await fixture.close(); }
+});
+
+test("полная обработка читает материал, заменяет пустую смету и применяет глобальный DEKEL", async () => {
+  const codex = new ProjectBuildingCodex();
+  const fixture = await startFixture({}, codex);
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", {
+      method: "POST",
+      body: { name: "Объект для расчёта", description: "Финальная уборка помещения после ремонта" },
+    })).body.project;
+    const upload = await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") },
+      body: "Выполнить финальную уборку десяти квадратных метров после ремонта.",
+    });
+    assert.equal(upload.status, 201);
+
+    const started = await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, {
+      method: "POST",
+      body: { mode: "full", replaceDocument: true },
+    });
+    assert.equal(started.response.status, 202);
+    assert.match(started.body.processing.status, /^(queued|running)$/);
+    assert.ok(started.body.processing.runId);
+
+    let current: any;
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      current = (await json(fixture.baseUrl, `/local/projects/${project.id}`)).body.project;
+      if (["ready", "failed", "needs_review", "stale"].includes(current.processing.status)) break;
+      await delay(25);
+    }
+    assert.equal(current.processing.status, "ready", JSON.stringify(current.processing));
+    assert.equal(current.processing.stage, "complete");
+    assert.equal(current.processing.readyForExport, true);
+    assert.deepEqual(current.processing.warningCodes, []);
+    assert.ok(current.processing.baseDocumentFingerprint);
+    assert.ok(current.versions.some((version: any) => /לפני עיבוד מלא/.test(version.label)));
+    assert.equal(current.document.boqRows.length, 1);
+    assert.ok(current.document.boqRows.every((row: any) => !String(row.id).startsWith("boq-example-")));
+    assert.equal(current.document.boqRows[0].code, "95.69.04.0003");
+    assert.ok(current.document.boqRows[0].unitPrice > 0);
+    assert.ok(current.document.evidenceNotes.some((note: any) => note.anchorId === current.document.boqRows[0].id));
+    assert.equal(current.dekelReview.status, "applied");
+    assert.equal(current.dekelReview.financialAudit.valid, true);
+    assert.ok(codex.prompts.some((prompt) => /точное профессиональное чтение одного материала/.test(prompt)));
+    assert.ok(codex.prompts.some((prompt) => /ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ/.test(prompt)));
+    assert.ok(codex.prompts.some((prompt) => /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt)));
+
+    const changedDocument = structuredClone(current.document);
+    changedDocument.objective = "Ручное изменение после проверки";
+    const changed = await json(fixture.baseUrl, `/local/projects/${project.id}`, { method: "PUT", body: { document: changedDocument } });
+    assert.equal(changed.response.status, 200);
+    assert.equal(changed.body.project.processing.readyForExport, false);
+    assert.equal(changed.body.project.processing.validatedDocumentFingerprint, null);
+    assert.notEqual(changed.body.project.processing.status, "ready");
+
+    const materialId = changed.body.project.materials[0].id;
+    const corrected = await json(fixture.baseUrl, `/local/projects/${project.id}/materials/${materialId}/content`, { method: "PUT", body: { text: "Исправленное требование владельца" } });
+    assert.equal(corrected.body.project.processing.readyForExport, false);
+    assert.equal(corrected.body.project.processing.sourceFingerprint, null);
+  } finally { await fixture.close(); }
+});
+
+test("два одновременных запуска дают один run, а правка во время run блокируется", async () => {
+  const codex = new BlockingProjectBuildingCodex();
+  const fixture = await startFixture({}, codex);
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", {
+      method: "POST", body: { name: "Проверка гонки", description: "Один запуск и безопасная правка" },
+    })).body.project;
+    const upload = await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") }, body: "Выполнить финальную уборку десяти квадратных метров после ремонта.",
+    });
+    assert.equal(upload.status, 201);
+
+    const [first, second] = await Promise.all([
+      json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } }),
+      json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } }),
+    ]);
+    assert.deepEqual([first.response.status, second.response.status].sort(), [202, 409]);
+    await codex.waitUntilBlocked();
+
+    const changedDocument = structuredClone(project.document);
+    changedDocument.objective = "Эта правка не должна быть затёрта rollback";
+    const edit = await json(fixture.baseUrl, `/local/projects/${project.id}`, { method: "PUT", body: { document: changedDocument } });
+    assert.equal(edit.response.status, 409);
+    assert.equal(edit.body.code, "processing_in_progress");
+    codex.release();
+    const completed = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.match(completed.processing.status, /^(ready|needs_review)$/);
+  } finally {
+    codex.release();
+    await fixture.close();
+  }
+});
+
+test("автоматический DEKEL сохраняет неподобранную работу и требует проверки", async () => {
+  const fixture = await startFixture({}, new UnmatchedProjectBuildingCodex());
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "Редкая работа", description: "Нет надёжного соответствия DEKEL" } })).body.project;
+    await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") }, body: "Выполнить специальную работу ZZZ_NONMATCH_987.",
+    });
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    const current = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.equal(current.processing.status, "needs_review", JSON.stringify(current.processing));
+    assert.equal(current.processing.readyForExport, false);
+    assert.equal(current.document.boqRows.length, 1);
+    assert.equal(current.document.boqRows[0].id, "boq-unmatched");
+    assert.equal(current.document.boqRows[0].unitPrice, 0);
+    assert.match(current.dekelReview.warnings.join("\n"), /בדיקה|ביטחון|התאמה|יחידת/);
+  } finally { await fixture.close(); }
+});
+
+test("полная обработка удаляет вымышленный источник evidence и требует проверки", async () => {
+  const fixture = await startFixture({}, new InvalidEvidenceProjectBuildingCodex());
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "Проверка evidence", description: "Источник должен существовать" } })).body.project;
+    await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") }, body: "Выполнить финальную уборку десяти квадратных метров после ремонта.",
+    });
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    const current = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.equal(current.processing.status, "needs_review", JSON.stringify(current.processing));
+    assert.ok(current.processing.warningCodes.includes("evidence_source_downgraded"));
+    assert.equal(current.document.boqRows.length, 1);
+    assert.equal(current.document.evidenceNotes[0].kind, "inference");
+    assert.equal(current.document.evidenceNotes[0].quantityBasis, "inferred");
+    assert.equal(current.document.evidenceNotes[0].source, undefined);
+  } finally { await fixture.close(); }
+});
+
+test("расшифровка звука видео с временными метками входит в анализ Codex", async () => {
+  const codex = new ProjectBuildingCodex();
+  const audio = new ScriptedAudioTranscription();
+  const fixture = await startFixture({}, codex, new EmptyKnowledge(), audio);
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", {
+      method: "POST",
+      body: { name: "Видеообъект", description: "Требования объяснены голосом" },
+    })).body.project;
+    const fakeMp4 = Buffer.from([0, 0, 0, 16, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0, 0, 0, 0]);
+    const upload = await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST",
+      headers: { "Content-Type": "video/mp4", "X-File-Name": encodeURIComponent("объяснение.mp4") },
+      body: fakeMp4,
+    });
+    assert.equal(upload.status, 201);
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    let current: any;
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      current = (await json(fixture.baseUrl, `/local/projects/${project.id}`)).body.project;
+      if (["ready", "failed", "needs_review", "stale"].includes(current.processing.status)) break;
+      await delay(25);
+    }
+    assert.equal(current.processing.status, "ready", JSON.stringify(current.processing));
+    assert.equal(current.materials[0].audioStatus, "completed");
+    assert.equal(current.materials[0].audioTranscriptLanguage, "he");
+    assert.equal(current.materials[0].audioTranscriptSegmentCount, 1);
+    const materialPrompt = codex.prompts.find((prompt) => /точное профессиональное чтение одного материала/.test(prompt)) ?? "";
+    assert.match(materialPrompt, /00:00:02–00:00:07/);
+    assert.match(materialPrompt, /יש לבצע ניקיון יסודי לאחר השיפוץ/);
+    assert.match(materialPrompt, /отличай сказанное от видимого/);
+
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      current = (await json(fixture.baseUrl, `/local/projects/${project.id}`)).body.project;
+      if (["ready", "failed", "needs_review", "stale"].includes(current.processing.status)) break;
+      await delay(25);
+    }
+    assert.equal(current.processing.status, "ready", JSON.stringify(current.processing));
+    assert.equal(audio.transcriptionCalls, 1, "неизменённое видео не должно распознаваться повторно");
+  } finally { await fixture.close(); }
+});
+
 test("проекты изолированы, а ошибка Codex сохраняется контролируемо", async () => {
   const codex = new CapturingCodex();
   const fixture = await startFixture({}, codex, new ReferenceKnowledge());
@@ -249,7 +445,7 @@ test("DEKEL проходит полный путь внутри локально
     assert.equal(analyzed.body.review.lines.length, project.document.boqRows.length);
     const reviewLine = analyzed.body.review.lines.find((line: any) => line.candidates.length > 0);
     assert.ok(reviewLine);
-    assert.equal(reviewLine.selectedCode, reviewLine.candidates[0].code);
+    assert.equal(reviewLine.selectedCode, reviewLine.included ? reviewLine.candidates[0].code : null);
     assert.equal(reviewLine.quantitySource, "document");
     assert.match(reviewLine.quantitySourceReason, /כתב הכמויות/);
     assert.ok(reviewLine.candidates[0].unitPrice > 0);
@@ -322,9 +518,14 @@ test("DEKEL блокирует устаревшую проверку и удал
   } finally { await fixture.close(); }
 });
 
-async function startFixture(localConfig: Record<string, number> = {}, codex: FakeCodex = new FakeCodex(), professionalKnowledgeService: ProfessionalKnowledgeGateway = new EmptyKnowledge()) {
+async function startFixture(
+  localConfig: Record<string, number> = {},
+  codex: FakeCodex = new FakeCodex(),
+  professionalKnowledgeService: ProfessionalKnowledgeGateway = new EmptyKnowledge(),
+  audioTranscriptionGateway?: AudioTranscriptionGateway,
+) {
   const dataRoot = await mkdtemp(join(tmpdir(), "mashmauet-api-"));
-  const app = createApp({ localDataRootPath: dataRoot, codexClient: codex, localConfig, professionalKnowledgeService });
+  const app = createApp({ localDataRootPath: dataRoot, codexClient: codex, localConfig, professionalKnowledgeService, audioTranscriptionGateway });
   const server = createServer(app.handleRequest);
   await new Promise<void>((resolvePromise, rejectPromise) => {
     server.once("error", rejectPromise);
@@ -378,6 +579,124 @@ class CapturingCodex extends FakeCodex {
     await delay(20);
     if (this.fail) throw new Error("test failure");
     return JSON.stringify({ answer: "Изолированный ответ", proposedChanges: [], proposedProjectRules: [], needsMoreInformation: [] });
+  }
+}
+
+class ProjectBuildingCodex extends FakeCodex {
+  prompts: string[] = [];
+  override async runTurn(_threadId?: string, _projectPath?: string, prompt = "") {
+    this.prompts.push(prompt);
+    await delay(10);
+    if (/точное профессиональное чтение одного материала/.test(prompt)) {
+      return JSON.stringify({ answer: "מקור: требования.txt. נדרשת עבודת ניקיון יסודי לאחר שיפוץ בשטח 10 מ״ר.", proposedChanges: [], proposedProjectRules: [], needsMoreInformation: [] });
+    }
+    const sourceFileName = /объяснение\.mp4/.test(prompt) ? "объяснение.mp4" : "требования.txt";
+    const sourceExcerpt = sourceFileName === "объяснение.mp4" ? "יש לבצע ניקיון יסודי לאחר השיפוץ" : "финальную уборку";
+    const rowId = "boq-final-cleaning";
+    const values: Record<string, unknown> = {
+      subject: "מסמך משמעויות לפרויקט אובייקט",
+      background: "נדרשת עבודת ניקיון לאחר שיפוץ בהתאם לחומר שהועלה.",
+      objective: "השלמת ניקיון ומסירת השטח.",
+      scope: ["ניקיון יסודי לאחר שיפוץ."],
+      estimateNotes: ["המחירים ייקבעו לפי מחירון DEKEL הגלובלי."],
+      scheduleRows: [{ id: "schedule-generated", phase: "ביצוע", duration: "יום", dependency: "לאחר סיום עבודות השיפוץ", notes: "תיאום עם מנהל הפרויקט" }],
+      scheduleNotes: "משך הביצוע מבוסס על הכמות שנמדדה.",
+      riskRows: [{ id: "risk-generated", risk: "עבודות שיפוץ שטרם הסתיימו", impact: "עיכוב במסירה", mitigation: "תיאום לפני תחילת ניקיון" }],
+      additionalNotes: "הכמות תיבדק לפני ביצוע.",
+      boqRows: [{ id: rowId, code: "95.69.04.0003", description: "נקיון יסודי חד פעמי של מבנים הכוללים שטחים ציבוריים לאחר שיפוץ ולפני איכלוס. שטחים ציבוריים כוללים: חצרות, חדרי מדרגות, חניונים, חדרי שרות, חלונות פנים וחוץ - קומפלט לרבות פנים המשרדים. (השטחים הציבוריים נכללים אך לא נמדדים)", unit: "מטר", quantity: 10, unitPrice: 0, category: "עבודות משלימות" }],
+      evidenceNotes: [{ id: "evidence-final-cleaning", anchorType: "boqRow", anchorId: rowId, kind: "source", quantityBasis: "documented", title: "דרישת ניקיון", explanation: "העבודה נדרשה בחומר הפרויקט.", reason: "נכתב במפורש בקובץ שהעלה הבעלים.", confidence: "high", source: { fileName: sourceFileName, location: "טקסט מלא", excerpt: sourceExcerpt } }],
+    };
+    return JSON.stringify({
+      answer: "המסמך נבנה מחומר הפרויקט.",
+      proposedChanges: Object.entries(values).map(([path, value]) => ({ path, valueJson: JSON.stringify(value), reason: "בניית מסמך מלאה" })),
+      proposedProjectRules: [],
+      needsMoreInformation: [],
+    });
+  }
+}
+
+class BlockingProjectBuildingCodex extends ProjectBuildingCodex {
+  private blocked = false;
+  private releaseBlocked?: () => void;
+  private markEntered!: () => void;
+  private readonly entered = new Promise<void>((resolvePromise) => { this.markEntered = resolvePromise; });
+  private readonly gate = new Promise<void>((resolvePromise) => { this.releaseBlocked = resolvePromise; });
+  async waitUntilBlocked() { await this.entered; }
+  release() { this.releaseBlocked?.(); }
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    if (!this.blocked && /точное профессиональное чтение одного материала/.test(prompt)) {
+      this.blocked = true;
+      this.markEntered();
+      await this.gate;
+    }
+    return await super.runTurn(threadId, projectPath, prompt);
+  }
+}
+
+class UnmatchedProjectBuildingCodex extends ProjectBuildingCodex {
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    const raw = await super.runTurn(threadId, projectPath, prompt);
+    if (/точное профессиональное чтение одного материала/.test(prompt)) return raw;
+    const parsed = JSON.parse(raw);
+    const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
+    boq.valueJson = JSON.stringify([{ id: "boq-unmatched", code: "", description: "ZZZ_NONMATCH_987 עבודת חלל מיוחדת", unit: "парсек", quantity: 3, unitPrice: 0, category: "עבודות מיוחדות" }]);
+    const notes = parsed.proposedChanges.find((change: any) => change.path === "evidenceNotes");
+    notes.valueJson = JSON.stringify([{ id: "evidence-unmatched", anchorType: "boqRow", anchorId: "boq-unmatched", kind: "source", quantityBasis: "documented", title: "דרישה מפורשת", explanation: "העבודה מופיעה בחומר.", reason: "הקובץ דורש אותה.", confidence: "high", source: { fileName: "требования.txt", location: "טקסט מלא", excerpt: "ZZZ_NONMATCH_987" } }]);
+    return JSON.stringify(parsed);
+  }
+}
+
+class InvalidEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    const raw = await super.runTurn(threadId, projectPath, prompt);
+    if (/точное профессиональное чтение одного материала/.test(prompt)) return raw;
+    const parsed = JSON.parse(raw);
+    const notes = parsed.proposedChanges.find((change: any) => change.path === "evidenceNotes");
+    const value = JSON.parse(notes.valueJson);
+    value[0].source = { fileName: "несуществующий-файл.txt", location: "страница 99", excerpt: "вымышленный фрагмент" };
+    notes.valueJson = JSON.stringify(value);
+    return JSON.stringify(parsed);
+  }
+}
+
+async function waitForProcessing(baseUrl: string, projectId: string) {
+  let current: any;
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    current = (await json(baseUrl, `/local/projects/${projectId}`)).body.project;
+    if (["ready", "failed", "needs_review", "stale"].includes(current.processing.status)) return current;
+    await delay(25);
+  }
+  return current;
+}
+
+class ScriptedAudioTranscription implements AudioTranscriptionGateway {
+  transcriptionCalls = 0;
+  async validateCache() { return { valid: true } as const; }
+  async probe(): Promise<MediaProbeResult> { return { status: "unavailable", stage: "probe", reasonCode: "ffprobe_unavailable", message: "not used" }; }
+  async transcribe(): Promise<AudioTranscriptionResult> {
+    this.transcriptionCalls += 1;
+    return {
+      status: "completed",
+      probe: {
+        durationSeconds: 10,
+        container: "mp4",
+        streamCount: 2,
+        audio: { codec: "aac", sampleRate: 48_000, channels: 1 },
+        video: { codec: "h264", width: 478, height: 850 },
+        provenance: { sourceSha256: "a".repeat(64), generatedAt: new Date().toISOString(), ffprobeVersion: "test" },
+      },
+      transcript: {
+        language: "he",
+        text: "יש לבצע ניקיון יסודי לאחר השיפוץ",
+        speechDetected: true,
+        segments: [{ startSeconds: 2, endSeconds: 7, text: "יש לבצע ניקיון יסודי לאחר השיפוץ" }],
+        generatedAt: new Date().toISOString(),
+      },
+      provenance: {
+        sourceSha256: "a".repeat(64), generatedAt: new Date().toISOString(), ffprobeVersion: "test",
+        engine: "whisper.cpp", engineVersion: "test", ffmpegVersion: "test", modelName: "test.bin", modelSha256: "b".repeat(64),
+      },
+    };
   }
 }
 

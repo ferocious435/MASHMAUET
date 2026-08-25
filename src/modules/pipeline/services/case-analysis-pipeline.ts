@@ -38,6 +38,12 @@ type DekelMatchingGateway = {
   findPricebookItemsByCodes(codes: string[]): Promise<PricebookItem[]>;
 };
 
+export interface CaseAnalysisPipelineRunOptions {
+  precomputedWorkItems?: WorkItem[];
+  evidence?: SupportingEvidenceRecord[];
+  assumptions?: string[];
+}
+
 const quantityUnits = new Set(["m2", "m", "unit", "komplet"]);
 
 const stageTaskTypeMap: Record<PipelineStage, string> = {
@@ -87,7 +93,10 @@ export class CaseAnalysisPipeline {
     this.dekelMatchingService = dekelMatchingService;
   }
 
-  public async run(input: CaseRecord): Promise<CaseRecord> {
+  public async run(
+    input: CaseRecord,
+    options?: CaseAnalysisPipelineRunOptions,
+  ): Promise<CaseRecord> {
     const template = this.templateRepository.findById(input.templateId);
     const pricebookItems = this.pricebookRepository.listByPricebookId(
       input.pricebookId,
@@ -96,11 +105,16 @@ export class CaseAnalysisPipeline {
     const analysis = createEmptyAnalysisSnapshot();
     analysis.selectedDekelLines = [...input.analysis.selectedDekelLines];
     analysis.reviewDecisions = [...input.analysis.reviewDecisions];
+    analysis.assumptions = [...(options?.assumptions ?? [])];
 
     let record: CaseRecord = {
       ...input,
       status: "analyzing",
       normalizedDescription: input.rawDescription,
+      supportingEvidence: mergeSupportingEvidence(
+        input.supportingEvidence,
+        options?.evidence ?? [],
+      ),
       analysis,
     };
 
@@ -167,7 +181,13 @@ export class CaseAnalysisPipeline {
         stage: "work_understanding",
         inputSummary: record.normalizedDescription,
       },
-      async () => detectWorkItems(record.caseId, record.normalizedDescription),
+      async () =>
+        options?.precomputedWorkItems
+          ? options.precomputedWorkItems.map((item) => ({
+              ...item,
+              caseId: record.caseId,
+            }))
+          : detectWorkItems(record.caseId, record.normalizedDescription),
     );
     const professionalQuantityResolution = applyProfessionalQuantityAssumptions(
       workUnderstandingStage.payload,
@@ -447,6 +467,21 @@ export class CaseAnalysisPipeline {
 
     return record;
   }
+}
+
+function mergeSupportingEvidence(
+  existing: SupportingEvidenceRecord[],
+  additional: SupportingEvidenceRecord[],
+): SupportingEvidenceRecord[] {
+  const evidenceById = new Map(
+    existing.map((item) => [item.evidenceId, item]),
+  );
+
+  for (const item of additional) {
+    evidenceById.set(item.evidenceId, item);
+  }
+
+  return [...evidenceById.values()];
 }
 
 async function resolveLiveDekelPricebookItems(

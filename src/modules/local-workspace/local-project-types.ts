@@ -15,6 +15,12 @@ export type LocalMaterial = {
   sheetCount?: number;
   videoDurationSeconds?: number;
   videoFrameCount?: number;
+  audioStatus?: "pending" | "transcribing" | "completed" | "no_audio" | "unavailable" | "failed";
+  audioTranscriptPath?: string;
+  audioProvenancePath?: string;
+  audioTranscriptLanguage?: string;
+  audioTranscriptSegmentCount?: number;
+  audioErrorCode?: string;
   analyzedAt?: string;
   correctedAt?: string;
   correctionNeedsReview?: boolean;
@@ -69,6 +75,8 @@ export type LocalDekelReviewLine = {
   quantitySource: "document" | "material" | "estimated";
   quantitySourceReason: string;
   included: boolean;
+  ownerExcluded?: boolean;
+  ownerConfirmed?: boolean;
   selectedCode: string | null;
   candidates: LocalDekelCandidate[];
 };
@@ -101,6 +109,38 @@ export type LocalDekelReview = {
   financialAudit: LocalFinancialAudit;
 };
 
+export type LocalProjectProcessingStatus = "idle" | "queued" | "running" | "needs_review" | "ready" | "failed" | "stale";
+
+export type LocalProjectProcessingStage =
+  | "awaiting_materials"
+  | "extracting"
+  | "awaiting_video_frames"
+  | "transcribing_audio"
+  | "analyzing_materials"
+  | "consolidating_evidence"
+  | "understanding_work"
+  | "quantifying"
+  | "matching_dekel"
+  | "building_document"
+  | "validating"
+  | "complete";
+
+export type LocalProjectProcessing = {
+  runId: string | null;
+  status: LocalProjectProcessingStatus;
+  stage: LocalProjectProcessingStage;
+  readyForExport: boolean;
+  progressPercent: number;
+  sourceFingerprint: string | null;
+  baseDocumentFingerprint: string | null;
+  validatedDocumentFingerprint: string | null;
+  startedAt?: string;
+  updatedAt: string;
+  completedAt?: string;
+  warningCodes: string[];
+  error?: { code: string; message: string; retryable: boolean };
+};
+
 export type LocalProject = {
   schemaVersion: 1;
   revision: number;
@@ -116,6 +156,7 @@ export type LocalProject = {
   rules: string[];
   codexThreadId?: string;
   dekelReview?: LocalDekelReview;
+  processing: LocalProjectProcessing;
   document: Record<string, unknown>;
 };
 
@@ -127,7 +168,7 @@ export type LocalBackupManifest = {
   projectCount: number;
 };
 
-export type PublicLocalMaterial = Omit<LocalMaterial, "sourcePath" | "extractedTextPath" | "analysisTextPath" | "correctedTextPath" | "visionImagePaths"> & {
+export type PublicLocalMaterial = Omit<LocalMaterial, "sourcePath" | "extractedTextPath" | "analysisTextPath" | "correctedTextPath" | "visionImagePaths" | "audioTranscriptPath" | "audioProvenancePath"> & {
   visionImageCount: number;
   hasTextContent: boolean;
   hasAiAnalysis: boolean;
@@ -142,7 +183,7 @@ export function toPublicProject(project: LocalProject): PublicLocalProject {
   const { codexThreadId: _codexThreadId, materials, ...publicProject } = project;
   return {
     ...publicProject,
-    materials: materials.map(({ sourcePath: _sourcePath, extractedTextPath, analysisTextPath, correctedTextPath, visionImagePaths, ...material }) => ({
+    materials: materials.map(({ sourcePath: _sourcePath, extractedTextPath, analysisTextPath, correctedTextPath, visionImagePaths, audioTranscriptPath: _audioTranscriptPath, audioProvenancePath: _audioProvenancePath, ...material }) => ({
       ...material,
       visionImageCount: visionImagePaths?.length ?? 0,
       hasTextContent: Boolean(extractedTextPath || analysisTextPath || correctedTextPath),

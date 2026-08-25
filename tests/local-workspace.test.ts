@@ -24,6 +24,57 @@ test("локальные проекты сохраняются между экз
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("новый рабочий проект не получает демонстрационные работы и цены", async () => {
+  const root = await mkdtemp(join(tmpdir(), "mashmauet-blank-project-"));
+  try {
+    const store = new LocalProjectStore(root);
+    await store.initialize();
+    const project = await store.create("Реальный объект", "Материалы будут загружены владельцем");
+    const rows = project.document.boqRows as Array<Record<string, unknown>>;
+    const notes = project.document.evidenceNotes as Array<Record<string, unknown>>;
+
+    assert.deepEqual(rows, []);
+    assert.deepEqual(notes, []);
+    assert.equal(project.processing.runId, null);
+    assert.equal(project.processing.status, "idle");
+    assert.equal(project.processing.stage, "awaiting_materials");
+    assert.equal(project.processing.sourceFingerprint, null);
+    assert.equal(project.processing.baseDocumentFingerprint, null);
+    assert.equal(project.processing.validatedDocumentFingerprint, null);
+    assert.deepEqual(project.processing.warningCodes, []);
+    assert.equal(project.processing.readyForExport, false);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("прерванный запуск после перезапуска становится повторяемой ошибкой", async () => {
+  const root = await mkdtemp(join(tmpdir(), "mashmauet-interrupted-processing-"));
+  try {
+    const first = new LocalProjectStore(root);
+    await first.initialize();
+    const project = await first.create("Прерванный объект", "Проверка восстановления после остановки приложения");
+    project.processing = {
+      ...project.processing,
+      runId: "abandoned-run",
+      status: "running",
+      stage: "analyzing_materials",
+      readyForExport: false,
+      progressPercent: 35,
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await first.save(project);
+
+    const reopened = new LocalProjectStore(root);
+    await reopened.initialize();
+    const restored = await reopened.get(project.id);
+    assert.equal(restored.processing.status, "failed");
+    assert.equal(restored.processing.readyForExport, false);
+    assert.equal(restored.processing.runId, null);
+    assert.equal(restored.processing.error?.code, "processing_interrupted");
+    assert.equal(restored.processing.error?.retryable, true);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("реальные PDF, Excel и фото подготавливаются к чтению", async () => {
   const root = await mkdtemp(join(tmpdir(), "mashmauet-extract-"));
   try {

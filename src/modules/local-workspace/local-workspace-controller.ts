@@ -12,7 +12,7 @@ import type { LocalWorkspaceLogger } from "./local-workspace-logger.ts";
 import { setSecurityHeaders } from "../../app/local-request-security.ts";
 import {
   backupCreateSchema, chatSchema, confirmationSchema, createProjectSchema, dekelAnalyzeSchema, dekelLineUpdateSchema,
-  materialContentSchema, proposalActionSchema, updateProjectSchema, validate, versionSchema, videoFrameSchema,
+  materialContentSchema, processingRunSchema, proposalActionSchema, updateProjectSchema, validate, versionSchema, videoFrameSchema,
 } from "./local-workspace-validation.ts";
 
 export class LocalWorkspaceController {
@@ -71,6 +71,13 @@ export class LocalWorkspaceController {
     if (projectMatch && method === "PUT") {
       const input = validate(updateProjectSchema, await readJson(request, this.config.maxDocumentJsonBytes));
       return this.json(response, 200, { project: await this.service.updateProject(projectMatch[1], input) });
+    }
+    const processingMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/processing$/);
+    if (processingMatch && method === "GET") return this.json(response, 200, { processing: await this.service.getProcessing(processingMatch[1]) });
+    const processingRunMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/processing-runs$/);
+    if (processingRunMatch && method === "POST") {
+      validate(processingRunSchema, await readJson(request, this.config.maxJsonBytes));
+      return this.json(response, 202, { processing: await this.service.startProcessing(processingRunMatch[1]) });
     }
     const dekelMatch = pathname.match(/^\/local\/projects\/([a-zA-Z0-9-]+)\/dekel$/);
     if (dekelMatch && method === "GET") return this.json(response, 200, await this.service.getDekelReview(dekelMatch[1]));

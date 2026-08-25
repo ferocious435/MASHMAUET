@@ -9,6 +9,7 @@ import { LocalWorkspaceController } from "../modules/local-workspace/local-works
 import { CodexAppServerClient, type CodexGateway } from "../modules/local-workspace/codex-app-server-client.ts";
 import { LocalWorkspaceService } from "../modules/local-workspace/local-workspace-service.ts";
 import { LocalWorkspaceLogger } from "../modules/local-workspace/local-workspace-logger.ts";
+import { LocalAudioTranscriptionGateway, type AudioTranscriptionGateway } from "../modules/local-workspace/media-audio-transcription.ts";
 
 import { CaseController } from "../modules/cases/controllers/case-controller.ts";
 import { InMemoryCaseRepository } from "../modules/cases/repositories/case-repository.ts";
@@ -48,6 +49,7 @@ export function createApp(options?: {
   contract3210DirectoryPath?: string;
   blueBookDirectoryPath?: string;
   localConfig?: Partial<LocalAppConfig>;
+  audioTranscriptionGateway?: AudioTranscriptionGateway;
 }): MashmauetApplication {
   const templateRepository = new InMemoryTemplateRepository();
   const pricebookRepository = new InMemoryPricebookRepository();
@@ -99,7 +101,17 @@ export function createApp(options?: {
     blueBookDirectoryPath: options?.blueBookDirectoryPath ?? join(process.cwd(), "HOMER", "BLUE BOOK"),
     cacheDirectoryPath: join(localConfig.dataRootPath, "knowledge-cache"),
   });
-  const localWorkspaceService = new LocalWorkspaceService(localProjectStore, codexClient, localConfig, localLogger, dekelCatalogService, professionalKnowledgeService);
+  const audioTranscriptionGateway = options?.audioTranscriptionGateway ?? new LocalAudioTranscriptionGateway({
+    allowedRootPath: localConfig.dataRootPath,
+    ffprobePath: process.env.MASHMAUET_FFPROBE_PATH ?? join(process.cwd(), ".local-tools", "ffmpeg", "b6.1.1", "ffprobe.exe"),
+    ffmpegPath: process.env.MASHMAUET_FFMPEG_PATH ?? join(process.cwd(), ".local-tools", "ffmpeg", "b6.1.1", "ffmpeg.exe"),
+    whisperPath: process.env.MASHMAUET_WHISPER_PATH ?? join(process.cwd(), ".local-tools", "whisper", "v1.9.1", "Release", "whisper-cli.exe"),
+    whisperModelPath: process.env.MASHMAUET_WHISPER_MODEL_PATH ?? join(process.cwd(), ".local-tools", "whisper", "models", "ggml-large-v3-turbo-q5_0.bin"),
+    ffprobeVersion: process.env.MASHMAUET_FFPROBE_VERSION ?? "6.1.1",
+    ffmpegVersion: process.env.MASHMAUET_FFMPEG_VERSION ?? "6.1.1",
+    whisperVersion: process.env.MASHMAUET_WHISPER_VERSION ?? "1.9.1",
+  });
+  const localWorkspaceService = new LocalWorkspaceService(localProjectStore, codexClient, localConfig, localLogger, dekelCatalogService, professionalKnowledgeService, audioTranscriptionGateway);
   const localWorkspaceController = new LocalWorkspaceController(
     localWorkspaceService,
     localConfig,

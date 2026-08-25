@@ -25,10 +25,16 @@ export class CodexAppServerClient implements CodexGateway {
   private closing = false;
   private readonly workspaceRoot: string;
   private readonly codexScriptPath: string;
+  private readonly turnTimeoutMs: number;
 
-  constructor(workspaceRoot = process.cwd(), codexScriptPath = join(process.cwd(), "node_modules", "@openai", "codex", "bin", "codex.js")) {
+  constructor(
+    workspaceRoot = process.cwd(),
+    codexScriptPath = join(process.cwd(), "node_modules", "@openai", "codex", "bin", "codex.js"),
+    turnTimeoutMs = 15 * 60_000,
+  ) {
     this.workspaceRoot = workspaceRoot;
     this.codexScriptPath = codexScriptPath;
+    this.turnTimeoutMs = turnTimeoutMs;
   }
 
   async getAccount(): Promise<JsonObject> {
@@ -100,7 +106,7 @@ export class CodexAppServerClient implements CodexGateway {
         cleanup();
         rejectPromise(error);
       };
-      const timer = setTimeout(() => { cleanup(); rejectPromise(new Error("Codex не ответил за отведённое время")); }, 300_000);
+      const timer = setTimeout(() => { cleanup(); rejectPromise(new Error("Codex не ответил за отведённое время")); }, this.turnTimeoutMs);
       const cleanup = () => {
         clearTimeout(timer);
         this.events.off("item/completed", onItem);

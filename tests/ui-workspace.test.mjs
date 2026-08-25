@@ -44,6 +44,47 @@ test("интерфейс содержит loading, empty, success и error со�
   assert.match(script, /data-retry-system/);
 });
 
+test("интерфейс честно показывает готовность и этапы обработки проекта", () => {
+  for (const id of [
+    "project-processing", "workflow-progress", "workflow-error",
+    "retry-workflow-button", "document-readiness",
+  ]) assert.match(html, new RegExp(`id=["']${id}["']`));
+
+  assert.match(html, /data-workflow-state=/);
+  assert.match(html, /data-workflow-stage=/);
+  assert.match(html, /role="progressbar"/);
+  assert.match(script, /renderProjectProcessing/);
+  assert.match(script, /progressPercent/);
+  assert.match(script, /processing\.error\?\.message/);
+  assert.match(script, /retry-workflow-button/);
+  assert.match(script, /processing-runs/);
+  assert.match(script, /pollProjectProcessing/);
+  assert.match(script, /await startProjectProcessing\(activeProjectId\)/);
+  assert.match(styles, /\.project-processing/);
+  assert.match(styles, /\.workflow-progress/);
+  assert.match(styles, /\[data-workflow-state="failed"\]/);
+});
+
+test("DEKEL доступен для проверки построенной сметы, а печать и экспорт — только после готовности", () => {
+  assert.match(script, /processing\?\.readyForExport\s*===\s*true/);
+  assert.match(script, /function syncProjectReadiness/);
+  assert.match(script, /const dekelAvailable\s*=\s*Boolean\(project\?\.document\?\.boqRows\?\.length\)/);
+  assert.match(script, /elements\.dekelReviewButton\.disabled\s*=\s*!dekelAvailable/);
+  assert.match(script, /elements\.exportButton\.disabled\s*=\s*!ready/);
+  assert.match(script, /elements\.printButton\.disabled\s*=\s*!ready/);
+  assert.match(script, /ensureProjectReadyForExport/);
+  assert.match(script, /readyForExport:\s*false/);
+});
+
+test("опрос обработки ведётся отдельно для каждого проекта и возобновляется после загрузки или переключения", () => {
+  assert.match(script, /const processingPolls\s*=\s*new Map\(\)/);
+  assert.doesNotMatch(script, /processingPollToken/);
+  assert.match(script, /function resumeProjectProcessing/);
+  assert.match(script, /processingPolls\.(?:get|has)\(projectId\)/);
+  assert.match(script, /processingPolls\.delete\(projectId\)/);
+  assert.match(script, /resumeProjectProcessing\(getActiveProject\(\)\)/);
+});
+
 test("проектный чат работает в границах проекта и позволяет безопасно повторить ошибку", () => {
   for (const id of ["codex-status", "chat-state-message", "chat-messages", "chat-form", "chat-input", "connect-codex-button"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`));
@@ -188,6 +229,7 @@ test("DEKEL доступен как полный проектный процес
   }
   for (const route of ["/dekel/analyze", "/dekel/lines/", "/dekel/apply"]) assert.ok(script.includes(route), `Не подключён маршрут ${route}`);
   assert.match(script, /renderDekelReview/);
+  assert.match(script, /\["needs_review", "ready"\]\.includes\(processing\.status\)/);
   assert.match(script, /selectedCode/);
   assert.match(script, /data-dekel-code/);
   assert.match(script, /quantitySource/);

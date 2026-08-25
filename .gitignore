@@ -10,6 +10,8 @@ tmp/
 artifacts/
 .vendor/
 local-data/
+.local-data/
+.local-tools/
 skill-system/logs/
 
 # Graphify keeps these local extraction caches and machine-specific helpers.
@@ -34,3 +36,7 @@ graphify-out/.graphify_old.json
 graphify-out/.needs_update
 graphify-out/.chunk*
 graphify-out/.read_*
+graphify-out/.graphify_learning.json
+graphify-out/.vocab.txt
+graphify-out/memory/
+graphify-out/reflections/

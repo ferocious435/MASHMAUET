@@ -62,9 +62,17 @@ const elements = {
   evidenceSourceButton: document.querySelector("#evidence-source-button"),
   documentStage: document.querySelector("#document-stage"),
   a4LayoutWarning: document.querySelector("#a4-layout-warning"),
+  projectProcessing: document.querySelector("#project-processing"),
+  workflowProgress: document.querySelector("#workflow-progress"),
+  workflowError: document.querySelector("#workflow-error"),
+  retryWorkflowButton: document.querySelector("#retry-workflow-button"),
+  documentReadiness: document.querySelector("#document-readiness"),
   workspaceTitle: document.querySelector("#workspace-title"),
   saveIndicator: document.querySelector("#save-indicator"),
   editButton: document.querySelector("#edit-button"),
+  dekelReviewButton: document.querySelector("#dekel-review-button"),
+  exportButton: document.querySelector("#export-button"),
+  printButton: document.querySelector("#print-button"),
   projectDialog: document.querySelector("#project-dialog"),
   projectForm: document.querySelector("#project-form"),
   versionsDialog: document.querySelector("#versions-dialog"),
@@ -99,6 +107,7 @@ let codexConnected = false;
 let chatSending = false;
 let a4LayoutIssues = [];
 let a4LayoutFrame;
+const processingPolls = new Map();
 let codexConnectionMessage = "בודק את החיבור לחשבון הנוכחי...";
 
 function createDefaultProject() {
@@ -111,6 +120,17 @@ function createDefaultProject() {
     updatedAt: now,
     materials: [],
     versions: [],
+    processing: {
+      runId: null,
+      status: "idle",
+      stage: "awaiting_materials",
+      readyForExport: false,
+      progressPercent: 0,
+      sourceFingerprint: null,
+      validatedDocumentFingerprint: null,
+      warningCodes: [],
+      updatedAt: now,
+    },
     chat: [
       {
         id: crypto.randomUUID(),
@@ -119,7 +139,23 @@ function createDefaultProject() {
         createdAt: now,
       },
     ],
-    document: createDocumentTemplate(),
+    document: createBlankDocumentTemplate(),
+  };
+}
+
+function createBlankDocumentTemplate() {
+  return {
+    subject: "מסמך משמעויות לפרויקט חדש",
+    background: "",
+    objective: "",
+    scope: [],
+    estimateNotes: [],
+    scheduleRows: [],
+    scheduleNotes: "",
+    riskRows: [],
+    additionalNotes: "",
+    boqRows: [],
+    evidenceNotes: [],
   };
 }
 
@@ -228,10 +264,80 @@ function markChanged() {
 function renderAll() {
   const project = getActiveProject();
   elements.workspaceTitle.textContent = project.name;
+  renderProjectProcessing(project);
   renderProjects();
   renderMaterials();
   renderDocument();
   renderChat();
+}
+
+const WORKFLOW_STAGES = Object.freeze({
+  awaiting_materials: { label: "ממתין לחומרי הפרויקט", progress: 0, group: "materials" },
+  extracting: { label: "שומר וקורא את חומרי הפרויקט", progress: 8, group: "materials" },
+  awaiting_video_frames: { label: "מכין פריימים מהווידאו", progress: 10, group: "materials" },
+  transcribing_audio: { label: "מתמלל את ההסברים מהווידאו", progress: 15, group: "analysis" },
+  analyzing_materials: { label: "מנתח מסמכים, תמונות ווידאו", progress: 30, group: "analysis" },
+  consolidating_evidence: { label: "מאחד עובדות, מדידות ודרישות", progress: 48, group: "analysis" },
+  understanding_work: { label: "בונה תכולת עבודות מלאה", progress: 58, group: "scope" },
+  quantifying: { label: "מחשב כמויות והנחות מקצועיות", progress: 66, group: "scope" },
+  matching_dekel: { label: "מתאים עבודות למחירון DEKEL", progress: 78, group: "dekel" },
+  building_document: { label: "מכין את המסמך", progress: 88, group: "document" },
+  validating: { label: "בודק כספים ומבנה A4", progress: 95, group: "document" },
+  complete: { label: "עיבוד הפרויקט הושלם", progress: 100, group: "document" },
+});
+
+function projectProcessingState(project) {
+  const processing = project?.processing;
+  const stage = WORKFLOW_STAGES[processing?.stage] ? processing.stage : project?.materials?.length ? "extracting" : "awaiting_materials";
+  const status = ["idle", "queued", "running", "needs_review", "ready", "failed", "stale"].includes(processing?.status) ? processing.status : "idle";
+  const definition = WORKFLOW_STAGES[stage];
+  const progress = Number.isFinite(Number(processing?.progressPercent))
+    ? Math.max(0, Math.min(100, Number(processing.progressPercent)))
+    : definition.progress;
+  return { ...processing, status, stage, progressPercent: progress, readyForExport: processing?.readyForExport === true };
+}
+
+function renderProjectProcessing(project) {
+  const processing = projectProcessingState(project);
+  const definition = WORKFLOW_STAGES[processing.stage];
+  const ready = processing.readyForExport === true;
+  elements.projectProcessing.dataset.workflowState = processing.status;
+  elements.projectProcessing.dataset.workflowStage = processing.stage;
+  elements.projectProcessing.querySelector("#processing-title").textContent = processing.status === "failed" ? "עיבוד הפרויקט נעצר" : processing.status === "stale" ? "חומרי הפרויקט השתנו בזמן העיבוד" : processing.status === "needs_review" ? "המסמך נבנה אך נדרשת השלמת בדיקה" : definition.label;
+  elements.documentReadiness.textContent = ready ? "המסמך מוכן לבדיקה, להדפסה ולייצוא" : "המסמך עדיין אינו מוכן להדפסה או לייצוא";
+  elements.documentReadiness.classList.toggle("ready", ready);
+  elements.workflowProgress.setAttribute("aria-valuenow", String(processing.progressPercent));
+  elements.workflowProgress.querySelector("span").style.width = `${processing.progressPercent}%`;
+  elements.projectProcessing.querySelectorAll("[data-workflow-stage]").forEach((item) => {
+    const stageOrder = ["materials", "analysis", "scope", "dekel", "document"];
+    const currentIndex = stageOrder.indexOf(definition.group);
+    const itemIndex = stageOrder.indexOf(item.dataset.workflowStage);
+    item.classList.toggle("active", processing.status !== "failed" && itemIndex === currentIndex);
+    item.classList.toggle("completed", ready || (currentIndex >= 0 && itemIndex < currentIndex));
+  });
+  elements.workflowError.textContent = processing.error?.message || (processing.warningCodes?.length ? `נדרשת השלמה: ${processing.warningCodes.join(", ")}` : "עיבוד הפרויקט נעצר. הנתונים נשמרו ואפשר להפעיל אותו מחדש.");
+  elements.workflowError.hidden = !["failed", "stale", "needs_review"].includes(processing.status);
+  elements.retryWorkflowButton.hidden = !["failed", "stale", "needs_review"].includes(processing.status);
+  syncProjectReadiness(project);
+}
+
+function syncProjectReadiness(project = getActiveProject()) {
+  const processing = projectProcessingState(project);
+  const ready = processing.readyForExport === true;
+  const dekelAvailable = Boolean(project?.document?.boqRows?.length) && ["needs_review", "ready"].includes(processing.status);
+  elements.dekelReviewButton.disabled = !dekelAvailable;
+  elements.exportButton.disabled = !ready;
+  elements.printButton.disabled = !ready;
+  elements.dekelReviewButton.title = dekelAvailable ? "" : "בדיקת DEKEL תהיה זמינה לאחר בניית כתב הכמויות";
+  for (const button of [elements.exportButton, elements.printButton]) button.title = ready ? "" : "הפעולה תהיה זמינה רק לאחר השלמת עיבוד הפרויקט ובדיקת המסמך";
+  return ready;
+}
+
+function ensureProjectReadyForExport() {
+  if (syncProjectReadiness()) return true;
+  elements.projectProcessing.scrollIntoView({ behavior: "smooth", block: "center" });
+  showToast("הפעולה נעצרה: המסמך עדיין לא עבר את כל שלבי העיבוד והבדיקה", "error", 6000);
+  return false;
 }
 
 function renderProjects() {
@@ -691,6 +797,7 @@ function renderMaterialPreview(material) {
 }
 
 async function openDekelReview() {
+  if (!ensureProjectReadyForExport()) return;
   if (!elements.dekelDialog.open) elements.dekelDialog.showModal();
   elements.dekelCatalogStatus.textContent = "טוען את מחירון DEKEL...";
   elements.dekelLines.innerHTML = managementSkeleton();
@@ -890,12 +997,58 @@ async function handleFiles(files) {
   }
   elements.materialInput.disabled = false;
   elements.saveIndicator.className = failures.length ? "save-indicator error" : "save-indicator";
-  elements.saveIndicator.textContent = failures.length ? `${completed} קבצים נוספו, ${failures.length} נכשלו` : "כל החומרים נקראו ונשמרו";
+  elements.saveIndicator.textContent = failures.length ? `${completed} קבצים נוספו, ${failures.length} נכשלו` : "החומרים נשמרו; מתחיל ניתוח מקצועי מלא";
+  if (completed > 0) await startProjectProcessing(activeProjectId);
   showToast(
-    failures.length ? `${completed} קבצים נוספו. ${failures[0]}` : `${completed} קבצים נקראו ונוספו לפרויקט הנוכחי`,
+    failures.length ? `${completed} קבצים נוספו. ${failures[0]}` : `${completed} קבצים נשמרו והעיבוד המלא התחיל`,
     failures.length ? "error" : "success",
     failures.length ? 6000 : 3000,
   );
+}
+
+async function startProjectProcessing(projectId) {
+  const { processing } = await requestJson(`/local/projects/${encodeURIComponent(projectId)}/processing-runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode: "full", replaceDocument: true }),
+  });
+  const project = projects.find((item) => item.id === projectId);
+  if (project) project.processing = processing;
+  renderAll();
+  void pollProjectProcessing(projectId);
+  return processing;
+}
+
+function resumeProjectProcessing(project = getActiveProject()) {
+  if (!project || !["queued", "running"].includes(projectProcessingState(project).status) || processingPolls.has(project.id)) return;
+  void pollProjectProcessing(project.id);
+}
+
+function pollProjectProcessing(projectId) {
+  const existing = processingPolls.get(projectId);
+  if (existing) return existing;
+  const polling = (async () => {
+    for (let attempt = 0; attempt < 1_200; attempt += 1) {
+      await new Promise((resolvePromise) => window.setTimeout(resolvePromise, 750));
+      const { processing } = await requestJson(`/local/projects/${encodeURIComponent(projectId)}/processing`);
+      const project = projects.find((item) => item.id === projectId);
+      if (!project) return;
+      project.processing = processing;
+      if (projectId === activeProjectId) renderProjectProcessing(project);
+      if (["ready", "needs_review", "failed", "stale"].includes(processing.status)) {
+        const { project: refreshed } = await requestJson(`/local/projects/${encodeURIComponent(projectId)}`);
+        replaceProject(refreshed);
+        if (projectId === activeProjectId) renderAll();
+        showToast(processing.status === "ready" ? "העיבוד הושלם והמסמך מוכן לבדיקה" : "העיבוד הסתיים אך נדרשת בדיקה או השלמה", processing.status === "ready" ? "success" : "error", 6000);
+        return;
+      }
+    }
+  })();
+  processingPolls.set(projectId, polling);
+  void polling.finally(() => {
+    if (processingPolls.get(projectId) === polling) processingPolls.delete(projectId);
+  });
+  return polling;
 }
 
 async function prepareVideoFrames(file, materialId) {
@@ -983,6 +1136,7 @@ function addChatMessage(role, text) {
 }
 
 async function exportHtml() {
+  if (!ensureProjectReadyForExport()) return;
   if (!ensureA4LayoutReady()) return;
   const css = await fetch("/styles.css").then((response) => response.text());
   const clone = elements.documentStage.querySelector("#printable-document").cloneNode(true);
@@ -1108,6 +1262,7 @@ document.querySelector("#create-version-button").addEventListener("click", async
 document.querySelector("#connect-codex-button").addEventListener("click", () => elements.codexDialog.showModal());
 document.querySelector("#start-codex-login-button").addEventListener("click", connectCodex);
 document.querySelector("#print-button").addEventListener("click", () => {
+  if (!ensureProjectReadyForExport()) return;
   if (!ensureA4LayoutReady()) return;
   window.print();
 });
@@ -1127,6 +1282,10 @@ window.addEventListener("resize", () => {
 });
 document.querySelector("#export-button").addEventListener("click", async (event) => {
   await runAction(event.currentTarget, "מייצא...", exportHtml);
+});
+elements.retryWorkflowButton.addEventListener("click", async (event) => {
+  const result = await runAction(event.currentTarget, "מפעיל עיבוד מלא...", async () => await startProjectProcessing(activeProjectId));
+  if (result.ok) showToast("העיבוד המלא הופעל מחדש");
 });
 document.querySelector("#system-center-button").addEventListener("click", async () => {
   elements.systemDialog.showModal();
@@ -1211,6 +1370,7 @@ elements.projectList.addEventListener("click", (event) => {
   elements.editButton.textContent = "עריכה";
   localStorage.setItem(ACTIVE_PROJECT_KEY, activeProjectId);
   renderAll();
+  resumeProjectProcessing(getActiveProject());
   if (window.matchMedia("(max-width: 900px)").matches) {
     document.querySelector('.mobile-nav [data-mobile-view="document"]').click();
   }
@@ -1618,6 +1778,7 @@ async function initialize() {
   try {
     await reloadProjects();
     renderAll();
+    resumeProjectProcessing(getActiveProject());
     elements.saveIndicator.textContent = "כל הנתונים נטענו ונשמרים מקומית";
     elements.saveIndicator.className = "save-indicator";
     await refreshCodexStatus();
@@ -1727,6 +1888,7 @@ function replaceProject(project) {
   const index = projects.findIndex((item) => item.id === project.id);
   if (index >= 0) projects[index] = project;
   else projects.unshift(project);
+  if (project.id === activeProjectId) syncProjectReadiness(project);
 }
 
 async function requestJson(url, options = {}) {

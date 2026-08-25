@@ -8,7 +8,7 @@
     "start": "node --experimental-strip-types src/server.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test",
-    "test": "node --experimental-strip-types tests/run-tests.ts && node --experimental-strip-types --test tests/local-workspace.test.ts tests/local-workspace-api.test.ts tests/professional-knowledge.test.ts && node --test tests/ui-calculations.test.mjs tests/ui-workspace.test.mjs",
+    "test": "node --experimental-strip-types tests/run-tests.ts && node --experimental-strip-types --test tests/audio-transcription.test.ts tests/local-workspace.test.ts tests/local-workspace-api.test.ts tests/professional-knowledge.test.ts && node --test tests/ui-calculations.test.mjs tests/ui-workspace.test.mjs",
     "test:e2e": "playwright test",
     "live-check": "node --experimental-strip-types src/live-case-check.ts"
   },
