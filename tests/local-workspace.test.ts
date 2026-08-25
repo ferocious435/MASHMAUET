@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
 import { LocalProjectStore } from "../src/modules/local-workspace/local-project-store.ts";
 import { extractMaterial } from "../src/modules/local-workspace/material-extractor.ts";
 import { applyClosestDekelFallbacks, applyDekelDecompositions, buildLocalDekelCandidates, buildPricedBoqDescription, createProposals, deriveHourlyBasisForReview, expandCompositeBoqRowsForDekel, normalizeBoqUnitForDocument, parseCodexAnswer, refreshEstimateNotesAfterDekel, stripDekelPriceAppendix } from "../src/modules/local-workspace/local-workspace-service.ts";
@@ -231,11 +232,22 @@ test("нейтральный аудит полноты блокирует опе
 
 test("полнота подтверждается только существующей и оценённой строкой DEKEL", () => {
   const inventory = sanitizeScopeInventory([{ id: "pipe-test", packageId: "pipe", packageTitle: "צנרת", stage: "testing_handover", title: "בדיקת לחץ", reason: "נדרש לפני מסירה", dekelQuerySeeds: ["בדיקת לחץ לצנרת"] }]);
-  const resolutions = [{ operationId: "pipe-test", disposition: "separate_boq_row" as const, boqRowIds: ["row-test"], reason: "משולם בנפרד" }];
+  const resolutions = [{ operationId: "pipe-test", disposition: "separate_boq_row" as const, boqRowIds: ["row-test"], allowedDekelCodes: ["95.01"], reason: "משולם בנפרד" }];
   const blocked = auditScopeIntegrity({ inventory, resolutions, boqRows: [{ id: "row-test" }], selectedDekelByRowId: new Map(), sourceFingerprint: "source", boqFingerprint: "boq" });
   assert.equal(blocked.status, "needs_review");
   const complete = auditScopeIntegrity({ inventory, resolutions, boqRows: [{ id: "row-test" }], selectedDekelByRowId: new Map([["row-test", "95.01"]]), sourceFingerprint: "source", boqFingerprint: "boq" });
   assert.equal(complete.status, "complete");
+});
+
+test("чужой код DEKEL и повторное использование одной строки не закрывают разные операции", () => {
+  const inventory = sanitizeScopeInventory([
+    { id: "prepare", packageId: "pkg", packageTitle: "עבודה", stage: "preparation", title: "הכנה", reason: "נדרש", dekelQuerySeeds: ["הכנת שטח"] },
+    { id: "primary", packageId: "pkg", packageTitle: "עבודה", stage: "primary_work", title: "ביצוע", reason: "נדרש", dekelQuerySeeds: ["ביצוע עבודה"] },
+  ]);
+  const resolutions = inventory.map((operation) => ({ operationId: operation.id, disposition: "separate_boq_row" as const, boqRowIds: ["same-row"], allowedDekelCodes: [operation.id === "prepare" ? "95.prepare" : "95.primary"], reason: "שורה נפרדת" }));
+  const result = auditScopeIntegrity({ inventory, resolutions, boqRows: [{ id: "same-row" }], selectedDekelByRowId: new Map([["same-row", "95.foreign"]]), sourceFingerprint: "source", boqFingerprint: "boq" });
+  assert.equal(result.status, "needs_review");
+  assert.ok(result.blockers.some((blocker) => blocker.startsWith("scope_row_reused:") || blocker.startsWith("scope_row_wrong_dekel:")));
 });
 
 test("название помещения само не создаёт акустику, доступность или другие специальные работы", async () => {
@@ -305,6 +317,33 @@ test("локальные проекты сохраняются между экз
     assert.equal(restored.name, "Проверка");
     assert.deepEqual(restored.rules, ["Правило проекта"]);
     assert.throws(() => second.projectPath("../outside"), /идентификатор/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("готовность после перезапуска сохраняется только вместе с валидным аудитом полноты", async () => {
+  const root = await mkdtemp(join(tmpdir(), "mashmauet-scope-restart-"));
+  try {
+    const first = new LocalProjectStore(root);
+    await first.initialize();
+    const project = await first.create("Проверка scope", "Перезапуск");
+    const row = { id: "boq-primary", code: "95.01", description: "עבודה", unit: "יח׳", quantity: 1, unitPrice: 100, category: "כללי" };
+    project.document.boqRows = [row];
+    const boqFingerprint = createHash("sha256").update(JSON.stringify([row])).digest("hex");
+    const inventory = sanitizeScopeInventory([{ id: "primary", packageId: "pkg", packageTitle: "עבודה", stage: "primary_work", title: "עבודה", reason: "נדרש", dekelQuerySeeds: ["עבודה"] }]);
+    const resolutions = [{ operationId: "primary", disposition: "separate_boq_row" as const, boqRowIds: [row.id], dekelCode: undefined, allowedDekelCodes: [row.code], reason: "שורה נפרדת" }];
+    project.scopeCompleteness = auditScopeIntegrity({ inventory, resolutions, boqRows: [row], selectedDekelByRowId: new Map([[row.id, row.code]]), sourceFingerprint: "source", boqFingerprint });
+    project.processing = { ...project.processing, status: "ready", stage: "complete", readyForExport: true, validatedDocumentFingerprint: "document", progressPercent: 100 };
+    await first.save(project);
+    const restored = await new LocalProjectStore(root).get(project.id);
+    assert.equal(restored.scopeCompleteness?.status, "complete");
+    assert.equal(restored.processing.status, "ready");
+    assert.equal(restored.processing.readyForExport, true);
+
+    restored.scopeCompleteness = undefined;
+    await first.save(restored);
+    const rejected = await new LocalProjectStore(root).get(project.id);
+    assert.notEqual(rejected.processing.status, "ready");
+    assert.equal(rejected.processing.readyForExport, false);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 

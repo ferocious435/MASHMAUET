@@ -135,6 +135,20 @@ test("локальный API закрывает полный жизненный 
   } finally { await fixture.close(); }
 });
 
+test("публичный документ не может подделать системное происхождение почасовой строки", async () => {
+  const fixture = await startFixture();
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects")).body.projects[0];
+    const document = structuredClone(project.document);
+    document.boqRows[0] = { ...document.boqRows[0], unit: "שעה", pricingBasis: "system_decomposed_residual" };
+    const updated = await json(fixture.baseUrl, `/local/projects/${project.id}`, { method: "PUT", body: { document } });
+    assert.equal(updated.response.status, 200);
+    assert.equal(updated.body.project.document.boqRows[0].pricingBasis, undefined);
+    const stored = JSON.parse(await readFile(join(fixture.dataRoot, "projects", project.id, "project.json"), "utf8"));
+    assert.equal(stored.document.boqRows[0].pricingBasis, undefined);
+  } finally { await fixture.close(); }
+});
+
 test("лимит запросов возвращает контролируемый 429", async () => {
   const fixture = await startFixture({ generalRequestsPerMinute: 2 });
   try {
@@ -226,6 +240,19 @@ test("полная обработка читает материал, замен�
     const corrected = await json(fixture.baseUrl, `/local/projects/${project.id}/materials/${materialId}/content`, { method: "PUT", body: { text: "Исправленное требование владельца" } });
     assert.equal(corrected.body.project.processing.readyForExport, false);
     assert.equal(corrected.body.project.processing.sourceFingerprint, null);
+  } finally { await fixture.close(); }
+});
+
+test("полная обработка не принимает непроверенный inventory от первого AI-прохода", async () => {
+  const fixture = await startFixture({}, new RejectingScopeCriticCodex());
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "Проверка полноты", description: "Нужна независимая проверка" } })).body.project;
+    await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, { method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") }, body: "Требуется финальная уборка." });
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    const current = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.equal(current.processing.status, "failed");
+    assert.equal(current.processing.error.code, "scope_inventory_unverified");
+    assert.equal(current.processing.readyForExport, false);
   } finally { await fixture.close(); }
 });
 
@@ -668,6 +695,9 @@ class ProjectBuildingCodex extends FakeCodex {
     if (prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ")) {
       return JSON.stringify({ answer: "זוהתה עבודת ניקיון נדרשת.", proposedChanges: [{ path: "scopeInventory", valueJson: JSON.stringify([{ id: "cleaning-primary", packageId: "cleaning", packageTitle: "ניקיון", stage: "primary_work", title: "ניקיון יסודי לאחר שיפוץ", reason: "העבודה נדרשה בחומר", dekelQuerySeeds: ["ניקיון יסודי לאחר שיפוץ", "ניקיון לפני מסירה"] }]), reason: "מלאי עבודות עצמאי" }], proposedProjectRules: [], needsMoreInformation: [] });
     }
+    if (prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC")) {
+      return JSON.stringify({ answer: "המלאי נבדק מחדש מול החומר.", proposedChanges: [{ path: "scopeInventoryCritique", valueJson: JSON.stringify({ accepted: true, missingOperations: [], reasons: [] }), reason: "ביקורת עצמאית" }], proposedProjectRules: [], needsMoreInformation: [] });
+    }
     if (prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) {
       const row = { id: "boq-final-cleaning", code: "", description: "נקיון יסודי חד פעמי של מבנים לאחר שיפוץ ולפני איכלוס", unit: "מ״ר", quantity: 10, unitPrice: 0, category: "עבודות משלימות" };
       return JSON.stringify({ answer: "היקף העבודה נסגר מול כתב הכמויות.", proposedChanges: [
@@ -718,10 +748,19 @@ class BlockingProjectBuildingCodex extends ProjectBuildingCodex {
   }
 }
 
+class RejectingScopeCriticCodex extends ProjectBuildingCodex {
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    if (prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC")) {
+      return JSON.stringify({ answer: "הביקורת לא אישרה את המלאי.", proposedChanges: [{ path: "scopeInventoryCritique", valueJson: JSON.stringify({ accepted: false, missingOperations: [], reasons: ["נדרשת בדיקה נוספת"] }), reason: "ביקורת עצמאית" }], proposedProjectRules: [], needsMoreInformation: [] });
+    }
+    return await super.runTurn(threadId, projectPath, prompt);
+  }
+}
+
 class UnmatchedProjectBuildingCodex extends ProjectBuildingCodex {
   override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
     boq.valueJson = JSON.stringify([{ id: "boq-unmatched", code: "", description: "ZZZ_NONMATCH_987 עבודת חלל מיוחדת", unit: "парсек", quantity: 3, unitPrice: 0, category: "עבודות מיוחדות" }]);
@@ -734,7 +773,7 @@ class UnmatchedProjectBuildingCodex extends ProjectBuildingCodex {
 class InvalidEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
   override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const notes = parsed.proposedChanges.find((change: any) => change.path === "evidenceNotes");
     const value = JSON.parse(notes.valueJson);
@@ -761,7 +800,7 @@ class SemanticDekelProjectBuildingCodex extends ProjectBuildingCodex {
       });
     }
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt) || /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
     boq.valueJson = JSON.stringify([{ id: "boq-final-cleaning", code: "", description: "ניקוי סופי של אולם לאחר שיפוץ והכנתו למסירה", unit: "מ״ר", quantity: 10, unitPrice: 0, category: "ניקוי ומסירה" }]);
@@ -800,7 +839,7 @@ class BatchedEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
       return JSON.stringify({ answer: "אין התאמה אוטומטית.", proposedChanges: [{ path: "dekelSelections", valueJson: "[]", reason: "נדרשת בדיקה" }], proposedProjectRules: [], needsMoreInformation: [] });
     }
     const raw = await super.runTurn(threadId, projectPath, prompt);
-    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
+    if (/точное профессиональное чтение одного материала/.test(prompt) || prompt.includes("SCOPE_INVENTORY_BEFORE_BOQ") || prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC") || prompt.includes("DEKEL_FULL_CATALOG_SCOPE_CLOSURE")) return raw;
     const parsed = JSON.parse(raw);
     const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
     boq.valueJson = JSON.stringify(Array.from({ length: 23 }, (_, index) => ({

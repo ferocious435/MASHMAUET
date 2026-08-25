@@ -260,9 +260,27 @@ export class LocalWorkspaceService {
     const change = parsed.proposedChanges.find((item) => item.path === "scopeInventory" && typeof item.valueJson === "string");
     let raw: unknown = [];
     try { raw = change ? JSON.parse(change.valueJson) : []; } catch { raw = []; }
-    const inventory = sanitizeScopeInventory(raw);
+    let inventory = sanitizeScopeInventory(raw);
     if (inventory.length === 0) throw new LocalWorkspaceError(502, "scope_inventory_empty", "Независимый анализ не сформировал проверяемый перечень физических операций");
-    return inventory;
+    for (let round = 0; round < 2; round += 1) {
+      const criticInstruction = `SCOPE_INVENTORY_INDEPENDENT_CRITIC
+Проверь переданный inventory заново непосредственно по всем материалам проекта, не доверяя первому анализу и не рассматривая будущий כתב כמויות. Найди пропущенные физические рабочие пакеты и технологически необходимые операции. Не добавляй системы только по названию помещения, нормативному предположению или типовой практике без связи с явно требуемым физическим результатом. Проверь демонтаж/обеспечение, подготовку, основную работу, подключения и сопряжения, восстановление, испытания и сдачу там, где они действительно применимы. Верни ровно одно proposedChanges path=scopeInventoryCritique. valueJson — объект {accepted,missingOperations,reasons}. accepted=true разрешён только если ни один физический пакет или применимая операция не пропущены; missingOperations использует ту же структуру {id,packageId,packageTitle,stage,title,reason,dekelQuerySeeds}.
+
+ПРОВЕРЯЕМЫЙ INVENTORY:
+${JSON.stringify(inventory)}`;
+      const criticBuilt = await this.buildPrompt(promptSnapshot, criticInstruction, randomUUID());
+      const criticThreadId = await this.codex.startThread(this.store.projectPath(snapshot.id));
+      const criticParsed = parseCodexAnswer(await this.codex.runTurn(criticThreadId, this.store.projectPath(snapshot.id), criticBuilt.prompt, []));
+      const criticChange = criticParsed.proposedChanges.find((item) => item.path === "scopeInventoryCritique" && typeof item.valueJson === "string");
+      let critique: Record<string, unknown> = {};
+      try { critique = criticChange ? JSON.parse(criticChange.valueJson) as Record<string, unknown> : {}; } catch { critique = {}; }
+      const missing = sanitizeScopeInventory(critique.missingOperations);
+      if (critique.accepted === true && missing.length === 0) return inventory;
+      const existing = new Set(inventory.map((operation) => operation.id));
+      for (const operation of missing) if (!existing.has(operation.id)) { inventory.push(operation); existing.add(operation.id); }
+      if (missing.length === 0) break;
+    }
+    throw new LocalWorkspaceError(502, "scope_inventory_unverified", "Независимая проверка не подтвердила полноту перечня физических операций");
   }
 
   private async completeScopeAgainstFullDekel(
@@ -306,7 +324,9 @@ ${JSON.stringify(catalogCoverage)}\n\n${HOURLY_PRICING_POLICY}`;
     candidate.evidenceNotes = [];
     const completed = expandCompositeBoqRowsForDekel(normalizeGeneratedDocument(candidate));
     const allowedCodesByOperation = new Map(catalogCoverage.map((entry) => [entry.key, new Set(entry.candidates.map((candidateItem) => candidateItem.code))]));
-    const resolutions = sanitizeScopeResolutions(proposedResolutions, inventory).filter((resolution) => resolution.disposition !== "included_in_dekel_price" || allowedCodesByOperation.get(resolution.operationId)?.has(resolution.dekelCode ?? ""));
+    const resolutions = sanitizeScopeResolutions(proposedResolutions, inventory)
+      .map((resolution) => ({ ...resolution, allowedDekelCodes: [...(allowedCodesByOperation.get(resolution.operationId) ?? new Set<string>())] }))
+      .filter((resolution) => resolution.disposition !== "included_in_dekel_price" || resolution.allowedDekelCodes.includes(resolution.dekelCode ?? ""));
     const completedRows = completed.boqRows as Array<Record<string, unknown>>;
     const audit = auditScopeIntegrity({ inventory, resolutions, boqRows: completedRows, sourceFingerprint: null, boqFingerprint: fingerprintBoq(completedRows) });
     await this.logger.write("info", "full_dekel_scope_coverage_completed", { projectId: snapshot.id, scannedCatalogRows: allDekelItems.length, inventoryOperations: inventory.length, unresolved: audit.unresolvedOperationIds, initialBoqRows: initialRows.length, completedBoqRows: completedRows.length });
@@ -539,7 +559,7 @@ ${JSON.stringify(payload)}`;
       assertProcessingIdle(project);
       if (changes.name != null) project.name = changes.name;
       if (changes.description != null) project.description = changes.description;
-      if (changes.document != null) project.document = structuredClone(changes.document);
+      if (changes.document != null) project.document = preserveInternalPricingBasis(structuredClone(changes.document), project.document);
       invalidateProcessing(project, changes.document != null ? "document_changed" : "project_source_changed");
       await this.store.save(project);
       return toPublicProject(project);
@@ -2005,8 +2025,26 @@ function normalizeChatBoqRows(proposedRows: Array<Record<string, unknown>>, curr
       id,
       code: samePricedWork ? String(current?.code ?? "") : "",
       unitPrice: samePricedWork ? Number(current?.unitPrice ?? 0) : 0,
+      ...(samePricedWork && current?.pricingBasis === "system_decomposed_residual" ? { pricingBasis: "system_decomposed_residual" as const } : { pricingBasis: undefined }),
     };
   });
+}
+
+function preserveInternalPricingBasis(candidate: Record<string, unknown>, currentDocument: Record<string, unknown>): Record<string, unknown> {
+  const currentRows = Array.isArray(currentDocument.boqRows) ? currentDocument.boqRows as Array<Record<string, unknown>> : [];
+  const currentById = new Map(currentRows.map((row) => [String(row.id ?? ""), row]));
+  if (!Array.isArray(candidate.boqRows)) return candidate;
+  candidate.boqRows = (candidate.boqRows as Array<Record<string, unknown>>).map((row) => {
+    const copy = { ...row };
+    delete copy.pricingBasis;
+    const current = currentById.get(String(row.id ?? ""));
+    const unchangedWork = current
+      && String(current.description ?? "") === String(row.description ?? "")
+      && String(current.unit ?? "") === String(row.unit ?? "");
+    if (unchangedWork && current?.pricingBasis === "system_decomposed_residual") copy.pricingBasis = "system_decomposed_residual";
+    return copy;
+  });
+  return candidate;
 }
 
 function fingerprintDocument(document: Record<string, unknown>): string {

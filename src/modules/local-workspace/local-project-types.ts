@@ -190,6 +190,7 @@ export function toPublicProject(project: LocalProject): PublicLocalProject {
   const { codexThreadId: _codexThreadId, materials, ...publicProject } = project;
   return {
     ...publicProject,
+    document: publicDocument(project.document),
     materials: materials.map(({ sourcePath: _sourcePath, extractedTextPath, analysisTextPath, correctedTextPath, visionImagePaths, audioTranscriptPath: _audioTranscriptPath, audioProvenancePath: _audioProvenancePath, ...material }) => ({
       ...material,
       visionImageCount: visionImagePaths?.length ?? 0,
@@ -198,4 +199,10 @@ export function toPublicProject(project: LocalProject): PublicLocalProject {
       hasCorrection: Boolean(correctedTextPath),
     })),
   };
+}
+
+function publicDocument(document: Record<string, unknown>): Record<string, unknown> {
+  const output = structuredClone(document);
+  if (Array.isArray(output.boqRows)) output.boqRows = (output.boqRows as Array<Record<string, unknown>>).map(({ pricingBasis: _pricingBasis, ...row }) => row);
+  return output;
 }

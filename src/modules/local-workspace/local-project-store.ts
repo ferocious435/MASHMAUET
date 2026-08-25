@@ -1,9 +1,10 @@
 import { access, copyFile, cp, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { basename, join, resolve, sep } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { LocalBackupManifest, LocalProject } from "./local-project-types.ts";
 import { documentSchema } from "./local-workspace-validation.ts";
 import { LocalWorkspaceError } from "./local-workspace-error.ts";
+import { auditScopeIntegrity, sanitizeScopeInventory, sanitizeScopeResolutions, type ScopeCompletenessAudit } from "./boq-scope-completeness.ts";
 
 const DEMO_DOCUMENT = {
   subject: "מסמך משמעויות לפרויקט שיפוץ והתאמת מבנה",
@@ -330,6 +331,8 @@ function migrateProject(raw: Partial<LocalProject>): LocalProject {
   if (!raw.id || !/^[a-zA-Z0-9-]{1,80}$/.test(raw.id)) throw new Error("Повреждён идентификатор проекта");
   const document = documentSchema.parse(raw.document);
   ensureDocumentEvidence(document);
+  const scopeCompleteness = migrateScopeCompleteness(raw.scopeCompleteness, document);
+  const processing = migrateProcessing(raw.processing, document, Array.isArray(raw.materials) ? raw.materials : [], raw.updatedAt, scopeCompleteness?.status === "complete");
   return {
     schemaVersion: 1,
     revision: Number.isInteger(raw.revision) ? Number(raw.revision) : 0,
@@ -345,9 +348,40 @@ function migrateProject(raw: Partial<LocalProject>): LocalProject {
     rules: Array.isArray(raw.rules) ? raw.rules.filter((item): item is string => typeof item === "string") : [],
     codexThreadId: typeof raw.codexThreadId === "string" ? raw.codexThreadId : undefined,
     dekelReview: isLocalDekelReview(raw.dekelReview) ? raw.dekelReview : undefined,
-    processing: migrateProcessing(raw.processing, document, Array.isArray(raw.materials) ? raw.materials : [], raw.updatedAt),
+    scopeCompleteness,
+    processing,
     document,
   };
+}
+
+function migrateScopeCompleteness(value: unknown, document: Record<string, unknown>): ScopeCompletenessAudit | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const raw = value as Partial<ScopeCompletenessAudit>;
+  const inventory = sanitizeScopeInventory(raw.inventory);
+  const resolutions = sanitizeScopeResolutions(raw.resolutions, inventory);
+  if (inventory.length === 0 || resolutions.length === 0) return undefined;
+  const rows = Array.isArray(document.boqRows) ? document.boqRows as Array<Record<string, unknown>> : [];
+  const selectedDekelByRowId = new Map<string, string>(rows.flatMap((row) => {
+    const rowId = String(row.id ?? "");
+    const code = String(row.code ?? "").trim();
+    return rowId && code ? [[rowId, code] as const] : [];
+  }));
+  const boqFingerprint = fingerprintBoqForMigration(rows);
+  const audit = auditScopeIntegrity({
+    inventory,
+    resolutions,
+    boqRows: rows,
+    selectedDekelByRowId,
+    sourceFingerprint: typeof raw.sourceFingerprint === "string" ? raw.sourceFingerprint : null,
+    boqFingerprint,
+  });
+  if (raw.status === "stale" || raw.boqFingerprint !== boqFingerprint) audit.status = "stale";
+  return audit;
+}
+
+function fingerprintBoqForMigration(rows: Array<Record<string, unknown>>): string {
+  const stable = rows.map((row) => ({ id: row.id, code: row.code, description: row.description, unit: row.unit, quantity: row.quantity, unitPrice: row.unitPrice, category: row.category }));
+  return createHash("sha256").update(JSON.stringify(stable)).digest("hex");
 }
 
 function migrateProcessing(
@@ -355,6 +389,7 @@ function migrateProcessing(
   document: Record<string, unknown>,
   materials: LocalProject["materials"],
   updatedAt: unknown,
+  scopeComplete: boolean,
 ): LocalProject["processing"] {
   const rows = Array.isArray(document.boqRows) ? document.boqRows : [];
   const legacyDemoDetected = isLegacyDemoRows(rows);
@@ -367,23 +402,26 @@ function migrateProcessing(
       "awaiting_materials", "extracting", "awaiting_video_frames", "transcribing_audio", "analyzing_materials",
       "consolidating_evidence", "understanding_work", "quantifying", "matching_dekel", "building_document", "validating", "complete",
     ]);
-    if (candidate.status && statuses.has(candidate.status)) return {
+    if (candidate.status && statuses.has(candidate.status)) {
+      const invalidReady = candidate.status === "ready" && !scopeComplete;
+      return {
       runId: typeof candidate.runId === "string" ? candidate.runId : null,
-      status: candidate.status,
+      status: invalidReady ? (materials.length === 0 ? "idle" : "needs_review") : candidate.status,
       stage: candidate.stage && stages.has(candidate.stage) ? candidate.stage : "awaiting_materials",
-      readyForExport: candidate.readyForExport === true && candidate.status === "ready" && !legacyDemoDetected,
+      readyForExport: candidate.readyForExport === true && candidate.status === "ready" && scopeComplete && !legacyDemoDetected,
       progressPercent: Number.isFinite(candidate.progressPercent) ? Math.max(0, Math.min(100, Number(candidate.progressPercent))) : 0,
       sourceFingerprint: typeof candidate.sourceFingerprint === "string" ? candidate.sourceFingerprint : null,
       baseDocumentFingerprint: typeof candidate.baseDocumentFingerprint === "string" ? candidate.baseDocumentFingerprint : null,
-      validatedDocumentFingerprint: typeof candidate.validatedDocumentFingerprint === "string" ? candidate.validatedDocumentFingerprint : null,
+      validatedDocumentFingerprint: invalidReady ? null : typeof candidate.validatedDocumentFingerprint === "string" ? candidate.validatedDocumentFingerprint : null,
       startedAt: typeof candidate.startedAt === "string" ? candidate.startedAt : undefined,
       updatedAt: typeof candidate.updatedAt === "string" ? candidate.updatedAt : typeof updatedAt === "string" ? updatedAt : new Date().toISOString(),
       completedAt: typeof candidate.completedAt === "string" ? candidate.completedAt : undefined,
-      warningCodes: [...new Set([...(Array.isArray(candidate.warningCodes) ? candidate.warningCodes.filter((item): item is string => typeof item === "string") : []), ...(legacyDemoDetected ? ["legacy_demo_detected"] : [])])],
+      warningCodes: [...new Set([...(Array.isArray(candidate.warningCodes) ? candidate.warningCodes.filter((item): item is string => typeof item === "string") : []), ...(legacyDemoDetected ? ["legacy_demo_detected"] : []), ...(invalidReady ? ["scope_completeness_review_required"] : [])])],
       error: candidate.error && typeof candidate.error === "object" && typeof candidate.error.code === "string" && typeof candidate.error.message === "string"
         ? { code: candidate.error.code, message: candidate.error.message, retryable: candidate.error.retryable === true }
         : undefined,
-    };
+      };
+    }
   }
   const hasAnalyzedMaterials = materials.some((material) => Boolean(material.analyzedAt));
   return {

@@ -24,6 +24,7 @@ export type ScopeResolution = {
   disposition: "separate_boq_row" | "included_in_dekel_price";
   boqRowIds: string[];
   dekelCode?: string;
+  allowedDekelCodes: string[];
   reason: string;
 };
 
@@ -84,11 +85,12 @@ export function sanitizeScopeResolutions(value: unknown, inventory: ScopeInvento
     const disposition = String(row.disposition ?? "") as ScopeResolution["disposition"];
     const boqRowIds = Array.isArray(row.boqRowIds) ? [...new Set(row.boqRowIds.map(String).map((entry) => entry.trim()).filter(Boolean))] : [];
     const dekelCode = String(row.dekelCode ?? "").trim() || undefined;
+    const allowedDekelCodes = Array.isArray(row.allowedDekelCodes) ? [...new Set(row.allowedDekelCodes.map(String).map((entry) => entry.trim()).filter(Boolean))] : [];
     const reason = String(row.reason ?? "").trim();
     if (!allowed.has(operationId) || ids.has(operationId) || !["separate_boq_row", "included_in_dekel_price"].includes(disposition) || boqRowIds.length === 0 || !reason) continue;
     if (disposition === "included_in_dekel_price" && !dekelCode) continue;
     ids.add(operationId);
-    output.push({ operationId, disposition, boqRowIds, dekelCode, reason });
+    output.push({ operationId, disposition, boqRowIds, dekelCode, allowedDekelCodes, reason });
   }
   return output;
 }
@@ -104,6 +106,10 @@ export function auditScopeIntegrity(input: {
   const blockers: string[] = [];
   const rowIds = new Set(input.boqRows.map((row) => String(row.id ?? "")).filter(Boolean));
   const resolutionByOperation = new Map(input.resolutions.map((resolution) => [resolution.operationId, resolution]));
+  const separateRowUse = new Map<string, string[]>();
+  for (const resolution of input.resolutions.filter((item) => item.disposition === "separate_boq_row")) {
+    for (const rowId of resolution.boqRowIds) separateRowUse.set(rowId, [...(separateRowUse.get(rowId) ?? []), resolution.operationId]);
+  }
   for (const operation of input.inventory) {
     const resolution = resolutionByOperation.get(operation.id);
     if (!resolution) {
@@ -115,8 +121,12 @@ export function auditScopeIntegrity(input: {
       continue;
     }
     if (input.selectedDekelByRowId) {
-      if (resolution.disposition === "separate_boq_row" && resolution.boqRowIds.some((rowId) => !input.selectedDekelByRowId?.get(rowId))) blockers.push(`scope_row_unpriced:${operation.id}`);
-      if (resolution.disposition === "included_in_dekel_price" && !resolution.boqRowIds.some((rowId) => input.selectedDekelByRowId?.get(rowId) === resolution.dekelCode)) blockers.push(`scope_inclusion_not_verified:${operation.id}`);
+      if (resolution.disposition === "separate_boq_row") {
+        if (resolution.boqRowIds.some((rowId) => (separateRowUse.get(rowId)?.length ?? 0) > 1)) blockers.push(`scope_row_reused:${operation.id}`);
+        else if (resolution.boqRowIds.some((rowId) => !input.selectedDekelByRowId?.get(rowId))) blockers.push(`scope_row_unpriced:${operation.id}`);
+        else if (resolution.boqRowIds.some((rowId) => !resolution.allowedDekelCodes.includes(input.selectedDekelByRowId?.get(rowId) ?? ""))) blockers.push(`scope_row_wrong_dekel:${operation.id}`);
+      }
+      if (resolution.disposition === "included_in_dekel_price" && (!resolution.allowedDekelCodes.includes(resolution.dekelCode ?? "") || !resolution.boqRowIds.some((rowId) => input.selectedDekelByRowId?.get(rowId) === resolution.dekelCode))) blockers.push(`scope_inclusion_not_verified:${operation.id}`);
     }
   }
   const unresolvedOperationIds = input.inventory.filter((operation) => blockers.some((blocker) => blocker.endsWith(`:${operation.id}`))).map((operation) => operation.id);
