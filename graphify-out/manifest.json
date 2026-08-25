@@ -144,10 +144,10 @@
     "semantic_hash": "4493fec2e65f2649646c320d8ea5b6fc"
   },
   "src/modules/local-workspace/local-workspace-service.ts": {
-    "mtime": 1787660757.5844934,
-    "seen": 1787660980.529226,
-    "ast_hash": "5cf2fcacb29e86c763d638df5232866d",
-    "semantic_hash": "5cf2fcacb29e86c763d638df5232866d"
+    "mtime": 1787661920.7480125,
+    "seen": 1787662155.439422,
+    "ast_hash": "6a9fdd31f9683af74ee6e2b56cf43282",
+    "semantic_hash": "6a9fdd31f9683af74ee6e2b56cf43282"
   },
   "src/modules/local-workspace/local-workspace-validation.ts": {
     "mtime": 1787659087.0481234,
@@ -306,10 +306,10 @@
     "semantic_hash": "1a6261b1bf006fff44978ebad66b9790"
   },
   "tests/local-workspace-api.test.ts": {
-    "mtime": 1787660910.396569,
-    "seen": 1787660980.5472083,
-    "ast_hash": "70030b8f128dbb6521cb0d87e6d01045",
-    "semantic_hash": "70030b8f128dbb6521cb0d87e6d01045"
+    "mtime": 1787661811.0670323,
+    "seen": 1787662155.439422,
+    "ast_hash": "0463c4d62531ede4ec3de4cad8fe618f",
+    "semantic_hash": "0463c4d62531ede4ec3de4cad8fe618f"
   },
   "tests/local-workspace.test.ts": {
     "mtime": 1787660805.8229263,

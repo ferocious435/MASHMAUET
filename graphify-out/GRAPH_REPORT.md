@@ -4,78 +4,75 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1517 nodes · 3559 edges · 101 communities (69 shown, 32 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 301 edges (avg confidence: 0.82)
+- 1519 nodes · 3378 edges · 100 communities (69 shown, 31 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 189 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4787bd93`
+- Built from commit: `54b78b2a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- local-workspace-controller.ts
-- dekel-matching-service.ts
-- run-tests.ts
+- case-service.ts
+- CodexAppServerClient
+- media-audio-transcription.ts
 - local-workspace-service.ts
-- LocalWorkspaceService
-- .runFullProcessing
-- mavnadim-matching-service.ts
-- case-analysis-pipeline.ts
-- app.js
-- professional-knowledge-service.ts
-- scripts
 - LocalProjectStore
+- openxml-dekel-reader.ts
+- local-workspace-controller.ts
+- case-schemas.ts
+- run-tests.ts
+- case-analysis-pipeline.ts
 - masmach-template-engine.ts
+- dekel-matching-service.ts
+- mavnadim-matching-service.ts
+- LocalWorkspaceService
+- app.js
+- scripts
 - Masonry Work Specification
 - live-case-check.ts
-- dekel-catalog-service.ts
+- .buildDekelReview
 - skill-orchestrator-service.ts
-- CaseService
-- dekel-case-estimate-service.ts
-- create-app.ts
-- case-schemas.ts
 - escapeHtml
-- createApp
-- calculateProjectSummary
-- local-project-store.ts
-- CodexAppServerClient
+- calculations.js
+- dekel-case-estimate-service.ts
 - getActiveProject
-- case-output-export-service.ts
-- local-workspace-api.test.ts
-- openxml-dekel-reader.ts
+- .runFullProcessing
+- buildCaseRecord
 - MASHMAUET Agent
 - Text Policy Matrix
+- professional-knowledge-service.ts
 - compilerOptions
-- media-audio-transcription.ts
-- local-project-types.ts
-- case-service.ts
-- audio-transcription.test.ts
-- Blue Book Publication Table 2026
-- LocalAudioTranscriptionGateway
 - ProjectBuildingCodex
+- local-workspace-api.test.ts
+- create-app.ts
+- Blue Book Publication Table 2026
+- local-workspace.test.ts
 - Local Backend Runbook
-- isRecord
 - mock-local-api.ts
 - renderDocument
+- buildDekelCandidateMatches
 - Production Skill Ecosystem
 - Local Media Tools
 - Controlled Case-Analysis Pipeline
-- CaseRecord
-- detectWorkItems
 - showToast
+- .search
 - מפרט מערכות גילוי וכיבוי אש
 - מפרט פיתוח נופי
 - replaceProject
 - Local Workspace Shell
+- detectWorkItems
 - FakeCodex
 - Verify Job
 - Superficial Document Root Cause
+- containsAny
+- ProfessionalKnowledgeService
 - תיקון 1 לפרק 58/59 — מתקני תברואה במרחבים מוגנים
 - document-layout.js
+- isRecord
 - ProfessionalKnowledgeService
 - Q: Почему после загрузки фото и видео локальная система показала поверхностный шаблонный документ и не создала глубокую реальную смету?
-- CodexGateway
 - Shop Drawings and Prototypes
 - דף תיקון לקיבוע רעפים
 - מפרט עבודות גינון והשקיה
@@ -111,18 +108,20 @@
 - הסדרת מחפורת, תעלות ניקוז וקו מתח גבוה
 - Project, document and Codex chat interface
 - Evidence Confidence Policy
+- Pricing Completeness State
+- .analyzeDekel
 
 ## God Nodes (most connected - your core abstractions)
 1. `main()` - 52 edges
-2. `LocalWorkspaceService` - 51 edges
-3. `createApp()` - 40 edges
-4. `LocalProjectStore` - 39 edges
+2. `LocalWorkspaceService` - 50 edges
+3. `createApp()` - 39 edges
+4. `LocalProjectStore` - 37 edges
 5. `CaseService` - 34 edges
 6. `CaseRecord` - 28 edges
 7. `escapeHtml()` - 26 edges
 8. `CaseController` - 23 edges
 9. `SkillOrchestratorService` - 21 edges
-10. `PublicLocalProject` - 21 edges
+10. `buildDekelCandidateMatches()` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Persistent Local Project Storage` --semantically_similar_to--> `Local Data Layout`  [INFERRED] [semantically similar]
@@ -150,287 +149,287 @@
 - **DEKEL Pricing Governance** — readme_dekel_pricebook, readme_dekel_financial_audit, docs_backend_runbook_dekel_governance, docs_backend_runbook_dekel_review_session, public_index_dekel_review_ui, graphify_out_memory_query_20260823_092806_dekel_example_matching [INFERRED 0.95]
 - **Governed Skill Orchestration** — project_skills_project_skill_layer, docs_archive_source_inputs_skills_download_md_skill_registry, docs_archive_source_inputs_skills_download_md_skill_manager, docs_archive_source_inputs_skills_download_md_skill_router, docs_archive_source_inputs_skills_download_md_execution_policy, docs_archive_source_inputs_skills_download_md_audit_and_fallback [INFERRED 0.95]
 
-## Communities (101 total, 32 thin omitted)
+## Communities (100 total, 31 thin omitted)
 
-### Community 0 - "local-workspace-controller.ts"
+### Community 0 - "case-service.ts"
 Cohesion: 0.05
-Nodes (47): enforceLocalRequestSecurity(), isLoopbackHostname(), isLoopbackOrigin(), normalizeHostname(), setSecurityHeaders(), currentDirectory, publicDirectory, publicFiles (+39 more)
+Nodes (49): createApp(), CaseController, CaseRecord, ClarificationQuestion, GeneratedArtifact, SelectedDekelLine, SelectedMavnadimItem, CaseRepository (+41 more)
 
-### Community 1 - "dekel-matching-service.ts"
-Cohesion: 0.06
-Nodes (62): buildDekelCandidateMatches(), buildDekelCandidateMatchesForCase(), buildDekelSearchQueryPlan(), buildRouteCandidates(), buildRouteReason(), buildWorkItemSearchQuery(), calculateRouteAdjustment(), calculateWorkTypeSemanticAdjustment() (+54 more)
+### Community 1 - "CodexAppServerClient"
+Cohesion: 0.12
+Nodes (8): approvalDecline(), CodexAppServerClient, CodexGateway, extractNotificationError(), extractRpcError(), extractTurnError(), JsonObject, OUTPUT_SCHEMA
 
-### Community 2 - "run-tests.ts"
-Cohesion: 0.10
-Nodes (52): createEmptyAnalysisSnapshot(), buildCaseOutputDraft(), roundMoney(), buildCaseOutputPackage(), roundMoney(), buildCaseEstimatePreviewFromDekelCandidates(), inferDekelRoutingHints(), buildCaseRecord() (+44 more)
+### Community 2 - "media-audio-transcription.ts"
+Cohesion: 0.07
+Nodes (38): assertDirectory(), assertExecutable(), AudioTranscript, AudioTranscriptionGateway, buildSafeSpawnOptions(), CachedAudioTranscriptValidationInput, CachedAudioTranscriptValidationResult, failed() (+30 more)
 
 ### Community 3 - "local-workspace-service.ts"
-Cohesion: 0.06
-Nodes (47): KeyedMutex, Semantic DEKEL Selection Metadata, ALLOWED_DOCUMENT_PATHS, assertGeneratedDocument(), buildCandidateFromItem(), Build Local DEKEL Review, buildDekelSearchQueries(), buildDomainFallbackDekelItems() (+39 more)
-
-### Community 4 - "LocalWorkspaceService"
-Cohesion: 0.18
-Nodes (9): LocalDekelReview, PublicLocalProject, toPublicProject(), assertProcessingAccess(), assertProcessingIdle(), invalidateProcessing(), LocalWorkspaceService, requireReadyDekelReview() (+1 more)
-
-### Community 5 - ".runFullProcessing"
-Cohesion: 0.11
-Nodes (33): ScopeInventoryOperation, applyClosestDekelFallbacks(), applyDekelBillingQuantityRule(), applyDekelDecompositions(), applyDekelReviewToDocument(), applyVerifiedDekelSelectionsToDocument(), buildPricedBoqDescription(), chunkArray() (+25 more)
-
-### Community 6 - "mavnadim-matching-service.ts"
-Cohesion: 0.09
-Nodes (34): MavnadimAncillaryRecommendation, MavnadimCandidateMatch, MavnadimCatalogAddon, MavnadimCatalogItem, MavnadimCatalogSummary, mavnadimCatalogItems, MavnadimCatalogService, buildMavnadimAncillaryRecommendations() (+26 more)
-
-### Community 7 - "case-analysis-pipeline.ts"
 Cohesion: 0.07
-Nodes (40): AggregatedTemplateLine, CandidateMatch, DetailedCostLine, DetectedGeometry, DimensionInput, MatchType, PipelineStage, PipelineStageState (+32 more)
+Nodes (41): BoqScopeGap, inventoryAsScopeGaps(), LIFECYCLE_STAGES, LifecycleStage, ScopeCompletenessAudit, ScopeInventoryOperation, ScopeResolution, KeyedMutex (+33 more)
 
-### Community 8 - "app.js"
-Cohesion: 0.08
-Nodes (34): a4LayoutIssues, buildEvidenceChatContext(), canvasToJpeg(), createBlankDocumentTemplate(), createDefaultProject(), dateFormatter, documentPathLabel(), elements (+26 more)
-
-### Community 9 - "professional-knowledge-service.ts"
+### Community 4 - "LocalProjectStore"
 Cohesion: 0.11
-Nodes (26): buildExpandedTerms(), buildSource(), CachedPdf, CHAPTER_TERMS, chunkPage(), deduplicateResults(), detectChapterCodes(), detectIntents() (+18 more)
+Nodes (18): auditScopeIntegrity(), sanitizeScopeInventory(), sanitizeScopeResolutions(), blankDocument(), DEMO_DOCUMENT, ensureDocumentEvidence(), exists(), fingerprintBoqForMigration() (+10 more)
 
-### Community 10 - "scripts"
-Cohesion: 0.06
-Nodes (34): @fix-webm-duration/fix, mammoth, @napi-rs/canvas, @openai/codex, dependencies, mammoth, @napi-rs/canvas, @openai/codex (+26 more)
+### Community 5 - "openxml-dekel-reader.ts"
+Cohesion: 0.10
+Nodes (36): dekelExpectedHeaders, DekelWorkbookColumnMap, DekelWorkbookRow, PricebookItem, DekelCatalogService, DekelWorkbookSummary, buildDekelEstimatePreview(), DekelEstimatePreview (+28 more)
 
-### Community 11 - "LocalProjectStore"
-Cohesion: 0.15
-Nodes (4): exists(), LocalProjectStore, LocalBackupManifest, LocalProject
-
-### Community 12 - "masmach-template-engine.ts"
-Cohesion: 0.11
-Nodes (33): buildAppendicesSection(), buildBackgroundSection(), buildBackgroundSectionV2(), buildBudgetBreakdownSection(), buildMasmachTemplateDocument(), buildObjectiveSection(), buildObjectiveSectionV2(), buildRemarksSection() (+25 more)
-
-### Community 13 - "Masonry Work Specification"
-Cohesion: 0.07
-Nodes (34): Cast-in-Place Concrete Specification, Concrete Quality Control, Precast Concrete Components, Precast Erection and Tolerances, Masonry Materials and Joints, Masonry Work Specification, Waterproofing Specification, Waterproofing Systems and Tests (+26 more)
-
-### Community 14 - "live-case-check.ts"
-Cohesion: 0.11
-Nodes (32): asArray(), asObject(), asStringArray(), buildCasePayload(), buildObservations(), buildReport(), buildTimestampSlug(), deriveDescriptionFromSupportingEvidence() (+24 more)
-
-### Community 15 - "dekel-catalog-service.ts"
-Cohesion: 0.13
-Nodes (21): dekelExpectedHeaders, DekelWorkbookColumnMap, DekelWorkbookRow, PricebookItem, DekelCatalogService, DekelWorkbookSummary, buildDekelEstimatePreview(), DekelEstimatePreview (+13 more)
-
-### Community 16 - "skill-orchestrator-service.ts"
+### Community 6 - "local-workspace-controller.ts"
 Cohesion: 0.09
-Nodes (22): buildBaseSkillSource(), dedupe(), getScopeKey(), getTaskDefinition(), GovernanceConfig, isFileNotFoundError(), isRecord(), RegistryConfig (+14 more)
+Nodes (29): decodeFileName(), LocalRateLimiter, normalizeMaterialContentType(), readBinary(), readJson(), routeLabel(), asPublicError(), isNotFoundError() (+21 more)
 
-### Community 17 - "CaseService"
-Cohesion: 0.19
-Nodes (9): SelectedDekelLine, SelectedMavnadimItem, appendManualTrace(), CaseService, buildCaseEstimatePreviewFromSelectedDekelLines(), CaseDekelEstimatePreview, DekelMatchingService, MavnadimMatchingService (+1 more)
-
-### Community 18 - "dekel-case-estimate-service.ts"
-Cohesion: 0.12
-Nodes (28): buildCaseEstimatePreview(), buildPreferredSewerFamilies(), buildPreviewCandidateFingerprint(), CaseDekelEstimatePreviewLine, classifySewerPreviewFamily(), extractExplicitAreaQuantity(), extractExplicitDiscreteQuantity(), extractExplicitLinearQuantity() (+20 more)
-
-### Community 19 - "create-app.ts"
-Cohesion: 0.13
-Nodes (17): executeRoutedRequest(), MashmauetApplication, readJsonBody(), sendJson(), summarizeForRoute(), toHttpResult(), caseRoutes, CaseAnalysisPipeline (+9 more)
-
-### Community 20 - "case-schemas.ts"
+### Community 7 - "case-schemas.ts"
 Cohesion: 0.08
 Nodes (28): CaseAnalysisSnapshot, CaseClarificationAnswerInput, CaseClarificationSubmissionInput, CaseCreateInput, CaseDekelSelectionInput, CaseDekelSelectionInputLine, CaseMavnadimAncillarySelectionInput, CaseMavnadimAncillarySelectionInputLine (+20 more)
 
-### Community 21 - "escapeHtml"
+### Community 8 - "run-tests.ts"
+Cohesion: 0.10
+Nodes (41): buildCaseEstimatePreviewFromDekelCandidates(), buildDekelCandidateMatchesForCase(), buildRouteReason(), selectBillableDekelRows(), buildPipelineWithLiveDekelFallback(), buildPipelineWithMissingReferences(), buildStoredZip(), computeCrc32() (+33 more)
+
+### Community 9 - "case-analysis-pipeline.ts"
+Cohesion: 0.08
+Nodes (40): AggregatedTemplateLine, CandidateMatch, DetailedCostLine, DetectedGeometry, DimensionInput, MatchType, PipelineStage, PipelineStageState (+32 more)
+
+### Community 10 - "masmach-template-engine.ts"
+Cohesion: 0.09
+Nodes (38): CaseOutputDraft, roundMoney(), roundMoney(), buildAppendicesSection(), buildBackgroundSection(), buildBackgroundSectionV2(), buildBudgetBreakdownSection(), buildMasmachTemplateDocument() (+30 more)
+
+### Community 11 - "dekel-matching-service.ts"
+Cohesion: 0.08
+Nodes (40): buildDekelSearchQueryPlan(), buildRouteCandidates(), buildWorkItemSearchQuery(), calculateRouteAdjustment(), calculateWorkTypeSemanticAdjustment(), chapterRoutingRules, dedupeDekelQueryPlan(), DekelRoutingHints (+32 more)
+
+### Community 12 - "mavnadim-matching-service.ts"
+Cohesion: 0.10
+Nodes (30): MavnadimAncillaryRecommendation, MavnadimCandidateMatch, MavnadimCatalogAddon, MavnadimCatalogItem, MavnadimCatalogSummary, mavnadimCatalogItems, MavnadimCatalogService, buildMavnadimAncillaryRecommendations() (+22 more)
+
+### Community 13 - "LocalWorkspaceService"
+Cohesion: 0.11
+Nodes (10): LocalAppConfig, LocalWorkspaceController, LocalWorkspaceLogger, assertProcessingAccess(), assertProcessingIdle(), invalidateProcessing(), LocalWorkspaceService, preserveInternalPricingBasis() (+2 more)
+
+### Community 14 - "app.js"
+Cohesion: 0.08
+Nodes (34): a4LayoutIssues, buildEvidenceChatContext(), canvasToJpeg(), createBlankDocumentTemplate(), createDefaultProject(), dateFormatter, documentPathLabel(), elements (+26 more)
+
+### Community 15 - "scripts"
+Cohesion: 0.06
+Nodes (34): @fix-webm-duration/fix, mammoth, @napi-rs/canvas, @openai/codex, dependencies, mammoth, @napi-rs/canvas, @openai/codex (+26 more)
+
+### Community 16 - "Masonry Work Specification"
+Cohesion: 0.07
+Nodes (34): Cast-in-Place Concrete Specification, Concrete Quality Control, Precast Concrete Components, Precast Erection and Tolerances, Masonry Materials and Joints, Masonry Work Specification, Waterproofing Specification, Waterproofing Systems and Tests (+26 more)
+
+### Community 17 - "live-case-check.ts"
+Cohesion: 0.11
+Nodes (32): asArray(), asObject(), asStringArray(), buildCasePayload(), buildObservations(), buildReport(), buildTimestampSlug(), deriveDescriptionFromSupportingEvidence() (+24 more)
+
+### Community 18 - ".buildDekelReview"
+Cohesion: 0.13
+Nodes (23): applyDekelBillingQuantityRule(), buildCandidateFromItem(), Build Local DEKEL Review, buildDekelSearchQueries(), buildDomainFallbackDekelItems(), buildLocalDekelCandidates(), compareDekelUnits(), Candidate-Constrained DEKEL Selection Policy (+15 more)
+
+### Community 19 - "skill-orchestrator-service.ts"
+Cohesion: 0.09
+Nodes (21): buildBaseSkillSource(), dedupe(), getScopeKey(), getTaskDefinition(), GovernanceConfig, isFileNotFoundError(), isRecord(), RegistryConfig (+13 more)
+
+### Community 20 - "escapeHtml"
 Cohesion: 0.12
 Nodes (28): backupKindLabel(), boqRow(), dekelQuantitySourceLabel(), dekelUnitCompatibilityLabel(), escapeAttribute(), escapeHtml(), formatBoqUnit(), formatDekelUnit() (+20 more)
 
-### Community 22 - "createApp"
-Cohesion: 0.19
-Nodes (6): createApp(), CaseController, ApplicationError, BaseController, HttpContext, HttpResult
+### Community 21 - "calculations.js"
+Cohesion: 0.35
+Nodes (12): allocateVatByLargestRemainder(), buildFinancialAudit(), calculateBoq(), calculateProjectSummary(), FEE_ROWS, groupEstimate(), moneyAtRate(), moneyToCents() (+4 more)
 
-### Community 23 - "calculateProjectSummary"
-Cohesion: 0.14
-Nodes (24): DEKEL Pricebook Governance, Project DEKEL Review Session, Financial Reconciliation to Agora, allocateVatByLargestRemainder(), buildFinancialAudit(), calculateBoq(), calculateProjectSummary(), FEE_ROWS (+16 more)
-
-### Community 24 - "local-project-store.ts"
-Cohesion: 0.13
-Nodes (21): auditScopeIntegrity(), BoqScopeGap, inventoryAsScopeGaps(), LIFECYCLE_STAGES, LifecycleStage, sanitizeScopeInventory(), sanitizeScopeResolutions(), ScopeCompletenessAudit (+13 more)
-
-### Community 25 - "CodexAppServerClient"
+### Community 22 - "dekel-case-estimate-service.ts"
 Cohesion: 0.17
-Nodes (7): approvalDecline(), CodexAppServerClient, extractNotificationError(), extractRpcError(), extractTurnError(), JsonObject, OUTPUT_SCHEMA
+Nodes (22): buildCaseEstimatePreview(), buildPreferredSewerFamilies(), buildPreviewCandidateFingerprint(), CaseDekelEstimatePreviewLine, classifySewerPreviewFamily(), extractExplicitAreaQuantity(), extractExplicitDiscreteQuantity(), extractExplicitLinearQuantity() (+14 more)
 
-### Community 26 - "getActiveProject"
+### Community 23 - "getActiveProject"
 Cohesion: 0.18
 Nodes (22): addChatMessage(), connectCodex(), findEvidenceMaterial(), getActiveProject(), handleFiles(), initialize(), markChanged(), persistProject() (+14 more)
 
-### Community 27 - "case-output-export-service.ts"
-Cohesion: 0.24
-Nodes (11): GeneratedArtifact, buildArtifact(), buildDetailedCostSheetCsv(), buildMainDocumentMarkdown(), buildReviewSheetMarkdown(), CaseOutputExportManifest, CaseOutputExportService, csvEscape() (+3 more)
+### Community 24 - ".runFullProcessing"
+Cohesion: 0.14
+Nodes (15): buildFinancialContext(), buildFullDekelScopeCoverage(), buildProfessionalKnowledgeQuery(), buildProposalContext(), buildRecentConversationContext(), chunkArray(), expandCompositeBoqRowsForDekel(), formatMediaTime() (+7 more)
 
-### Community 28 - "local-workspace-api.test.ts"
-Cohesion: 0.11
-Nodes (11): AudioTranscriptionGateway, AudioTranscriptionResult, MediaProbeResult, ProfessionalKnowledgeContext, closeServer(), EmptyKnowledge, json(), ReferenceKnowledge (+3 more)
+### Community 25 - "buildCaseRecord"
+Cohesion: 0.20
+Nodes (21): createEmptyAnalysisSnapshot(), buildCaseOutputDraft(), buildCaseOutputPackage(), buildCaseRecord(), buildPipeline(), buildSelectedMavnadimSelection(), testCaseOutputDraftBuilder(), testCaseOutputDraftUsesCompactScopeFragmentsWithoutConfirmedDekelLines() (+13 more)
 
-### Community 29 - "openxml-dekel-reader.ts"
-Cohesion: 0.21
-Nodes (20): decodeXmlEntities(), escapeRegExp(), findEndOfCentralDirectoryOffset(), isFileMissing(), normalizeZipEntryPath(), parseCellValue(), parseSharedStrings(), parseSheetRows() (+12 more)
-
-### Community 30 - "MASHMAUET Agent"
+### Community 26 - "MASHMAUET Agent"
 Cohesion: 0.12
 Nodes (20): Ancillary Works Policy, Product Backlog, Engineering Calculation Document System, Pricebook-to-Template Mapping Table, Calculation Core and Document Layer, Engineering Calculation Document System Idea, Hidden Works Library, Masmach Section Contracts (+12 more)
 
-### Community 31 - "Text Policy Matrix"
+### Community 27 - "Text Policy Matrix"
 Cohesion: 0.12
 Nodes (20): Controlled Estimate Pipeline, MASHMAUET Technical Specification, Ancillary Works Policy, Controlled Ancillary Inclusion, Masmach Section Contracts, Required Output Sections, Quantity Rule Matrix, Strongest Available Quantity (+12 more)
 
-### Community 32 - "compilerOptions"
+### Community 28 - "professional-knowledge-service.ts"
+Cohesion: 0.12
+Nodes (16): buildSource(), CachedPdf, CHAPTER_TERMS, chunkPage(), deduplicateResults(), EMPTY_CONTEXT, inferChapterCode(), INTENT_TERMS (+8 more)
+
+### Community 29 - "compilerOptions"
 Cohesion: 0.11
 Nodes (18): ES2022, node, src/**/*.ts, tests/**/*.ts, compilerOptions, allowImportingTsExtensions, esModuleInterop, forceConsistentCasingInFileNames (+10 more)
 
-### Community 33 - "media-audio-transcription.ts"
-Cohesion: 0.13
-Nodes (18): AudioTranscript, CachedAudioTranscriptValidationInput, CachedAudioTranscriptValidationResult, finiteNumber(), isNonEmptyFile(), LocalAudioTranscriptionOptions, MediaFailureStage, MediaProbe (+10 more)
+### Community 30 - "ProjectBuildingCodex"
+Cohesion: 0.15
+Nodes (8): BatchedEvidenceProjectBuildingCodex, BlockingProjectBuildingCodex, InvalidEvidenceProjectBuildingCodex, ProgressiveScopeCriticCodex, ProjectBuildingCodex, RejectingScopeCriticCodex, SemanticDekelProjectBuildingCodex, UnmatchedProjectBuildingCodex
 
-### Community 34 - "local-project-types.ts"
+### Community 31 - "local-workspace-api.test.ts"
 Cohesion: 0.14
-Nodes (14): ChatProposal, LocalDekelCandidate, LocalDekelReviewLine, LocalFinancialAudit, LocalMaterial, LocalProjectProcessing, LocalProjectProcessingStage, LocalProjectProcessingStatus (+6 more)
+Nodes (10): AudioTranscriptionResult, MediaProbeResult, ProfessionalKnowledgeContext, closeServer(), EmptyKnowledge, json(), ReferenceKnowledge, ScriptedAudioTranscription (+2 more)
 
-### Community 35 - "case-service.ts"
-Cohesion: 0.16
-Nodes (16): ClarificationQuestion, applyClarificationAnswer(), buildSupportingEvidenceRecord(), inferSupportingEvidenceConfidence(), inferSupportingEvidenceFormat(), inferSupportingEvidenceRole(), mergeClarifiedDescription(), parseGeometryQuantityInterpretation() (+8 more)
+### Community 32 - "create-app.ts"
+Cohesion: 0.08
+Nodes (31): executeRoutedRequest(), MashmauetApplication, readJsonBody(), sendJson(), summarizeForRoute(), toHttpResult(), enforceLocalRequestSecurity(), isLoopbackHostname() (+23 more)
 
-### Community 36 - "audio-transcription.test.ts"
-Cohesion: 0.21
-Nodes (10): assertDirectory(), buildSafeSpawnOptions(), MediaProcessRequest, MediaProcessResult, MediaProcessRunner, SpawnMediaProcessRunner, fileSha256(), ScriptedRunner (+2 more)
-
-### Community 37 - "Blue Book Publication Table 2026"
+### Community 33 - "Blue Book Publication Table 2026"
 Cohesion: 0.17
 Nodes (16): Contract Administration and Measurement, Government Construction Contract 3210, General Specification Chapter 00, Preliminaries and Price Inclusion Rules, Earthwork Measurement and Execution, General Specification Chapter 01, Current General Specification Editions, Blue Book Publication Table 2026 (+8 more)
 
-### Community 38 - "LocalAudioTranscriptionGateway"
-Cohesion: 0.25
-Nodes (9): assertExecutable(), failed(), isCompleteTranscriptProvenance(), isInside(), isRegularAbsoluteFile(), LocalAudioTranscriptionGateway, sha256File(), toolIdentityMatches() (+1 more)
+### Community 34 - "local-workspace.test.ts"
+Cohesion: 0.15
+Nodes (19): Semantic DEKEL Selection Metadata, applyClosestDekelFallbacks(), applyDekelDecompositions(), applyDekelReviewToDocument(), applyVerifiedDekelSelectionsToDocument(), buildPricedBoqDescription(), evidenceConfidence(), hasCredibleMeasurableCandidate() (+11 more)
 
-### Community 39 - "ProjectBuildingCodex"
-Cohesion: 0.17
-Nodes (7): BatchedEvidenceProjectBuildingCodex, BlockingProjectBuildingCodex, InvalidEvidenceProjectBuildingCodex, ProjectBuildingCodex, RejectingScopeCriticCodex, SemanticDekelProjectBuildingCodex, UnmatchedProjectBuildingCodex
-
-### Community 40 - "Local Backend Runbook"
+### Community 35 - "Local Backend Runbook"
 Cohesion: 0.16
-Nodes (15): Local Backend Runbook, Local Data Layout, Loopback-Only Local Service, Recoverable Project Archiving, Validated Backup Restore, Local Backend Security Limits, Explicit Confirmation Dialog, DEKEL Review UI (+7 more)
+Nodes (15): Local Backend Runbook, Local Data Layout, Loopback-Only Local Service, Recoverable Project Archiving, Validated Backup Restore, Local Backend Security Limits, Seven Images Sent to Chat, Missing Audio Transcription (+7 more)
 
-### Community 41 - "isRecord"
-Cohesion: 0.32
-Nodes (14): isRecord(), optionalPositiveNumber(), optionalString(), requireRecommendationKey(), requireString(), validateCaseClarificationSubmissionInput(), validateCaseCreateInput(), validateCaseDekelSelectionInput() (+6 more)
-
-### Community 42 - "mock-local-api.ts"
+### Community 36 - "mock-local-api.ts"
 Cohesion: 0.28
 Nodes (9): blankDocument(), fulfill(), installMockLocalApi(), MockProject, now(), processing(), project(), readyDocument() (+1 more)
 
-### Community 43 - "renderDocument"
+### Community 37 - "renderDocument"
 Cohesion: 0.20
 Nodes (12): buildEvidenceIndex(), fitDocumentPreview(), formatPercent(), narrativeSection(), Priced-Only BOQ Pagination, renderDocument(), renderScheduleTimeline(), renderUnpricedWorksNotice() (+4 more)
 
-### Community 44 - "Production Skill Ecosystem"
+### Community 38 - "buildDekelCandidateMatches"
+Cohesion: 0.18
+Nodes (12): buildDekelCandidateMatches(), Expanded DEKEL Chapter Routing, getTokenWeight(), Hebrew Matching Normalization, inferDekelRoutingHints(), preparedPricebookItemCache, Expanded DEKEL Routing Hints Test, testDekelMatchingChapterPreference() (+4 more)
+
+### Community 39 - "Production Skill Ecosystem"
 Cohesion: 0.22
 Nodes (10): Skill Audit and Fallback, Skill Execution Policy, Production Skill Ecosystem, Skill Manager, Skill Registry, Deterministic Skill Router, General Skills SOP, Project-Local Skill Layer (+2 more)
 
-### Community 45 - "Local Media Tools"
+### Community 40 - "Local Media Tools"
+Cohesion: 0.29
+Nodes (8): Chronological Video Keyframes, FFmpeg Static Binaries b6.1.1, Bundled Media License Review, Local Media Tools, Pinned SHA-256 Verification, whisper.cpp v1.9.1, Whisper Model Files, Local Photo and Video Processing
+
+### Community 41 - "Controlled Case-Analysis Pipeline"
 Cohesion: 0.22
-Nodes (10): Chronological Video Keyframes, FFmpeg Static Binaries b6.1.1, Bundled Media License Review, Local Media Tools, Pinned SHA-256 Verification, whisper.cpp v1.9.1, Whisper Model Files, Seven Images Sent to Chat (+2 more)
+Nodes (11): Local-to-Production Pipeline Integration Gap, Production Cases API, Clarification Loop, Controlled Case-Analysis Pipeline, Generated Case Artifact Package, Local Application API, Evidence Assumption Fallback, Batched Evidence-Note Generation (+3 more)
 
-### Community 46 - "Controlled Case-Analysis Pipeline"
-Cohesion: 0.24
-Nodes (10): Local-to-Production Pipeline Integration Gap, Production Cases API, Clarification Loop, Controlled Case-Analysis Pipeline, Generated Case Artifact Package, Evidence Assumption Fallback, Batched Evidence-Note Generation, Professional BOQ Synthesis Policy (+2 more)
+### Community 42 - "showToast"
+Cohesion: 0.31
+Nodes (9): analyzeDekelReview(), ensureA4LayoutReady(), ensureProjectReadyForExport(), exportHtml(), managementSkeleton(), openDekelReview(), runAction(), safeFileName() (+1 more)
 
-### Community 47 - "CaseRecord"
-Cohesion: 0.27
-Nodes (3): CaseRecord, CaseRepository, InMemoryCaseRepository
+### Community 43 - ".search"
+Cohesion: 0.56
+Nodes (7): buildExpandedTerms(), detectChapterCodes(), detectIntents(), includesTerm(), isKnowledgeRelevant(), normalize(), tokenize()
+
+### Community 44 - "מפרט מערכות גילוי וכיבוי אש"
+Cohesion: 0.25
+Nodes (8): בטיחות מיכלים, שילוט ואחזקה, דף תיקון למערכות גילוי וכיבוי אש, מערכות גילוי עשן וכיבוי אוטומטי, מפרט מערכות גילוי וכיבוי אש, BMS, ממשקים ואבטחת סייבר, מפרט בקרת מערכות במתקן, מפרט מערכת דיזל-גנרטור, גנרטור, דלק, אוורור ופליטה
+
+### Community 45 - "מפרט פיתוח נופי"
+Cohesion: 0.25
+Nodes (8): שיקום נופי, משטחים ומתקני חוץ, מפרט פיתוח נופי, מילוי, שריון וחזית קיר התמך, מפרט קירות תמך מקרקע משוריינת, מפרט משטחי בטון, מישקים, גימור ואשפרת בטון, תשתיות, אספלט, בטון ובקרת סלילה, מפרט עבודות סלילה
+
+### Community 46 - "replaceProject"
+Cohesion: 0.29
+Nodes (8): createDefaultEvidenceNote(), createDocumentTemplate(), ensureDocumentEvidence(), expandLegacyBoqDescriptions(), reloadProjects(), renderVersions(), replaceProject(), saveVersion()
+
+### Community 47 - "Local Workspace Shell"
+Cohesion: 0.25
+Nodes (8): Codex Account Linking UI, Document Workspace UI, Decision Evidence Dialog, Local Workspace Shell, Project Materials UI, Project Processing Workflow UI, Project Codex Chat UI, Projects Panel
 
 ### Community 48 - "detectWorkItems"
 Cohesion: 0.29
 Nodes (10): buildSewerDescriptorSuffix(), detectInlineGeometry(), detectWorkItems(), extractExplicitAreaQuantity(), extractExplicitDepthMeters(), extractExplicitDiameterMm(), extractExplicitLinearQuantity(), extractExplicitUnitQuantity() (+2 more)
 
-### Community 49 - "showToast"
-Cohesion: 0.31
-Nodes (9): analyzeDekelReview(), ensureA4LayoutReady(), ensureProjectReadyForExport(), exportHtml(), managementSkeleton(), openDekelReview(), runAction(), safeFileName() (+1 more)
-
-### Community 50 - "מפרט מערכות גילוי וכיבוי אש"
-Cohesion: 0.25
-Nodes (8): בטיחות מיכלים, שילוט ואחזקה, דף תיקון למערכות גילוי וכיבוי אש, מערכות גילוי עשן וכיבוי אוטומטי, מפרט מערכות גילוי וכיבוי אש, BMS, ממשקים ואבטחת סייבר, מפרט בקרת מערכות במתקן, מפרט מערכת דיזל-גנרטור, גנרטור, דלק, אוורור ופליטה
-
-### Community 51 - "מפרט פיתוח נופי"
-Cohesion: 0.25
-Nodes (8): שיקום נופי, משטחים ומתקני חוץ, מפרט פיתוח נופי, מילוי, שריון וחזית קיר התמך, מפרט קירות תמך מקרקע משוריינת, מפרט משטחי בטון, מישקים, גימור ואשפרת בטון, תשתיות, אספלט, בטון ובקרת סלילה, מפרט עבודות סלילה
-
-### Community 52 - "replaceProject"
-Cohesion: 0.29
-Nodes (8): createDefaultEvidenceNote(), createDocumentTemplate(), ensureDocumentEvidence(), expandLegacyBoqDescriptions(), reloadProjects(), renderVersions(), replaceProject(), saveVersion()
-
-### Community 53 - "Local Workspace Shell"
-Cohesion: 0.25
-Nodes (8): Codex Account Linking UI, Document Workspace UI, Decision Evidence Dialog, Local Workspace Shell, Project Materials UI, Project Processing Workflow UI, Project Codex Chat UI, Projects Panel
-
-### Community 55 - "Verify Job"
+### Community 50 - "Verify Job"
 Cohesion: 0.38
 Nodes (7): CI Workflow, Playwright Failure Artifacts, Node.js 24 Environment, npm run check, Playwright Browser Smoke Tests, Verify Job, Backend Quick Diagnostics
 
-### Community 56 - "Superficial Document Root Cause"
+### Community 51 - "Superficial Document Root Cause"
 Cohesion: 0.29
 Nodes (7): Material-Derivative Storage, DEFAULT_DOCUMENT and Example BOQ Seed, DEKEL Matching Against Example Codes, Query: Superficial Document After Media Upload, Separate Material Analysis Action, Superficial Document Root Cause, Material Analysis and Correction UI
 
-### Community 57 - "תיקון 1 לפרק 58/59 — מתקני תברואה במרחבים מוגנים"
+### Community 52 - "containsAny"
+Cohesion: 0.43
+Nodes (7): candidateExplicitlyExcludesRequestedWork(), containsAny(), detectSemanticConcepts(), escapeRegularExpression(), evaluateSemanticGuard(), hasMandatorySemanticAnchors(), hasUnrequestedSpecialization()
+
+### Community 53 - "ProfessionalKnowledgeService"
+Cohesion: 0.33
+Nodes (3): extractPdfPages(), ProfessionalKnowledgeGateway, ProfessionalKnowledgeService
+
+### Community 54 - "תיקון 1 לפרק 58/59 — מתקני תברואה במרחבים מוגנים"
 Cohesion: 0.33
 Nodes (6): משאבות, צנרת ולוחות פיקוד במקלטים, תיקון 1 לפרק 58/59 — מתקני תברואה במרחבים מוגנים, פרק 58/59 — מרחבים מוגנים ומקלטים, דרישות בנייה ומערכות למרחבים מוגנים, תיקון 2 לפרק 58/59 — החלפת תיקון 1, משאבות וניקוז למרחבים מוגנים לפי תיקון 2
 
-### Community 58 - "document-layout.js"
+### Community 55 - "document-layout.js"
 Cohesion: 0.53
 Nodes (5): BOQ_PAGE_CAPACITY, BOQ_TOTALS_RESERVE, boqPageWeight(), boqRowWeight(), paginateBoqRows()
 
-### Community 59 - "ProfessionalKnowledgeService"
+### Community 56 - "isRecord"
+Cohesion: 0.32
+Nodes (14): isRecord(), optionalPositiveNumber(), optionalString(), requireRecommendationKey(), requireString(), validateCaseClarificationSubmissionInput(), validateCaseCreateInput(), validateCaseDekelSelectionInput() (+6 more)
+
+### Community 57 - "ProfessionalKnowledgeService"
 Cohesion: 0.40
 Nodes (5): Project Applicability Boundary, Hybrid Lexical and Metadata Ranking, Lazy Local Retrieval, ProfessionalKnowledgeService, Semantic Index Revisit Condition
 
-### Community 60 - "Q: Почему после загрузки фото и видео локальная система показала поверхностный шаблонный документ и не создала глубокую реальную смету?"
+### Community 58 - "Q: Почему после загрузки фото и видео локальная система показала поверхностный шаблонный документ и не создала глубокую реальную смету?"
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Почему после загрузки фото и видео локальная система показала поверхностный шаблонный документ и не создала глубокую реальную смету?, Source Nodes
 
-### Community 62 - "Shop Drawings and Prototypes"
+### Community 59 - "Shop Drawings and Prototypes"
 Cohesion: 0.50
 Nodes (4): Carpentry and Steelwork Specification, Shop Drawings and Prototypes, Aluminium Work Specification, Fabrication, Glazing and Finishes
 
-### Community 63 - "דף תיקון לקיבוע רעפים"
+### Community 60 - "דף תיקון לקיבוע רעפים"
 Cohesion: 0.50
 Nodes (4): דף תיקון לקיבוע רעפים, דרישות התקנה וקיבוע רעפים, מפרט נגרות חרש וסיכוך, גגות, פרגולות ורצפות עץ
 
-### Community 64 - "מפרט עבודות גינון והשקיה"
+### Community 61 - "מפרט עבודות גינון והשקיה"
 Cohesion: 0.50
 Nodes (4): מפרט עבודות גינון והשקיה, נטיעות ומערכות השקיה, מפרט אחזקת גנים, אחזקת צמחייה ומערכות השקיה
 
-### Community 65 - "Clarification and Review Gate"
+### Community 62 - "Clarification and Review Gate"
 Cohesion: 0.67
 Nodes (3): No-Guessing Principle, Clarification and Review Gate, Source Priority Policy
 
-### Community 66 - "Reference-Only Professional Retrieval"
+### Community 63 - "Reference-Only Professional Retrieval"
 Cohesion: 0.67
 Nodes (3): Rebuildable Knowledge Cache, Reference-Only Professional Retrieval, 3210 and Blue Book Context Retrieval
 
+### Community 98 - "Pricing Completeness State"
+Cohesion: 0.17
+Nodes (13): DEKEL Pricebook Governance, Project DEKEL Review Session, Financial Reconciliation to Agora, Financial Summary Pricing State Type, Priced-Rows-Only Financial Aggregation, Pricing Completeness State, DEKEL Review UI, DEKEL Financial Audit (+5 more)
+
+### Community 99 - ".analyzeDekel"
+Cohesion: 0.33
+Nodes (6): fingerprintBoq(), fingerprintDocument(), markProcessingReadyAfterDekel(), refreshStoredScopeAudit(), requireReadyDekelReview(), sourceFingerprint()
+
 ## Knowledge Gaps
-- **302 isolated node(s):** `LogLevel`, `DekelRoutingHints`, `DekelSearchQueryPlanItem`, `PreparedPricebookItem`, `SemanticGuardResult` (+297 more)
+- **302 isolated node(s):** `JsonObject`, `MashmauetApplication`, `MasmachBudgetBreakdownRow`, `MasmachBudgetBreakdownSection`, `MasmachBulletSection` (+297 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Unresolved Versus Owner-Excluded DEKEL State` connect `escapeHtml` to `Local Backend Runbook`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
-- **Why does `DEKEL Review UI` connect `Local Backend Runbook` to `escapeHtml`, `calculateProjectSummary`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
+- **Why does `DEKEL Review UI` connect `Pricing Completeness State` to `Local Backend Runbook`, `escapeHtml`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `Unresolved Versus Owner-Excluded DEKEL State` connect `escapeHtml` to `Pricing Completeness State`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `Explicit Confirmation Dialog` connect `Local Backend Runbook` to `Pricing Completeness State`?**
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `createApp()` (e.g. with `.analyzeCase()` and `.createCase()`) actually correct?**
   _`createApp()` has 26 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `LogLevel`, `DekelRoutingHints`, `DekelSearchQueryPlanItem` to the rest of the system?**
+- **What connects `JsonObject`, `MashmauetApplication`, `MasmachBudgetBreakdownRow` to the rest of the system?**
   _302 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `local-workspace-controller.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05144230769230769 - nodes in this community are weakly interconnected._
-- **Should `dekel-matching-service.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.057859703020993344 - nodes in this community are weakly interconnected._
-- **Should `run-tests.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.10202655485674354 - nodes in this community are weakly interconnected._
+- **Should `case-service.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.05309734513274336 - nodes in this community are weakly interconnected._
+- **Should `CodexAppServerClient` be split into smaller, more focused modules?**
+  _Cohesion score 0.11954022988505747 - nodes in this community are weakly interconnected._

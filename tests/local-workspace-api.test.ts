@@ -256,6 +256,20 @@ test("полная обработка не принимает непровере
   } finally { await fixture.close(); }
 });
 
+test("полная обработка повторно проверяет inventory после каждого дополнения критика", async () => {
+  const codex = new ProgressiveScopeCriticCodex();
+  const fixture = await startFixture({}, codex);
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "Последовательная проверка", description: "Критик находит технологические операции слоями" } })).body.project;
+    await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, { method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") }, body: "Требуется финальная уборка после ремонта." });
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    const current = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.equal(codex.criticCalls, 3);
+    assert.notEqual(current.processing.error?.code, "scope_inventory_unverified");
+    assert.match(current.processing.status, /^(ready|needs_review)$/);
+  } finally { await fixture.close(); }
+});
+
 test("большой כתב כמויות формирует доказательства партиями без одного чрезмерного ответа", async () => {
   const codex = new BatchedEvidenceProjectBuildingCodex();
   const fixture = await startFixture({}, codex);
@@ -752,6 +766,27 @@ class RejectingScopeCriticCodex extends ProjectBuildingCodex {
   override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
     if (prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC")) {
       return JSON.stringify({ answer: "הביקורת לא אישרה את המלאי.", proposedChanges: [{ path: "scopeInventoryCritique", valueJson: JSON.stringify({ accepted: false, missingOperations: [], reasons: ["נדרשת בדיקה נוספת"] }), reason: "ביקורת עצמאית" }], proposedProjectRules: [], needsMoreInformation: [] });
+    }
+    return await super.runTurn(threadId, projectPath, prompt);
+  }
+}
+
+class ProgressiveScopeCriticCodex extends ProjectBuildingCodex {
+  criticCalls = 0;
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    if (prompt.includes("SCOPE_INVENTORY_INDEPENDENT_CRITIC")) {
+      this.criticCalls += 1;
+      const missingOperations = this.criticCalls === 1
+        ? [{ id: "cleaning-preparation", packageId: "cleaning", packageTitle: "ניקיון", stage: "preparation", title: "הכנת השטח לניקיון", reason: "נדרשת הכנה לפני העבודה", dekelQuerySeeds: ["הכנת שטח לניקיון"] }]
+        : this.criticCalls === 2
+          ? [{ id: "cleaning-handover", packageId: "cleaning", packageTitle: "ניקיון", stage: "testing_handover", title: "בדיקת ניקיון ומסירה", reason: "נדרשת בדיקת התוצאה לפני מסירה", dekelQuerySeeds: ["בדיקת ניקיון לפני מסירה"] }]
+          : [];
+      return JSON.stringify({
+        answer: "המלאי נבדק בשכבה נוספת.",
+        proposedChanges: [{ path: "scopeInventoryCritique", valueJson: JSON.stringify({ accepted: missingOperations.length === 0, missingOperations, reasons: [] }), reason: "ביקורת עצמאית" }],
+        proposedProjectRules: [],
+        needsMoreInformation: [],
+      });
     }
     return await super.runTurn(threadId, projectPath, prompt);
   }

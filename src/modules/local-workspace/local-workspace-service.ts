@@ -25,6 +25,7 @@ import { auditScopeIntegrity, inventoryAsScopeGaps, sanitizeScopeInventory, sani
 export const ALLOWED_DOCUMENT_PATHS = new Set(["subject", "background", "objective", "scope", "estimateNotes", "scheduleRows", "scheduleNotes", "riskRows", "additionalNotes", "boqRows", "evidenceNotes"]);
 const HOURLY_PRICING_POLICY = "ЕДИНОЕ ПРАВИЛО ОПЛАЧИВАЕМОЙ ЕДИНИЦЫ: не решай заранее, что работа почасовая. Сначала определи физический результат и полный технологический состав операций из материалов проекта; затем каждую операцию ищи по всему DEKEL с учётом материала, размера и условий. Именно подходящий סעיף DEKEL определяет оплачиваемую единицу. Если измеримая работа не найдена, разложи её на более точные подработы и повтори поиск. שעה допустима без числовых лимитов только когда материалы владельца прямо задают повременную оплату либо после разложения остаётся локальная операция, для которой DEKEL действительно даёт почасовой סעיף и не даёт подходящей измеримой строки; трудоёмкость должна быть рассчитана и объяснена. Отсутствие совпадения, название профессии или первоначальная единица модели никогда не являются разрешением заменить работу часами.";
 const DEFAULT_PRICING_POLICY = "DEKEL — постоянный глобальный прайс-лист системы и единственный разрешённый источник кодов и цен по умолчанию для всех проектов. Он всегда читается из системной папки HOMER/DEKEL и никогда не загружается в отдельный проект. Любой другой прайс-лист полностью игнорируй при ценообразовании независимо от того, где он сохранён — в проекте, глобальной папке или другом каталоге. Не используй его как источник, альтернативу или резервный вариант, пока владелец сам прямо не назовёт конкретный файл и не потребует использовать именно его. Никогда не спрашивай и не предлагай сменить прайс-лист.";
+const MAX_SCOPE_INVENTORY_AUGMENTATIONS = 6;
 
 export class LocalWorkspaceService {
   private initialized?: Promise<void>;
@@ -262,7 +263,8 @@ export class LocalWorkspaceService {
     try { raw = change ? JSON.parse(change.valueJson) : []; } catch { raw = []; }
     let inventory = sanitizeScopeInventory(raw);
     if (inventory.length === 0) throw new LocalWorkspaceError(502, "scope_inventory_empty", "Независимый анализ не сформировал проверяемый перечень физических операций");
-    for (let round = 0; round < 2; round += 1) {
+    let augmentationRounds = 0;
+    while (augmentationRounds <= MAX_SCOPE_INVENTORY_AUGMENTATIONS) {
       const criticInstruction = `SCOPE_INVENTORY_INDEPENDENT_CRITIC
 Проверь переданный inventory заново непосредственно по всем материалам проекта, не доверяя первому анализу и не рассматривая будущий כתב כמויות. Найди пропущенные физические рабочие пакеты и технологически необходимые операции. Не добавляй системы только по названию помещения, нормативному предположению или типовой практике без связи с явно требуемым физическим результатом. Проверь демонтаж/обеспечение, подготовку, основную работу, подключения и сопряжения, восстановление, испытания и сдачу там, где они действительно применимы. Верни ровно одно proposedChanges path=scopeInventoryCritique. valueJson — объект {accepted,missingOperations,reasons}. accepted=true разрешён только если ни один физический пакет или применимая операция не пропущены; missingOperations использует ту же структуру {id,packageId,packageTitle,stage,title,reason,dekelQuerySeeds}.
 
@@ -276,9 +278,12 @@ ${JSON.stringify(inventory)}`;
       try { critique = criticChange ? JSON.parse(criticChange.valueJson) as Record<string, unknown> : {}; } catch { critique = {}; }
       const missing = sanitizeScopeInventory(critique.missingOperations);
       if (critique.accepted === true && missing.length === 0) return inventory;
+      if (missing.length === 0 || augmentationRounds === MAX_SCOPE_INVENTORY_AUGMENTATIONS) break;
       const existing = new Set(inventory.map((operation) => operation.id));
-      for (const operation of missing) if (!existing.has(operation.id)) { inventory.push(operation); existing.add(operation.id); }
-      if (missing.length === 0) break;
+      let added = 0;
+      for (const operation of missing) if (!existing.has(operation.id)) { inventory.push(operation); existing.add(operation.id); added += 1; }
+      if (added === 0) break;
+      augmentationRounds += 1;
     }
     throw new LocalWorkspaceError(502, "scope_inventory_unverified", "Независимая проверка не подтвердила полноту перечня физических операций");
   }
