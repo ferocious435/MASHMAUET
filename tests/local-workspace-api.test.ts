@@ -229,6 +229,35 @@ test("полная обработка читает материал, замен�
   } finally { await fixture.close(); }
 });
 
+test("большой כתב כמויות формирует доказательства партиями без одного чрезмерного ответа", async () => {
+  const codex = new BatchedEvidenceProjectBuildingCodex();
+  const fixture = await startFixture({}, codex);
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", {
+      method: "POST",
+      body: { name: "Многострочный объект", description: "Проверка пакетного анализа" },
+    })).body.project;
+    await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("объём.txt") },
+      body: "Нужно сформировать полный многострочный כתב כמויות.",
+    });
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, {
+      method: "POST",
+      body: { mode: "full", replaceDocument: true },
+    });
+    const current = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.equal(current.processing.status, "needs_review", JSON.stringify(current.processing));
+    assert.equal(current.document.boqRows.length, 23);
+    assert.equal(current.document.evidenceNotes.length, 23);
+    assert.ok(current.processing.warningCodes.includes("evidence_assumption_fallback"));
+    assert.equal(current.document.evidenceNotes.find((note: any) => note.anchorId === "batch-boq-23")?.kind, "inference");
+    const evidencePrompts = codex.prompts.filter((prompt) => /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt));
+    assert.equal(evidencePrompts.length, 3);
+    assert.ok(evidencePrompts.every((prompt) => new Set(prompt.match(/batch-boq-\d+/g) ?? []).size <= 10));
+  } finally { await fixture.close(); }
+});
+
 test("два одновременных запуска дают один run, а правка во время run блокируется", async () => {
   const codex = new BlockingProjectBuildingCodex();
   const fixture = await startFixture({}, codex);
@@ -277,6 +306,25 @@ test("автоматический DEKEL сохраняет неподобран
     assert.equal(current.document.boqRows[0].id, "boq-unmatched");
     assert.equal(current.document.boqRows[0].unitPrice, 0);
     assert.match(current.dekelReview.warnings.join("\n"), /בדיקה|ביטחון|התאמה|יחידת/);
+  } finally { await fixture.close(); }
+});
+
+test("полная обработка семантически выбирает реальный סעיף DEKEL из кандидатов и применяет цену", async () => {
+  const codex = new SemanticDekelProjectBuildingCodex();
+  const fixture = await startFixture({}, codex);
+  try {
+    const project = (await json(fixture.baseUrl, "/local/projects", { method: "POST", body: { name: "אולם ספורט", description: "ניקוי סופי לאחר שיפוץ" } })).body.project;
+    await fetch(`${fixture.baseUrl}/local/projects/${project.id}/materials`, {
+      method: "POST", headers: { "Content-Type": "text/plain", "X-File-Name": encodeURIComponent("требования.txt") }, body: "Нужна финальную уборку зала площадью 10 м² после ремонта.",
+    });
+    await json(fixture.baseUrl, `/local/projects/${project.id}/processing-runs`, { method: "POST", body: { mode: "full", replaceDocument: true } });
+    const current = await waitForProcessing(fixture.baseUrl, project.id);
+    assert.equal(current.processing.status, "ready", JSON.stringify(current.processing));
+    assert.equal(current.document.boqRows.length, 1);
+    assert.equal(current.document.boqRows[0].code, "95.69.04.0003");
+    assert.ok(current.document.boqRows[0].unitPrice > 0);
+    assert.match(current.document.boqRows[0].description, /נקיון יסודי/);
+    assert.ok(codex.prompts.some((prompt) => prompt.includes("DEKEL_CANDIDATE_SELECTION")));
   } finally { await fixture.close(); }
 });
 
@@ -539,7 +587,7 @@ async function startFixture(
     close: async () => {
       app.close();
       await closeServer(server);
-      await rm(dataRoot, { recursive: true, force: true });
+      await rm(dataRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 80 });
       assert.equal(codex.closed, true);
     },
   };
@@ -655,6 +703,78 @@ class InvalidEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
     const value = JSON.parse(notes.valueJson);
     value[0].source = { fileName: "несуществующий-файл.txt", location: "страница 99", excerpt: "вымышленный фрагмент" };
     notes.valueJson = JSON.stringify(value);
+    return JSON.stringify(parsed);
+  }
+}
+
+class SemanticDekelProjectBuildingCodex extends ProjectBuildingCodex {
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    if (prompt.includes("DEKEL_CANDIDATE_SELECTION")) {
+      this.prompts.push(prompt);
+      const lineId = prompt.match(/"sourceBoqRowId"\s*:\s*"([^"]+)"/)?.[1] ?? "boq-final-cleaning";
+      assert.match(prompt, /95\.69\.04\.0003/);
+      return JSON.stringify({
+        answer: "נבחר סעיף מדויק ממחירון דקל.",
+        proposedChanges: [{
+          path: "dekelSelections",
+          valueJson: JSON.stringify([{ sourceBoqRowId: lineId, selectedCode: "95.69.04.0003", confidence: "high", reason: "הסעיף מתאר ניקיון יסודי לאחר שיפוץ ונמדד במ״ר." }]),
+          reason: "בחירה סמנטית מוגבלת למועמדי DEKEL",
+        }],
+        proposedProjectRules: [], needsMoreInformation: [],
+      });
+    }
+    const raw = await super.runTurn(threadId, projectPath, prompt);
+    if (/точное профессиональное чтение одного материала/.test(prompt) || /СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt)) return raw;
+    const parsed = JSON.parse(raw);
+    const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
+    boq.valueJson = JSON.stringify([{ id: "boq-final-cleaning", code: "", description: "ניקוי סופי של אולם לאחר שיפוץ והכנתו למסירה", unit: "מ״ר", quantity: 10, unitPrice: 0, category: "ניקוי ומסירה" }]);
+    return JSON.stringify(parsed);
+  }
+}
+
+class BatchedEvidenceProjectBuildingCodex extends ProjectBuildingCodex {
+  override async runTurn(threadId?: string, projectPath?: string, prompt = "") {
+    if (/СФОРМИРУЙ ТОЛЬКО evidenceNotes/.test(prompt)) {
+      this.prompts.push(prompt);
+      const ids = [...new Set(prompt.match(/batch-boq-\d+/g) ?? [])];
+      const returnedIds = ids.includes("batch-boq-23") ? ids.filter((id) => id !== "batch-boq-23") : ids;
+      return JSON.stringify({
+        answer: "נבנו הערות ראיה עבור האצווה.",
+        proposedChanges: [{
+          path: "evidenceNotes",
+          valueJson: JSON.stringify(returnedIds.map((id) => ({
+            id: `evidence-${id}`,
+            anchorType: "boqRow",
+            anchorId: id,
+            kind: "inference",
+            quantityBasis: "inferred",
+            title: "כמות תכנון",
+            explanation: "הכמות נועדה לשמור על שלמות כתב הכמויות.",
+            reason: "אין מדידה מפורשת בחומר הבדיקה.",
+            confidence: "medium",
+          }))),
+          reason: "ראיות לפי אצווה",
+        }],
+        proposedProjectRules: [], needsMoreInformation: [],
+      });
+    }
+    if (prompt.includes("DEKEL_CANDIDATE_SELECTION")) {
+      this.prompts.push(prompt);
+      return JSON.stringify({ answer: "אין התאמה אוטומטית.", proposedChanges: [{ path: "dekelSelections", valueJson: "[]", reason: "נדרשת בדיקה" }], proposedProjectRules: [], needsMoreInformation: [] });
+    }
+    const raw = await super.runTurn(threadId, projectPath, prompt);
+    if (/точное профессиональное чтение одного материала/.test(prompt)) return raw;
+    const parsed = JSON.parse(raw);
+    const boq = parsed.proposedChanges.find((change: any) => change.path === "boqRows");
+    boq.valueJson = JSON.stringify(Array.from({ length: 23 }, (_, index) => ({
+      id: `batch-boq-${index + 1}`,
+      code: "",
+      description: `עבודה מיוחדת נפרדת מספר ${index + 1}`,
+      unit: "יח׳",
+      quantity: index + 1,
+      unitPrice: 0,
+      category: "עבודות מיוחדות",
+    })));
     return JSON.stringify(parsed);
   }
 }

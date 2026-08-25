@@ -60,6 +60,20 @@ test("planning, management and supervision fees use the VAT-inclusive base", () 
   assert.ok(Object.values(summary.audit.checks).every(Boolean));
 });
 
+test("неоценённые строки не превращаются в нулевые группы פירוט האומדן", () => {
+  const summary = calculateProjectSummary([
+    ...rows,
+    { code: "", description: "עבודה שטרם הותאמה לדקל", unit: "יח׳", quantity: 3, unitPrice: 0, category: "טרם תומחר" },
+  ]);
+
+  assert.equal(summary.pricing.status, "partial");
+  assert.equal(summary.pricing.pricedRowCount, 2);
+  assert.equal(summary.pricing.unpricedRowCount, 1);
+  assert.deepEqual(summary.pricing.unpricedRows.map((row) => row.description), ["עבודה שטרם הותאמה לדקל"]);
+  assert.equal(summary.groups.some((group) => group.category === "טרם תומחר"), false);
+  assert.equal(summary.boq.totalWithVat, 354);
+});
+
 test("more than five categories are reduced to five estimate rows", () => {
   const manyRows = Array.from({ length: 7 }, (_, index) => ({
     code: String(index),

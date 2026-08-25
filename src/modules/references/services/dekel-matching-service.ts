@@ -87,9 +87,8 @@ export function buildDekelCandidateMatches(
 
   return items
     .flatMap((item) => {
-      const itemTokens = tokenize(
-        `${item.description} ${item.code} ${item.tagsJson.join(" ")}`,
-      );
+      const preparedItem = preparePricebookItem(item);
+      const itemTokens = preparedItem.tokens;
       const sharedTokens = queryTokens.filter((token) => itemTokens.includes(token));
       const uniqueSharedTokens = [...new Set(sharedTokens)];
       const baseScore =
@@ -98,9 +97,7 @@ export function buildDekelCandidateMatches(
       if (baseScore <= 0) {
         return [];
       }
-      const normalizedItemDescription = normalizeText(
-        `${item.description} ${item.tagsJson.join(" ")}`,
-      );
+      const normalizedItemDescription = preparedItem.normalizedDescription;
       const semanticGuard = evaluateSemanticGuard(
         normalizedQuery,
         normalizedItemDescription,
@@ -121,7 +118,7 @@ export function buildDekelCandidateMatches(
       ) {
         return [];
       }
-      const itemChapterCode = inferItemChapterCode(item);
+      const itemChapterCode = preparedItem.chapterCode;
       const chapterBoost =
         itemChapterCode && routingHints.chapterHints.includes(itemChapterCode)
           ? 0.15
@@ -354,6 +351,9 @@ function tokenize(value: string): string[] {
 
 function normalizeText(value: string): string {
   return value
+    .replace(/נקיון/gu, "ניקיון")
+    .replace(/תאורת/gu, "תאורה")
+    .replace(/כוח/gu, "כח")
     .replace(/סף\s+דלת/gu, "סף")
     .replace(/door\s+threshold/giu, "threshold")
     .replace(/\s+/gu, " ")
@@ -827,6 +827,27 @@ function normalizeChapterCode(value: string): string | null {
   return match ? match[1] : null;
 }
 
+type PreparedPricebookItem = {
+  tokens: string[];
+  normalizedDescription: string;
+  chapterCode: string | null;
+};
+
+const preparedPricebookItemCache = new WeakMap<PricebookItem, PreparedPricebookItem>();
+
+function preparePricebookItem(item: PricebookItem): PreparedPricebookItem {
+  const cached = preparedPricebookItemCache.get(item);
+  if (cached) return cached;
+  const searchableText = `${item.description} ${item.code} ${item.tagsJson.join(" ")}`;
+  const prepared = {
+    tokens: tokenize(searchableText),
+    normalizedDescription: normalizeText(`${item.description} ${item.tagsJson.join(" ")}`),
+    chapterCode: inferItemChapterCode(item),
+  };
+  preparedPricebookItemCache.set(item, prepared);
+  return prepared;
+}
+
 interface SemanticGuardResult {
   allowed: boolean;
   sharedConcepts: string[];
@@ -1067,12 +1088,20 @@ const explicitExclusionConceptRules: ReadonlyArray<{
 
 const chapterRoutingRules = [
   {
+    chapterCode: "69",
+    triggerTerms: ["ניקיון", "נקיון", "ניקוי", "מסירה"],
+  },
+  {
     chapterCode: "40",
     triggerTerms: ["סלילה", "אספלט", "כביש", "מדרכה", "ריבוד", "קרצוף"],
   },
   {
     chapterCode: "08",
     triggerTerms: ["חשמל", "תאורה", "מאור", "שקע", "הארקה"],
+  },
+  {
+    chapterCode: "07",
+    triggerTerms: ["ניקוז", "צנרת", "מים", "ביוב"],
   },
   {
     chapterCode: "15",
@@ -1083,12 +1112,20 @@ const chapterRoutingRules = [
     triggerTerms: ["ריצוף", "רצפה", "שיפולי", "סף"],
   },
   {
+    chapterCode: "11",
+    triggerTerms: ["צביעה", "צבע", "טיח", "שפכטל", "קורוזיה", "חלודה"],
+  },
+  {
     chapterCode: "06",
     triggerTerms: ["דלת", "חלון", "חלונות", "זיגוג"],
   },
   {
     chapterCode: "05",
-    triggerTerms: ["איטום"],
+    triggerTerms: ["איטום", "אטימה", "רטיבות"],
+  },
+  {
+    chapterCode: "34",
+    triggerTerms: ["גילוי אש", "כיבוי אש", "ספרינקלר", "גלאי", "לחצן אש"],
   },
   {
     chapterCode: "19",

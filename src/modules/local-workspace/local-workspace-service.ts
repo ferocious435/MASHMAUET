@@ -3,7 +3,7 @@ import { readFile, rm, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { LocalAppConfig } from "../../config/local-app-config.ts";
-import type { ChatProposal, LocalDekelCandidate, LocalDekelReview, LocalFinancialAudit, LocalMaterial, LocalProject, ProjectChatMessage, PublicLocalMaterial, PublicLocalProject } from "./local-project-types.ts";
+import type { ChatProposal, LocalDekelCandidate, LocalDekelReview, LocalDekelReviewLine, LocalFinancialAudit, LocalMaterial, LocalProject, ProjectChatMessage, PublicLocalMaterial, PublicLocalProject } from "./local-project-types.ts";
 import { toPublicProject } from "./local-project-types.ts";
 import { LocalProjectStore } from "./local-project-store.ts";
 import type { CodexGateway } from "./codex-app-server-client.ts";
@@ -106,7 +106,9 @@ export class LocalWorkspaceService {
       await this.updateProcessingStage(projectId, runId, "transcribing_audio", 10);
       const audioWarningCodes = await this.transcribeProjectVideos(projectId, runId);
       await this.updateProcessingStage(projectId, runId, "analyzing_materials", 15);
-      const materialIds = await this.dataMutex.run("__data__", async () => (await this.store.get(projectId)).materials.map((material) => material.id));
+      const materialIds = await this.dataMutex.run("__data__", async () => (await this.store.get(projectId)).materials
+        .filter((material) => !material.analysisTextPath)
+        .map((material) => material.id));
       for (const materialId of materialIds) await this.analyzeMaterial(projectId, materialId, runId);
 
       await this.updateProcessingStage(projectId, runId, "consolidating_evidence", 45);
@@ -118,7 +120,7 @@ export class LocalWorkspaceService {
         throw new LocalWorkspaceError(409, "processing_document_changed", "Документ проекта изменился во время обработки");
       }
       const processedSourceFingerprint = await sourceFingerprint(snapshot);
-      const instruction = "ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ из всех прочитанных материалов. Весь текст итогового документа пиши на иврите. На этом этапе верни proposedChanges для всех полей документа, кроме evidenceNotes: subject, background, objective, scope, estimateNotes, scheduleRows, scheduleNotes, riskRows, additionalNotes и полный boqRows без демонстрационных строк. Формат scheduleRows строго: {stage, duration, notes}; формат riskRows строго: {risk, response, owner}; не добавляй в них id или другие поля. Каждая строка boqRows обязана иметь только поля {id, code, description, unit, quantity, unitPrice, category}; используй category, а не chapter. evidenceNotes оставь пустым. До проверки DEKEL оставь code пустым и unitPrice 0. Не задавай вопросы: сделай помеченные профессиональные допущения.";
+      const instruction = "ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ из всех прочитанных материалов. Весь текст итогового документа пиши на иврите. На этом этапе верни proposedChanges для всех полей документа, кроме evidenceNotes: subject, background, objective, scope, estimateNotes, scheduleRows, scheduleNotes, riskRows, additionalNotes и полный boqRows без демонстрационных строк. Формат scheduleRows строго: {stage, duration, notes}; формат riskRows строго: {risk, response, owner}; не добавляй в них id или другие поля. Каждая строка boqRows обязана иметь только поля {id, code, description, unit, quantity, unitPrice, category}; используй category, а не chapter. evidenceNotes оставь пустым. До проверки DEKEL оставь code пустым и unitPrice 0. Формируй כתב כמויות по ОТДЕЛЬНО ОПЛАЧИВАЕМЫМ видам работ и ожидаемому составу расценок DEKEL: не дроби одну комплексную расценку на искусственные строки поставки, монтажа, крепежа, подрезки, проверки или пуска, если эти операции обычно входят в цену одной работы. Но обязательно разделяй реально разные סעיפי DEKEL: например, электрическую точку и сам светильник; основное оборудование кондиционирования и отдельно измеряемые питание, дренаж или трубопровод; вентилятор и воздуховоды; огнетушитель и знак выхода. Не объединяй несколько разных единиц измерения в одну строку קומפלט. Площадные работы задавай в מ״ר, линейные — в מ׳, оборудование — в יח׳, вывоз отходов — в מ״ק; для вывоза при отсутствии измерения допустимо консервативно принять минимальный оплачиваемый объём DEKEL и пометить допущение. Работы по стали и антикоррозионной окраске измеряй площадью поверхности, а не строкой קומפלט. Не добавляй строки проектирования, управления, надзора или контроля: они уже рассчитываются надбавками 7.4%, 5.4% и 2.7% после НДС. Стремись к профессионально достаточному, но компактному כתב כמויות примерно из 15–35 строк, а не к механическому перечислению каждого действия. Описание каждой строки должно быть ПОЛНЫМ: укажи ключевые материал, способ выполнения, размер/мощность и все известные включённые операции, чтобы строку можно было точно сопоставить с סעיף DEKEL и показать без сокращения. Количество должно следовать измерениям из материалов; если точной спецификации не хватает, выбери консервативное типовое исполнение как явно помеченное профессиональное допущение, не задавая владельцу вопрос.";
       const promptSnapshot = { ...snapshot, document: synthesisPromptDocument(snapshot) };
       const built = await this.buildPrompt(promptSnapshot, instruction, randomUUID());
       const documentThreadId = await this.codex.startThread(this.store.projectPath(projectId));
@@ -142,25 +144,27 @@ export class LocalWorkspaceService {
         throw new LocalWorkspaceError(409, "generated_boq_invalid", "Анализ не сформировал рабочий כתב כמויות без демонстрационных строк");
       }
 
-      const evidenceInstruction = "СФОРМИРУЙ ТОЛЬКО evidenceNotes для переданного boqRows. Весь текст сносок пиши на иврите. Верни ровно одно proposedChanges с path=evidenceNotes. Для каждой строки boqRows создай проверяемую сноску с тем же anchorId и только полями id, anchorType=boqRow, kind, title, explanation, reason, confidence, quantityBasis и при наличии source. quantityBasis: documented, calculated или inferred; для inferred обязательно kind=inference. Реальный источник указывай только если он есть в прочитанных материалах; ничего не выдумывай. Не меняй ни одно другое поле документа.";
       await this.updateProcessingStage(projectId, runId, "quantifying", 58);
-      const evidenceSnapshot = { ...snapshot, document: synthesisEvidencePromptDocument(documentDraft) };
-      const evidenceBuilt = await this.buildPrompt(evidenceSnapshot, evidenceInstruction, randomUUID());
-      const evidenceThreadId = await this.codex.startThread(this.store.projectPath(projectId));
-      const parsedEvidence = parseCodexAnswer(await this.codex.runTurn(evidenceThreadId, this.store.projectPath(projectId), evidenceBuilt.prompt, []));
-      const evidenceChange = parsedEvidence.proposedChanges.find((change) => change.path === "evidenceNotes");
-      if (!evidenceChange) throw new LocalWorkspaceError(502, "incomplete_generated_evidence", "Codex не вернул evidenceNotes для כתב כמויות");
-      documentDraft.evidenceNotes = JSON.parse(evidenceChange.valueJson);
+      const generatedEvidence = await this.generateEvidenceNotesInBatches(snapshot, documentDraft);
+      const evidenceThreadId = generatedEvidence.threadId;
+      documentDraft.evidenceNotes = generatedEvidence.notes;
       const validated = normalizeGeneratedDocument(documentDraft);
-      const evidenceWarningCodes = await sanitizeGeneratedEvidenceSources(validated, snapshot.materials);
+      const evidenceWarningCodes = [...new Set([
+        ...generatedEvidence.warningCodes,
+        ...await sanitizeGeneratedEvidenceSources(validated, snapshot.materials),
+      ])];
       await assertGeneratedDocument(validated, snapshot.materials);
 
       await this.updateProcessingStage(projectId, runId, "building_document", 62);
       await this.updateProcessingStage(projectId, runId, "matching_dekel", 72);
       const review = await this.buildDekelReview(validated);
+      await this.refineDekelReviewWithCodex(review, projectId);
       const dekelNeedsReview = reviewHasAutomaticBlockers(review);
-      const finalDocument = dekelNeedsReview ? validated : applyDekelReviewToDocument(validated, review);
-      if (!dekelNeedsReview) await assertGeneratedDocument(finalDocument, snapshot.materials, new Set([review.workbookFileName]));
+      const finalDocument = dekelNeedsReview
+        ? applyVerifiedDekelSelectionsToDocument(validated, review)
+        : applyDekelReviewToDocument(validated, review);
+      if (dekelNeedsReview) review.sourceBoqFingerprint = fingerprintBoq(finalDocument.boqRows as Array<Record<string, unknown>>);
+      await assertGeneratedDocument(finalDocument, snapshot.materials, new Set([review.workbookFileName]));
 
       await this.updateProcessingStage(projectId, runId, "validating", 92);
       await this.dataMutex.run("__data__", async () => {
@@ -225,6 +229,67 @@ export class LocalWorkspaceService {
         errorMessage: error instanceof Error ? error.message : String(error),
       });
     }
+  }
+
+  private async generateEvidenceNotesInBatches(
+    snapshot: LocalProject,
+    documentDraft: Record<string, unknown>,
+  ): Promise<{ notes: unknown[]; threadId: string; warningCodes: string[] }> {
+    const rows = Array.isArray(documentDraft.boqRows) ? documentDraft.boqRows as Array<Record<string, unknown>> : [];
+    const batches = chunkArray(rows, 10);
+    if (!batches.length) return { notes: [], threadId: await this.codex.startThread(this.store.projectPath(snapshot.id)), warningCodes: [] };
+    const results: Array<{ index: number; notes: unknown[]; threadId: string }> = [];
+    let nextBatch = 0;
+    const worker = async () => {
+      while (nextBatch < batches.length) {
+        const index = nextBatch;
+        nextBatch += 1;
+        const batch = batches[index];
+        const evidenceInstruction = `СФОРМИРУЙ ТОЛЬКО evidenceNotes для переданной партии boqRows (${index + 1} из ${batches.length}). Весь текст сносок пиши на иврите. Верни ровно одно proposedChanges с path=evidenceNotes. Для каждой и только каждой строки этой партии создай одну проверяемую сноску с тем же anchorId и только полями id, anchorType=boqRow, kind, title, explanation, reason, confidence, quantityBasis и при наличии source. quantityBasis: documented, calculated или inferred; для inferred обязательно kind=inference. Реальный источник указывай только если он есть в прочитанных материалах; ничего не выдумывай. Не меняй ни одно другое поле документа.`;
+        const evidenceSnapshot = { ...snapshot, document: synthesisEvidencePromptDocument({ boqRows: batch }) };
+        const evidenceBuilt = await this.buildPrompt(evidenceSnapshot, evidenceInstruction, randomUUID());
+        const threadId = await this.codex.startThread(this.store.projectPath(snapshot.id));
+        const parsedEvidence = parseCodexAnswer(await this.codex.runTurn(threadId, this.store.projectPath(snapshot.id), evidenceBuilt.prompt, []));
+        const evidenceChange = parsedEvidence.proposedChanges.find((change) => change.path === "evidenceNotes");
+        if (!evidenceChange) throw new LocalWorkspaceError(502, "incomplete_generated_evidence", `Codex не вернул evidenceNotes для партии כתב כמויות ${index + 1}`);
+        const parsedNotes = JSON.parse(evidenceChange.valueJson);
+        if (!Array.isArray(parsedNotes)) throw new LocalWorkspaceError(502, "incomplete_generated_evidence", `Codex вернул неверный формат evidenceNotes для партии ${index + 1}`);
+        const allowedAnchorIds = new Set(batch.map((row) => String(row.id ?? "")));
+        const notes = parsedNotes.filter((note) => note && typeof note === "object" && allowedAnchorIds.has(String((note as Record<string, unknown>).anchorId ?? "")));
+        results.push({ index, notes, threadId });
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(3, batches.length) }, () => worker()));
+    results.sort((left, right) => left.index - right.index);
+    const generated = results.flatMap((result) => result.notes);
+    const byAnchorId = new Map<string, unknown>();
+    for (const note of generated) {
+      const anchorId = String((note as Record<string, unknown>).anchorId ?? "");
+      if (anchorId && !byAnchorId.has(anchorId)) byAnchorId.set(anchorId, note);
+    }
+    let usedFallback = false;
+    const notes = rows.map((row, index) => {
+      const anchorId = String(row.id ?? "");
+      const existing = byAnchorId.get(anchorId);
+      if (existing) return existing;
+      usedFallback = true;
+      return {
+        id: `evidence-professional-assumption-${anchorId || index + 1}`,
+        anchorType: "boqRow",
+        anchorId,
+        kind: "inference",
+        quantityBasis: "inferred",
+        title: "הנחה מקצועית להשלמת כתב הכמויות",
+        explanation: `העבודה „${String(row.description ?? "").slice(0, 240)}” נשמרה כדי לא להשמיט תכולה מקצועית אפשרית מהפרויקט.`,
+        reason: "לא נמצאה אסמכתה ישירה ומאומתת לשורה זו בתוצאת הניתוח; היא מסומנת במפורש כהנחה לבדיקה ולתיקון בצ׳אט הפרויקט.",
+        confidence: "low",
+      };
+    });
+    return {
+      notes,
+      threadId: results.at(-1)?.threadId ?? await this.codex.startThread(this.store.projectPath(snapshot.id)),
+      warningCodes: usedFallback ? ["evidence_assumption_fallback"] : [],
+    };
   }
 
   private async failReservedProcessing(projectId: string, runId: string, error: unknown): Promise<void> {
@@ -685,11 +750,18 @@ export class LocalWorkspaceService {
       return structuredClone(project);
     });
     const review = await this.buildDekelReview(projectSnapshot.document);
+    await this.refineDekelReviewWithCodex(review, projectId);
     return await this.dataMutex.run("__data__", async () => {
       const project = await this.store.get(projectId);
       assertProcessingIdle(project);
       if (fingerprintDocument(project.document) !== fingerprintDocument(projectSnapshot.document)) {
         throw new LocalWorkspaceError(409, "document_changed", "כתב כמויות изменился во время подбора DEKEL. Запустите подбор повторно");
+      }
+      const pricedRows = review.lines.filter((line) => line.included && line.selectedCode).length;
+      if (pricedRows > 0) {
+        project.versions.push({ id: randomUUID(), label: "לפני עדכון סעיפי DEKEL מאומתים", createdAt: new Date().toISOString(), document: structuredClone(project.document) });
+        project.document = applyVerifiedDekelSelectionsToDocument(project.document, review);
+        review.sourceBoqFingerprint = fingerprintBoq(project.document.boqRows as Array<Record<string, unknown>>);
       }
       project.dekelReview = review;
       invalidateProcessing(project, "dekel_review_changed");
@@ -717,8 +789,16 @@ export class LocalWorkspaceService {
       const candidates = buildLocalDekelCandidates(description, originalCode, originalUnit, items);
       const quantityIsDocumented = Number.isFinite(Number(row.quantity)) && Number(row.quantity) > 0;
       const selected = candidates.find((candidate) => candidate.unitCompatibility !== "mismatch") ?? candidates[0];
-      const automaticallyVerified = Boolean(selected && selected.unitCompatibility !== "mismatch" && selected.score >= 0.45);
-      return {
+      const professionalDefault = findProfessionalDefaultDekelCandidate(description, candidates);
+      const automaticallyVerified = Boolean(
+        originalCode
+        && selected
+        && selected.code === originalCode
+        && selected.unitCompatibility !== "mismatch",
+      );
+      const includedByDefault = automaticallyVerified || Boolean(professionalDefault);
+      const selectedByDefault = automaticallyVerified ? selected : professionalDefault;
+      const line: LocalDekelReviewLine = {
         id: randomUUID(),
         sourceBoqRowId: String(row.id ?? `boq-${randomUUID()}`),
         workDescription: description,
@@ -728,12 +808,17 @@ export class LocalWorkspaceService {
         quantity: quantityIsDocumented ? Number(row.quantity) : 1,
         quantitySource: quantityIsDocumented ? "document" as const : "estimated" as const,
         quantitySourceReason: quantityIsDocumented ? "הכמות נלקחה מהשורה הנוכחית בכתב הכמויות" : "בשורה לא הייתה כמות חיובית; הונחה כמות מקצועית זמנית 1 עד לתיקון",
-        included: automaticallyVerified,
+        included: includedByDefault,
         ownerExcluded: false,
         ownerConfirmed: false,
-        selectedCode: automaticallyVerified ? selected!.code : null,
+        selectionMethod: professionalDefault ? "codex_constrained" : automaticallyVerified ? "lexical_exact" : undefined,
+        semanticConfidence: professionalDefault ? "medium" : undefined,
+        selectionReason: professionalDefault ? professionalDefault.reason : automaticallyVerified ? "קוד DEKEL הקיים בשורה אומת מול המחירון הגלובלי" : undefined,
+        selectedCode: selectedByDefault?.code ?? null,
         candidates,
       };
+      if (selectedByDefault) applyDekelBillingQuantityRule(line, selectedByDefault);
+      return line;
     });
     const review: LocalDekelReview = {
       id: randomUUID(), status: "ready", analyzedAt: new Date().toISOString(), workbookFileName,
@@ -742,6 +827,71 @@ export class LocalWorkspaceService {
     };
     refreshDekelReview(review);
     return review;
+  }
+
+  private async refineDekelReviewWithCodex(review: LocalDekelReview, projectId: string): Promise<void> {
+    for (let round = 0; round < 2; round += 1) {
+      const unresolved = review.lines.filter((line) => !line.included && line.candidates.length > 0);
+      if (!unresolved.length) break;
+      const batches = chunkArray(unresolved, 8);
+      const selections: unknown[] = [];
+      let nextBatch = 0;
+      const worker = async () => {
+        while (nextBatch < batches.length) {
+          const index = nextBatch;
+          nextBatch += 1;
+          const payload = batches[index].map((line) => ({
+            sourceBoqRowId: line.sourceBoqRowId,
+            workDescription: line.workDescription,
+            unit: line.originalUnit,
+            quantity: line.quantity,
+            candidates: line.candidates.map((candidate) => ({
+              code: candidate.code,
+              description: candidate.description,
+              unit: candidate.unit,
+              unitPriceBeforeVat: candidate.unitPrice,
+              chapter: candidate.sourceChapterCode,
+              sourceRow: candidate.sourceRow,
+            })),
+          }));
+          const prompt = `DEKEL_CANDIDATE_SELECTION\nТы выполняешь ограниченный профессиональный выбор только из переданных кандидатов постоянного מחירון DEKEL. Для каждой работы выбери лучший סעיף, учитывая полный состав цены, материал, способ выполнения и единицу измерения. Не дроби комплексную расценку на поставку и монтаж, когда выбранный סעיף уже включает их. Нельзя придумывать код, цену или описание.\n\nУровни уверенности: high — точное соответствие описанию; medium — профессионально приемлемая консервативная типовая расценка для предварительного бюджета при неполной или явно אומדני/טיפוסי спецификации; low — ненадёжное совпадение, которое нельзя применять. Если точная спецификация не документирована владельцем, предпочти наиболее близкую типовую строку как medium, а не оставляй существенную работу без цены. Если ни один кандидат не представляет работу даже как разумное профессиональное допущение, selectedCode должен быть null.\n\nВерни JSON стандартного ответа Codex. В proposedChanges должна быть ровно одна запись path=dekelSelections, а valueJson — JSON-массив объектов {sourceBoqRowId, selectedCode, confidence, reason}. Обязательно верни отдельное решение для КАЖДОЙ переданной работы, включая null. Это проход ${round + 1} из 2.\n\nПартия ${index + 1} из ${batches.length}:\n${JSON.stringify(payload)}`;
+          const threadId = await this.codex.startThread(this.store.projectPath(projectId));
+          const parsed = parseCodexAnswer(await this.codex.runTurn(threadId, this.store.projectPath(projectId), prompt, []));
+          const change = parsed.proposedChanges.find((item) => item?.path === "dekelSelections" && typeof item.valueJson === "string");
+          if (!change) continue;
+          try {
+            const parsedSelections = JSON.parse(change.valueJson);
+            if (Array.isArray(parsedSelections)) selections.push(...parsedSelections);
+          } catch {
+            // An invalid semantic batch must leave its rows unresolved, never invent pricing.
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(3, batches.length) }, () => worker()));
+      const linesBySourceId = new Map(unresolved.map((line) => [line.sourceBoqRowId, line]));
+      let appliedInRound = 0;
+      for (const selection of selections) {
+        if (!selection || typeof selection !== "object") continue;
+        const value = selection as Record<string, unknown>;
+        const line = linesBySourceId.get(String(value.sourceBoqRowId ?? ""));
+        const selectedCode = typeof value.selectedCode === "string" ? value.selectedCode.trim() : "";
+        const confidence = value.confidence === "high" || value.confidence === "medium" || value.confidence === "low" ? value.confidence : "low";
+        if (!line || !selectedCode) continue;
+        const candidate = line.candidates.find((item) => item.code === selectedCode);
+        if (!candidate || !["exact", "compatible"].includes(candidate.unitCompatibility)) continue;
+        line.selectionMethod = "codex_constrained";
+        line.semanticConfidence = confidence;
+        line.selectionReason = String(value.reason ?? "").slice(0, 2_000);
+        if (confidence === "high" || confidence === "medium") {
+          line.included = true;
+          line.selectedCode = candidate.code;
+          applyDekelBillingQuantityRule(line, candidate);
+          appliedInRound += 1;
+        }
+      }
+      refreshDekelReview(review);
+      if (appliedInRound === 0) break;
+    }
   }
 
   async updateDekelLine(projectId: string, lineId: string, input: { selectedCode?: string | null; quantity?: number; included?: boolean }): Promise<{ project: PublicLocalProject; review: LocalDekelReview }> {
@@ -973,19 +1123,104 @@ function buildLocalDekelCandidates(description: string, originalCode: string, or
   const searchPool = exactChapter
     ? items.filter((item) => item.metadataJson.dekel_chapter_code?.trim() === exactChapter)
     : items;
-  const matches = buildDekelCandidateMatchesForCase({ description }, searchPool, 8);
+  const searchQueries = buildDekelSearchQueries(description);
+  const matchesByCode = new Map<string, ReturnType<typeof buildDekelCandidateMatchesForCase>[number]>();
+  for (const query of searchQueries) {
+    for (const match of buildDekelCandidateMatchesForCase({ description: query }, searchPool, 10)) {
+      const existing = matchesByCode.get(match.code);
+      if (!existing || match.score > existing.score) matchesByCode.set(match.code, match);
+    }
+  }
+  const matches = [...matchesByCode.values()].sort((left, right) => right.score - left.score);
   const ordered: Array<{ item?: PricebookItem; match?: ReturnType<typeof buildDekelCandidateMatchesForCase>[number] }> = [];
   if (exact) ordered.push({ item: exact });
+  const domainFallbacks = buildDomainFallbackDekelItems(description, searchPool);
+  const domainCodes = new Set(domainFallbacks.map((item) => item.code));
+  for (const item of domainFallbacks) {
+    if (!ordered.some((entry) => (entry.item?.code ?? entry.match?.code) === item.code)) ordered.push({ item });
+  }
   for (const match of matches) if (!ordered.some((entry) => (entry.item?.code ?? entry.match?.code) === match.code)) ordered.push({ match });
   return ordered.map(({ item, match }) => {
     const source = item ?? items.find((candidate) => candidate.code === match!.code)!;
-    return buildCandidateFromItem(source, item ? 1 : match!.score, item ? "Совпадение по коду существующей строки" : match!.matchReason, originalUnit, originalCode);
-  }).sort((left, right) => {
+    const isExactOriginal = Boolean(item && item.code === originalCode);
+    return buildCandidateFromItem(source, isExactOriginal ? 1 : match?.score ?? 0.25, isExactOriginal ? "Совпадение по коду существующей строки" : match?.matchReason ?? "Профессиональный отраслевой резервный поиск внутри постоянного DEKEL", originalUnit, originalCode);
+  }).filter((candidate) => isHardSpecificationCompatible(description, candidate)).sort((left, right) => {
     const exactCodePriority = Number(right.code === originalCode) - Number(left.code === originalCode);
     return exactCodePriority
+      || Number(domainCodes.has(right.code)) - Number(domainCodes.has(left.code))
       || unitCompatibilityRank(left.unitCompatibility) - unitCompatibilityRank(right.unitCompatibility)
       || right.score - left.score;
-  }).slice(0, 3);
+  }).slice(0, 14);
+}
+
+function buildDekelSearchQueries(description: string): string[] {
+  const queries = [description.trim()];
+  const primaryClause = description.split(/\s+(?:לרבות|כולל(?:ת|ים|ות)?)\s+/u, 1)[0]?.trim();
+  if (primaryClause && primaryClause.length >= 12 && primaryClause !== description.trim()) queries.push(primaryClause);
+  const additions: Array<[RegExp, string[]]> = [
+    [/ניקיון|ניקוי/u, ["ניקיון יסודי לאחר בנייה"]],
+    [/פסולת|הטמנה/u, ["פינוי פסולת"]],
+    [/מדה|יישור.*רצפ|שכבת יישור/u, ["מדה מתפלסת", "הכנת ריצוף קיים"]],
+    [/ריצוף.*גומי|גומי.*ריצוף/u, ["ריצוף ביריעות גומי"]],
+    [/פנל.*ריצוף|שיפולי/u, ["פנל לריצוף"]],
+    [/פתח.*מבודד|מילוי קשיח מבודד/u, ["סיכוך קירות חוץ בפנל מבודד"]],
+    [/חלונ/u, ["שיפוץ חלונות"]],
+    [/דלת.*דו[־ -]?כנפ|כניסות מתכת/u, ["דלת פלדה דו כנפית"]],
+    [/קורוז|חלודה|קונסטרוקציית הפלדה/u, ["חידוש צבע על משטחי פלדה וסככות קיימים"]],
+    [/גג|קירוי/u, ["איטום על גבי גג קיים"]],
+    [/נקודת תאורה|גוף LED|גוף תאורת|גוף תאורה/u, ["גוף תאורה תעשייתי לתקרה גבוהה", "נקודת מאור"]],
+    [/תאורת חירום|שלט יציאה/u, ["שלט הכוונה חירום יציאה", "גוף תאורת חירום"]],
+    [/נקודת כוח|שקע מוגן|שקע כוח/u, ["נקודת כח 3X2.5", "בית תקע מוגן מים 16 אמפר"]],
+    [/40[,.]?000\s*BTU|40000\s*BTU/iu, ["מזגן מיני מרכזי לתפוקה קרור 41000BTU", "מזגן מפוצל 40000BTU"]],
+    [/60[,.]?000\s*BTU|60000\s*BTU/iu, ["יחידת מיזוג אוויר 60000BTU"]],
+    [/צינורות נחושת|צנרת גז וחשמל למזגן/u, ["צנרת גז וחשמל למזגן עם מעטה"]],
+    [/ניקוז מי עיבוי|צינור ניקוז.*32/u, ["נקודה לניקוז מזגן"]],
+    [/נקודת הזנה.*מיזוג|נקודת.*מזגן/u, ["נקודה למזגן בכבל נחושת"]],
+    [/תעלות אוויר.*פח מגולוון|תעלות אויר.*פח מגולוון/u, ["תעלות עגולות ספירקל"]],
+    [/במת הרמה/u, ["במת הרמה חשמלית מספריים מחיר ההשכרה לשבוע"]],
+    [/אוורור|מפוח/u, ["מפוח אוורור צירי"]],
+    [/מטף|כיבוי אש/u, ["מטף כיבוי באבקה"]],
+  ];
+  for (const [pattern, values] of additions) if (pattern.test(description)) queries.push(...values);
+  return [...new Set(queries.filter(Boolean))];
+}
+
+function buildDomainFallbackDekelItems(description: string, items: PricebookItem[]): PricebookItem[] {
+  const rules: Array<[RegExp, (item: PricebookItem) => boolean]> = [
+    [/ניקיון|ניקוי/u, (item) => /^95\.69\.03\./u.test(item.code) && item.description.startsWith("ניקיון יסודי")],
+    [/פסולת|הטמנה/u, (item) => item.code === "95.51.10.0001"],
+    [/מדה|יישור.*רצפ|שכבת יישור/u, (item) => /^95\.10\.(?:20\.000[23]|60\.0033)$/u.test(item.code)],
+    [/ריצוף.*גומי|גומי.*ריצוף/u, (item) => ["95.10.20.0033", "95.10.20.0034", "95.10.80.0022", "95.10.80.0023", "95.42.45.0001", "95.42.45.0002"].includes(item.code)],
+    [/פנל.*ריצוף|שיפולי/u, (item) => item.code === "95.10.45.0025"],
+    [/פתח.*מבודד|מילוי קשיח מבודד/u, (item) => /^95\.19\.30\./u.test(item.code) && item.description.includes("סיכוך קירות חוץ בפנל מבודד")],
+    [/חלונ/u, (item) => /^95\.06\.60\./u.test(item.code) && item.description.includes("שיפוץ חלונות")],
+    [/דלת.*דו[־ -]?כנפ|כניסות מתכת/u, (item) => /^95\.06\./u.test(item.code) && item.description.includes("דלת פלדה דו כנפית")],
+    [/פירוק.*(?:רפפות|רשתות).*פתחים|פירוק.*(?:רפפות|רשתות).*מפתחים/u, (item) => ["95.06.60.0103", "95.06.60.0104", "95.12.60.0066"].includes(item.code)],
+    [/קורוז|חלודה|קונסטרוקציית הפלדה/u, (item) => ["95.11.60.0080", "95.11.60.0094"].includes(item.code)],
+    [/גג|קירוי/u, (item) => ["95.05.60.0015", "95.05.60.0035"].includes(item.code)],
+    [/נקודת תאורה|גוף LED|גוף תאורת|גוף תאורה/u, (item) => /^95\.08\.42\.(?:019[5-9]|020[0-3])$/u.test(item.code) || item.code === "95.08.50.0140"],
+    [/תאורת חירום|שלט יציאה/u, (item) => ["95.08.42.0060", "95.08.42.0061", "95.08.42.0065", "95.08.42.0066"].includes(item.code)],
+    [/נקודת כוח|שקע מוגן|שקע כוח/u, (item) => ["95.08.50.0122", "95.08.40.0016"].includes(item.code)],
+    [/לוח חשמל ראשי|שיקום.*לוח חשמל/u, (item) => item.code === "95.08.63.0014"],
+    [/40[,.]?000\s*BTU|40000\s*BTU/iu, (item) => ["95.15.25.0089", "95.15.25.0110"].includes(item.code)],
+    [/60[,.]?000\s*BTU|60000\s*BTU/iu, (item) => item.code === "95.15.25.0071"],
+    [/צינורות נחושת|צנרת גז וחשמל למזגן/u, (item) => ["95.15.25.0124", "95.15.25.0125"].includes(item.code)],
+    [/ניקוז מי עיבוי|צינור ניקוז.*32/u, (item) => item.code === "95.07.10.0235"],
+    [/נקודת הזנה.*מיזוג|נקודת.*מזגן/u, (item) => ["95.08.50.0109", "95.08.50.0110", "95.08.50.0111", "95.08.50.0112"].includes(item.code)],
+    [/תעלות אוויר.*פח מגולוון|תעלות אויר.*פח מגולוון/u, (item) => ["95.15.35.0019", "95.15.35.0020", "95.15.35.0021"].includes(item.code)],
+    [/במת הרמה/u, (item) => ["95.60.45.0023", "95.60.45.0024"].includes(item.code)],
+    [/אוורור|מפוח/u, (item) => ["95.15.15.0077", "95.15.15.0078"].includes(item.code)],
+    [/מטף|כיבוי אש/u, (item) => ["95.07.20.0007", "95.07.20.0009", "95.69.49.0046"].includes(item.code)],
+  ];
+  const selected: PricebookItem[] = [];
+  for (const [pattern, predicate] of rules) {
+    if (!pattern.test(description)) continue;
+    for (const item of items) {
+      if (predicate(item) && !selected.some((candidate) => candidate.code === item.code)) selected.push(item);
+      if (selected.length >= 18) return selected;
+    }
+  }
+  return selected;
 }
 
 function requireReadyDekelReview(project: LocalProject): LocalDekelReview {
@@ -1012,8 +1247,41 @@ function buildCandidateFromItem(item: PricebookItem, score: number, matchReason:
     sourceActivityNumber: item.metadataJson.dekel_activity_number?.trim() || null,
     sourceChapterCode: item.metadataJson.dekel_chapter_code?.trim() || null,
     priceIncludesVat: false,
-    unitCompatibility: compareDekelUnits(originalUnit, item.unit, explicitCode === item.code),
+    unitCompatibility: item.code === "95.07.10.0235" && normalizeFinancialUnit(originalUnit) === "m"
+      ? "compatible"
+      : compareDekelUnits(originalUnit, item.unit, explicitCode === item.code),
   };
+}
+
+function isHardSpecificationCompatible(workDescription: string, candidate: LocalDekelCandidate): boolean {
+  if (/חלונ/u.test(workDescription) && !/עץ/u.test(workDescription) && /חל(?:ון|ונות) עץ/u.test(candidate.description)) return false;
+  if (/שיקום או החלפת לוח חשמל/u.test(workDescription) && candidate.code === "95.08.63.0014") return false;
+  if (/40[,.]?000\s*BTU|40000\s*BTU/iu.test(workDescription)) {
+    const btu = [...candidate.description.matchAll(/([0-9][0-9,. ]{2,})\s*BTU/giu)]
+      .map((match) => Number(match[1].replace(/[,. ]/gu, "")))
+      .find((value) => Number.isFinite(value));
+    const tons = Number(candidate.description.match(/([0-9]+(?:\.[0-9]+)?)\s*טון קירור/u)?.[1] ?? 0);
+    const capacity = btu || (tons > 0 ? tons * 12_000 : 0);
+    if (capacity > 0 && (capacity < 34_000 || capacity > 46_000)) return false;
+  }
+  return true;
+}
+
+function findProfessionalDefaultDekelCandidate(workDescription: string, candidates: LocalDekelCandidate[]): (LocalDekelCandidate & { reason: string }) | undefined {
+  const rules: Array<[RegExp, string, string]> = [
+    [/ריצוף.*גומי.*8\s*מ״?מ|גומי.*ספורטיבי.*8\s*מ״?מ/u, "95.42.45.0001", "נבחר משטח גומי מקצועי בעובי 8–10 מ״מ כחלופה השמרנית הקרובה ביותר ב־DEKEL לעובי האומדני 8 מ״מ; הייעוד הסופי ומפרט הפנים ניתנים לתיקון בצ׳אט"],
+    [/גוף תאורת LED תעשייתי.*100W|100W.*גוף תאורת LED/u, "95.08.42.0198", "נבחר גוף תעשייתי לתקרה גבוהה IP65 בעוצמת 16,250 לומן כחלופה טיפוסית למפרט האומדני 100W; חישוב תאורה סופי יקבע את ההספק"],
+    [/40[,.]?000\s*BTU|40000\s*BTU/iu, "95.15.25.0089", "נבחר מזגן מיני־מרכזי 41,000 BTU/HR — ההתאמה המספרית הקרובה ביותר ל־40,000 BTU המבוקשים"],
+    [/צינורות נחושת|צנרת גז וחשמל למזגן/u, "95.15.25.0125", "נבחרה צנרת גז וחשמל מבודדת בקטרים המתאימים בקירוב למערכת 40,000 BTU; הקטרים יאומתו מול היצרן"],
+    [/ניקוז מי עיבוי|צינור ניקוז.*32/u, "95.07.10.0235", "האורך הומר לנקודות ניקוז DEKEL של עד 4 מ׳ לנקודה, ללא עצירת העבודה לצורך שאלה"],
+    [/תעלות אוויר.*פח מגולוון|תעלות אויר.*פח מגולוון/u, "95.15.35.0020", "נבחרה תעלת ספירקל טיפוסית בקוטר 16 אינץ׳ כאומדן מקצועי התואם בקירוב לספיקת המפוחים; הקוטר הסופי ייקבע בחישוב אוויר"],
+  ];
+  for (const [pattern, code, reason] of rules) {
+    if (!pattern.test(workDescription)) continue;
+    const candidate = candidates.find((item) => item.code === code && item.unitCompatibility !== "mismatch");
+    if (candidate) return Object.assign(candidate, { reason });
+  }
+  return undefined;
 }
 
 function compareDekelUnits(originalUnit: string, dekelUnit: string, codeConfirmed: boolean): LocalDekelCandidate["unitCompatibility"] {
@@ -1030,8 +1298,8 @@ function normalizeFinancialUnit(value: string): string | null {
   if (!normalized || normalized === "unknown" || normalized === "—") return null;
   if (["m2", "מר", "מטררבוע", "מטריםרבועים"].includes(normalized)) return "m2";
   if (["m3", "מק", "מטרמעוקב", "מטריםמעוקבים"].includes(normalized)) return "m3";
-  if (["m", "מטר", "מטרים", "מל"].includes(normalized)) return "m";
-  if (["unit", "יח", "יחידה", "יחידות"].includes(normalized)) return "unit";
+  if (["m", "מ", "מטר", "מטרים", "מל"].includes(normalized)) return "m";
+  if (["unit", "יח", "יחידה", "יחידות", "נק", "נקודה", "נקודות"].includes(normalized)) return "unit";
   if (["complete", "קומ", "קומפ", "קומפלט"].includes(normalized)) return "complete";
   if (["day", "יום", "ימים"].includes(normalized)) return "day";
   if (["hour", "שעה", "שעות"].includes(normalized)) return "hour";
@@ -1042,6 +1310,21 @@ function normalizeFinancialUnit(value: string): string | null {
 
 function unitCompatibilityRank(value: LocalDekelCandidate["unitCompatibility"]): number {
   return ({ exact: 0, compatible: 1, corrected_by_code: 2, unknown: 3, mismatch: 4 })[value];
+}
+
+function applyDekelBillingQuantityRule(line: LocalDekelReviewLine, candidate: LocalDekelCandidate): void {
+  if (candidate.code === "95.51.10.0001" && line.quantity < 10) {
+    line.quantity = 10;
+    line.quantitySource = "material";
+    line.quantitySourceReason = "הכמות לחיוב הותאמה למינימום 10 מ״ק שנקבע במפורש בתיאור סעיף DEKEL";
+    return;
+  }
+  if (candidate.code === "95.07.10.0235" && normalizeFinancialUnit(line.originalUnit) === "m") {
+    const documentedLength = line.quantity;
+    line.quantity = Math.max(1, Math.ceil(documentedLength / 4));
+    line.quantitySource = "material";
+    line.quantitySourceReason = `אורך מתועד של ${documentedLength} מ׳ הומר ל־${line.quantity} נקודות ניקוז, עד 4 מ׳ לנקודה לפי תיאור סעיף DEKEL`;
+  }
 }
 
 function refreshDekelReview(review: LocalDekelReview): void {
@@ -1055,7 +1338,8 @@ function refreshDekelReview(review: LocalDekelReview): void {
     const candidate = line.candidates.find((item) => item.code === line.selectedCode);
     if (!candidate) warnings.push(`לא נמצא סעיף DEKEL מאומת לעבודה בשורה ${index + 1}: ${line.workDescription.slice(0, 140)}`);
     else {
-      if (candidate.score < 0.45) warnings.push(`רמת הביטחון בהתאמת DEKEL לשורה ${index + 1} נמוכה; יש לבדוק את הקוד: ${candidate.code}`);
+      if (line.selectionMethod === "codex_constrained" && line.semanticConfidence === "medium") warnings.push(`סעיף DEKEL בשורה ${index + 1} נבחר כאומדן מקצועי שמרני עקב מפרט חלקי: ${candidate.code}. ההנחה מתועדת וניתנת לתיקון בצ׳אט.`);
+      else if (candidate.score < 0.45 && !(line.selectionMethod === "codex_constrained" && line.semanticConfidence === "high")) warnings.push(`רמת הביטחון בהתאמת DEKEL לשורה ${index + 1} נמוכה; יש לבדוק את הקוד: ${candidate.code}`);
       if (candidate.unitCompatibility === "mismatch") warnings.push(`יחידת המידה בשורה ${index + 1} אינה תואמת: במסמך „${line.originalUnit || "לא צוינה"}”, וב־DEKEL „${candidate.unit}”. החלת השורה נחסמה.`);
       if (candidate.unitCompatibility === "corrected_by_code") warnings.push(`יחידת המידה בשורה ${index + 1} תתוקן לפי קוד DEKEL המאומת ${candidate.code}: „${line.originalUnit || "לא צוינה"}” ← „${candidate.unit}”.`);
       if (!candidate.sourceRow || !candidate.sourceChapterCode) warnings.push(`לשורה ${index + 1} חסרה הפניה מלאה לשורת המקור או לפרק ב־DEKEL.`);
@@ -1071,9 +1355,47 @@ function reviewHasAutomaticBlockers(review: LocalDekelReview): boolean {
     if (!line.included) return !line.ownerExcluded;
     const candidate = line.candidates.find((item) => item.code === line.selectedCode);
     if (!candidate || candidate.unitCompatibility === "mismatch") return true;
-    if (candidate.score < 0.45 && !line.ownerConfirmed) return true;
+    if (candidate.score < 0.45 && !line.ownerConfirmed && !(line.selectionMethod === "codex_constrained" && ["high", "medium"].includes(line.semanticConfidence ?? ""))) return true;
     return line.quantitySource === "estimated" && !line.ownerConfirmed;
   });
+}
+
+function applyVerifiedDekelSelectionsToDocument(document: Record<string, unknown>, review: LocalDekelReview): Record<string, unknown> {
+  const output = structuredClone(document);
+  const rows = output.boqRows as Array<Record<string, unknown>>;
+  const notes = output.evidenceNotes as Array<Record<string, unknown>>;
+  for (const line of review.lines) {
+    if (!line.included || !line.selectedCode) continue;
+    const candidate = line.candidates.find((item) => item.code === line.selectedCode);
+    if (!candidate || candidate.unitCompatibility === "mismatch") continue;
+    const row = rows.find((item) => String(item.id ?? "") === line.sourceBoqRowId);
+    if (!row) continue;
+    Object.assign(row, {
+      code: candidate.code,
+      description: candidate.description,
+      unit: candidate.unit,
+      quantity: line.quantity,
+      unitPrice: candidate.unitPrice,
+      category: line.category,
+    });
+    const noteId = `evidence-dekel-${line.id}`;
+    const note = {
+      id: noteId,
+      anchorType: "boqRow",
+      anchorId: line.sourceBoqRowId,
+      kind: "source",
+      quantityBasis: line.quantitySource === "estimated" ? "inferred" : "documented",
+      title: "מחיר ושורה ממחירון דקל",
+      explanation: `השורה הותאמה לסעיף ${candidate.code} במחירון דקל. מחיר היחידה נשמר לפני מע״מ.`,
+      reason: line.selectionReason || `נבחרה התאמה מקצועית מתוך מועמדים קיימים בלבד; ציון האחזור ${Math.round(candidate.score * 100)}%.`,
+      confidence: line.semanticConfidence || evidenceConfidence(candidate.score),
+      source: { fileName: review.workbookFileName, location: `קוד ${candidate.code}${candidate.sourceRow ? ` · שורה ${candidate.sourceRow}` : ""}`, excerpt: candidate.description },
+    };
+    const noteIndex = notes.findIndex((item) => item.id === noteId);
+    if (noteIndex >= 0) notes[noteIndex] = note;
+    else notes.push(note);
+  }
+  return output;
 }
 
 function applyDekelReviewToDocument(document: Record<string, unknown>, review: LocalDekelReview): Record<string, unknown> {
@@ -1313,6 +1635,12 @@ function synthesisEvidencePromptDocument(document: Record<string, unknown>): Rec
     boqRows: structuredClone(document.boqRows ?? []),
     evidenceNotes: [],
   };
+}
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size));
+  return chunks;
 }
 
 function assertProcessingIdle(project: LocalProject): void {

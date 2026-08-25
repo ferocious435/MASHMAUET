@@ -77,6 +77,9 @@ export type LocalDekelReviewLine = {
   included: boolean;
   ownerExcluded?: boolean;
   ownerConfirmed?: boolean;
+  selectionMethod?: "lexical_exact" | "codex_constrained";
+  semanticConfidence?: "high" | "medium" | "low";
+  selectionReason?: string;
   selectedCode: string | null;
   candidates: LocalDekelCandidate[];
 };

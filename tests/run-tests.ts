@@ -771,6 +771,10 @@ function testDekelRoutingHints(): void {
 
   assert.equal(hints.chapterHints.includes("40"), true);
   assert.equal(hints.mode, "chapter_preferred");
+  assert.equal(inferDekelRoutingHints("נקיון יסודי לאחר שיפוץ").chapterHints.includes("69"), true);
+  assert.equal(inferDekelRoutingHints("הכנת קירות וצביעה פנימית").chapterHints.includes("11"), true);
+  assert.equal(inferDekelRoutingHints("ניקוז מי עיבוי למזגן").chapterHints.includes("07"), true);
+  assert.equal(inferDekelRoutingHints("גופי תאורת LED כללית").chapterHints.includes("08"), true);
 }
 
 async function testDekelMatchingService(): Promise<void> {

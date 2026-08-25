@@ -49,6 +49,7 @@ export function groupEstimate(rows) {
   const groups = new Map();
 
   for (const row of calculated.rows) {
+    if (row.amount <= 0) continue;
     const category = String(row.category || "עבודות כלליות").trim();
     const current = groups.get(category) || { category, net: 0, sourceRows: [] };
     current.net = roundMoney(current.net + row.amount);
@@ -102,6 +103,15 @@ function allocateVatByLargestRemainder(groups, totalVat) {
 export function calculateProjectSummary(rows) {
   const boq = calculateBoq(rows);
   const groups = groupEstimate(rows);
+  const pricedRows = boq.rows.filter((row) => String(row.code || "").trim() && row.quantity > 0 && row.unitPrice > 0);
+  const unpricedRows = boq.rows.filter((row) => !pricedRows.includes(row));
+  const pricing = {
+    status: unpricedRows.length === 0 ? "complete" : pricedRows.length === 0 ? "unpriced" : "partial",
+    pricedRowCount: pricedRows.length,
+    unpricedRowCount: unpricedRows.length,
+    pricedRows,
+    unpricedRows,
+  };
   const fees = FEE_ROWS.map((fee) => ({
     ...fee,
     amount: moneyAtRate(boq.totalWithVat, fee.rate),
@@ -111,7 +121,7 @@ export function calculateProjectSummary(rows) {
   const audit = buildFinancialAudit({ boq, groups, fees, feesTotal, grandTotal });
   if (!audit.valid) throw new Error(`Financial audit failed: ${audit.failedChecks.join(", ")}`);
 
-  return { boq, groups, fees, feesTotal, grandTotal, audit };
+  return { boq, groups, fees, feesTotal, grandTotal, pricing, audit };
 }
 
 function buildFinancialAudit({ boq, groups, fees, feesTotal, grandTotal }) {

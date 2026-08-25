@@ -145,6 +145,24 @@ test("כתב כמויות печатается как читаемый A4 с п�
   assert.match(script, /Intl\.NumberFormat\("en-US"/);
   assert.match(script, /₪ \$\{moneyFormatter\.format/);
   assert.match(styles, /\.boq-table \.boq-description[^}]*white-space:\s*normal/);
+  assert.match(styles, /\.boq-table \.description-input[^}]*field-sizing:\s*content/);
+  assert.match(styles, /\.boq-table \.description-input[^}]*overflow-y:\s*hidden/);
+});
+
+test("לוח הזמנים отображается как графический календарный план, а не обычная таблица", () => {
+  assert.match(script, /function renderScheduleTimeline/);
+  assert.match(script, /class="schedule-timeline"/);
+  assert.match(script, /class="schedule-bar"/);
+  assert.doesNotMatch(script, /<table class="official-table"><thead><tr><th>שלב<\/th><th>משך משוער<\/th><th>הערות<\/th>/);
+  assert.match(styles, /\.schedule-timeline/);
+  assert.match(styles, /\.schedule-bar/);
+});
+
+test("неоценённые работы отделены от денежного כתב כמויות и не маскируются под нулевую цену", () => {
+  assert.match(script, /summary\.pricing\.pricedRows/);
+  assert.match(script, /renderUnpricedWorksNotice/);
+  assert.match(script, /data-unpriced-boq/);
+  assert.match(styles, /\.unpriced-boq-notice/);
 });
 
 test("пагинация כתב כמויות сохраняет каждое полное описание и резервирует место для итогов", () => {
@@ -241,4 +259,12 @@ test("DEKEL доступен как полный проектный процес
   assert.match(styles, /\.dekel-financial-audit/);
   assert.match(html, /מחירון ברירת המחדל הקבוע של המערכת/);
   assert.match(html, /כל מחירון אחר יישאר מחוץ לחישוב גם אם הוא שמור בתיקייה גלובלית או בתיקיית פרויקט/);
+});
+
+test("экран DEKEL отличает неподобранную работу от исключённой владельцем", () => {
+  assert.match(script, /const unresolvedLines = review\.lines\.filter/);
+  assert.match(script, /!line\.included && !line\.ownerExcluded/);
+  assert.match(script, /unresolvedLines\.length > 0/);
+  assert.match(script, /ממתינות להתאמה/);
+  assert.match(script, /line\.semanticConfidence/);
 });

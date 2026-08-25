@@ -1,5 +1,5 @@
-export const BOQ_PAGE_CAPACITY = 62;
-export const BOQ_TOTALS_RESERVE = 10;
+export const BOQ_PAGE_CAPACITY = 50;
+export const BOQ_TOTALS_RESERVE = 9;
 
 export function boqRowWeight(row) {
   return Math.max(2.4, 1.25 + Math.ceil(String(row?.description || "").length / 50));

@@ -380,7 +380,7 @@ function renderDocument() {
   ensureDocumentEvidence(doc);
   const summary = calculateProjectSummary(doc.boqRows);
   const editable = editing ? 'contenteditable="true"' : "";
-  const boqPages = paginateBoqRows(summary.boq.rows);
+  const boqPages = paginateBoqRows(editing ? summary.boq.rows : summary.pricing.pricedRows);
   const evidenceIndex = buildEvidenceIndex(doc);
 
   elements.documentStage.innerHTML = `
@@ -413,6 +413,7 @@ function renderDocument() {
                 <tr class="grand-total"><td colspan="2">סה״כ אומדן הפרויקט</td><td class="money">${formatMoney(summary.grandTotal)}</td></tr>
               </tfoot>
             </table>
+            ${renderUnpricedWorksNotice(summary.pricing)}
             <details class="estimate-source-details">
               <summary>הצגת התאמת ${summary.groups.length} סוגי העבודה לכתב הכמויות</summary>
               ${summary.groups.map((group) => `<section><h3>${escapeHtml(group.category)}</h3><ul>${group.sourceRows.map((row) => `<li>${escapeHtml(row.code)} · ${escapeHtml(row.description)} · ${formatMoney(row.amount)} לפני מע״מ</li>`).join("")}</ul></section>`).join("")}
@@ -424,7 +425,7 @@ function renderDocument() {
         </div>
         <section class="document-section">
           <h2>6. לו״ז עקרוני לפרויקט:</h2>
-          <table class="official-table"><thead><tr><th>שלב</th><th>משך משוער</th><th>הערות</th></tr></thead><tbody>${doc.scheduleRows.map((row, index) => `<tr><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="stage">${escapeHtml(row.stage)}</td><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="duration">${escapeHtml(row.duration)}</td><td ${editable} data-table="scheduleRows" data-index="${index}" data-key="notes">${escapeHtml(row.notes)}</td></tr>`).join("")}</tbody></table>
+          ${renderScheduleTimeline(doc.scheduleRows, editable)}
         </section>
         ${narrativeSection(7, "הערות ללו״ז", doc.scheduleNotes, "scheduleNotes", editable)}
         </div>
@@ -456,6 +457,50 @@ function renderDocument() {
     fitDocumentPreview();
     refreshA4LayoutStatus();
   });
+}
+
+function renderUnpricedWorksNotice(pricing) {
+  if (!pricing.unpricedRowCount) return "";
+  const label = pricing.pricedRowCount
+    ? `האומדן הכספי כולל ${pricing.pricedRowCount} סעיפי DEKEL מתומחרים. ${pricing.unpricedRowCount} עבודות נוספות ממתינות להתאמה ולא נכללו בסכום.`
+    : `טרם נבחרו סעיפי DEKEL מאומתים. ${pricing.unpricedRowCount} עבודות ממתינות להתאמה ולכן אין להציג סכום פרויקט.`;
+  return `<aside class="unpriced-boq-notice" data-unpriced-boq role="status"><strong>מצב התמחור</strong><span>${escapeHtml(label)}</span></aside>`;
+}
+
+function renderScheduleTimeline(rows, editable) {
+  if (!rows.length) return '<div class="schedule-timeline empty" role="img" aria-label="לוח זמנים טרם הוגדר"><span>לוח הזמנים ייבנה לאחר ניתוח חומרי הפרויקט.</span></div>';
+  const phases = [];
+  let cursor = 0;
+  for (const [index, row] of rows.entries()) {
+    const duration = scheduleDurationInWeeks(row.duration);
+    const previous = phases.at(-1);
+    const parallel = /במקביל|חופף|parallel/iu.test(String(row.notes || ""));
+    const start = parallel && previous ? previous.start + Math.max(0.25, previous.duration * 0.35) : cursor;
+    phases.push({ row, index, start, duration });
+    cursor = Math.max(cursor, start + duration);
+  }
+  const totalWeeks = Math.max(1, Math.ceil(Math.max(...phases.map((phase) => phase.start + phase.duration))));
+  const milestones = [0, 0.25, 0.5, 0.75, 1].map((ratio) => `<span style="right:${ratio * 100}%">שבוע ${Math.min(totalWeeks, Math.max(1, Math.round(totalWeeks * ratio) || 1))}</span>`).join("");
+  return `<div class="schedule-timeline" role="img" aria-label="לוח זמנים גרפי משוער של ${totalWeeks} שבועות">
+    <div class="schedule-scale" aria-hidden="true">${milestones}</div>
+    ${phases.map(({ row, index, start, duration }) => {
+      const right = Math.min(98, start / totalWeeks * 100);
+      const width = Math.max(5, Math.min(100 - right, duration / totalWeeks * 100));
+      return `<div class="schedule-phase">
+        <div class="schedule-phase-label"><strong ${editable} data-table="scheduleRows" data-index="${index}" data-key="stage">${escapeHtml(row.stage)}</strong><small ${editable} data-table="scheduleRows" data-index="${index}" data-key="notes">${escapeHtml(row.notes)}</small></div>
+        <div class="schedule-track"><span class="schedule-bar" style="--schedule-right:${right}%;--schedule-width:${width}%"><b ${editable} data-table="scheduleRows" data-index="${index}" data-key="duration">${escapeHtml(row.duration)}</b></span></div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function scheduleDurationInWeeks(value) {
+  const text = String(value || "").replace(/,/gu, ".");
+  const numbers = [...text.matchAll(/\d+(?:\.\d+)?/gu)].map((match) => Number(match[0])).filter(Number.isFinite);
+  const amount = numbers.length ? Math.max(...numbers) : 1;
+  if (/יום|ימים|day/iu.test(text)) return Math.max(0.2, amount / 5);
+  if (/חודש|months?/iu.test(text)) return amount * 4.3;
+  return amount;
 }
 
 function fitDocumentPreview() {
@@ -588,7 +633,7 @@ function boqRow(row, index, evidenceIndex) {
 
   return `<tr class="boq-edit-row">
     <td><input dir="ltr" data-boq-index="${index}" data-boq-key="code" value="${escapeAttribute(row.code)}" aria-label="פריט SSC" /></td>
-    <td><textarea class="description-input" rows="5" data-boq-index="${index}" data-boq-key="description" aria-label="תיאור מלא">${escapeHtml(row.description)}</textarea></td>
+    <td><textarea class="description-input" rows="1" data-boq-index="${index}" data-boq-key="description" aria-label="תיאור מלא">${escapeHtml(row.description)}</textarea></td>
     <td><input data-boq-index="${index}" data-boq-key="unit" value="${escapeAttribute(row.unit)}" aria-label="יחידת מידה" /></td>
     <td><input type="number" min="0" step="0.01" data-boq-index="${index}" data-boq-key="quantity" value="${row.quantity}" aria-label="כמות" /></td>
     <td><input type="number" min="0" step="0.01" data-boq-index="${index}" data-boq-key="unitPrice" value="${row.unitPrice}" aria-label="מחיר נטו" /></td>
@@ -841,14 +886,16 @@ function renderDekelReview(review) {
     ? review.lines.map((line, index) => renderDekelReviewLine(line, index, review.status)).join("")
     : '<div class="empty-state"><strong>אין שורות לבדיקה</strong><span>הוסף עבודות לכתב הכמויות והריץ התאמה מחדש.</span></div>';
   const includedLines = review.lines.filter((line) => line.included);
+  const unresolvedLines = review.lines.filter((line) => !line.included && !line.ownerExcluded);
+  const ownerExcludedLines = review.lines.filter((line) => line.ownerExcluded);
   const selectedCount = includedLines.filter((line) => {
     const selected = line.candidates.find((candidate) => candidate.code === line.selectedCode);
     return selected && selected.unitCompatibility !== "mismatch";
   }).length;
   elements.dekelReviewSummary.textContent = review.status === "applied"
     ? `הבדיקה הוחלה על המסמך · ${shortDate(review.appliedAt)}`
-    : `${selectedCount} מתוך ${includedLines.length} שורות כלולות מוכנות להחלה${review.lines.length > includedLines.length ? ` · ${review.lines.length - includedLines.length} שורות הוחרגו ויימחקו` : ""}`;
-  elements.dekelApplyButton.disabled = review.status !== "ready" || selectedCount === 0 || selectedCount !== includedLines.length || !review.financialAudit?.valid;
+    : `${selectedCount} שורות DEKEL מוכנות${unresolvedLines.length ? ` · ${unresolvedLines.length} ממתינות להתאמה` : ""}${ownerExcludedLines.length ? ` · ${ownerExcludedLines.length} הוחרגו במפורש` : ""}`;
+  elements.dekelApplyButton.disabled = review.status !== "ready" || selectedCount === 0 || selectedCount !== includedLines.length || unresolvedLines.length > 0 || !review.financialAudit?.valid;
   elements.dekelApplyButton.textContent = review.status === "applied" ? "הוחל על המסמך" : "החלה על כתב הכמויות";
   if (catalog?.rowsCount && !review.workbookRowsCount) review.workbookRowsCount = catalog.rowsCount;
 }
@@ -856,11 +903,12 @@ function renderDekelReview(review) {
 function renderDekelReviewLine(line, index, reviewStatus) {
   const selected = line.candidates.find((candidate) => candidate.code === line.selectedCode) || line.candidates[0];
   const disabled = reviewStatus !== "ready" ? "disabled" : "";
-  const confidence = selected ? Math.round(selected.score * 100) : 0;
+  const semanticConfidence = ({ high: 90, medium: 60, low: 30 })[line.semanticConfidence];
+  const confidence = semanticConfidence ?? (selected ? Math.round(selected.score * 100) : 0);
   return `<article class="dekel-review-line ${line.included ? "included" : "excluded"}" data-dekel-line="${escapeAttribute(line.id)}">
     <header>
       <label class="dekel-include"><input type="checkbox" data-dekel-included ${line.included ? "checked" : ""} ${disabled} /><span>${index + 1}</span></label>
-      <div><strong>${escapeHtml(line.workDescription)}</strong><span>מקור הכמות: ${escapeHtml(dekelQuantitySourceLabel(line.quantitySource))}</span></div>
+      <div><strong>${escapeHtml(line.workDescription)}</strong><span>מקור הכמות: ${escapeHtml(dekelQuantitySourceLabel(line.quantitySource))}${line.selectionMethod === "codex_constrained" ? " · התאמה סמנטית מוגבלת למועמדי DEKEL" : ""}</span></div>
       <span class="dekel-confidence ${confidence >= 75 ? "high" : confidence >= 45 ? "medium" : "low"}">${confidence}%</span>
     </header>
     ${line.candidates.length ? `<div class="dekel-line-fields">

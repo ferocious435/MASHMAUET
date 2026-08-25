@@ -18,6 +18,13 @@ export type FinancialSummary = {
   fees: Array<{ key: string; label: string; rate: number; amount: number }>;
   feesTotal: number;
   grandTotal: number;
+  pricing: {
+    status: "complete" | "partial" | "unpriced";
+    pricedRowCount: number;
+    unpricedRowCount: number;
+    pricedRows: Array<FinancialRow & { amount: number }>;
+    unpricedRows: Array<FinancialRow & { amount: number }>;
+  };
   audit: { valid: boolean; checks: Record<string, boolean>; failedChecks: string[]; difference: number };
 };
 

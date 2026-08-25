@@ -184,6 +184,17 @@ body.document-focus .document-stage { padding-inline: 32px; }
 .narrative-page.layout-tight .document-section { margin-block: 6px; }
 .narrative-page.layout-tight .official-table { margin-block: 5px; font-size: 10.5px; }
 .narrative-page.layout-tight .official-table th, .narrative-page.layout-tight .official-table td { padding: 3px 4px; }
+.narrative-page-two.layout-tight { font-size: 10px; line-height: 1.24; }
+.narrative-page-two.layout-tight .estimate-page-grid { gap: 3mm; }
+.narrative-page-two.layout-tight .estimate-notes-section { font-size: 9.4px; line-height: 1.22; }
+.narrative-page-two.layout-tight .estimate-notes-section li { margin-block: 1px; }
+.narrative-page-two.layout-tight .schedule-timeline { margin-top: 4px; padding-block: 5px; }
+.narrative-page-two.layout-tight .schedule-phase { min-height: 25px; gap: 7px; padding-block: 1px; }
+.narrative-page-two.layout-tight .schedule-phase-label strong { font-size: 9.5px; }
+.narrative-page-two.layout-tight .schedule-phase-label small { font-size: 7.7px; -webkit-line-clamp: 1; }
+.narrative-page-two.layout-tight .schedule-track { height: 17px; }
+.narrative-page-two.layout-tight .schedule-bar { top: 2px; height: 12px; }
+.narrative-page-two.layout-tight > .page-content > .document-section:last-of-type p { font-size: 9.5px; line-height: 1.25; }
 .narrative-page .document-subject { margin-bottom: 18px; font-size: 18px; }
 .narrative-page .document-section { margin: 13px 0; }
 .narrative-page .document-section h2 { margin-bottom: 5px; font-size: 14px; }
@@ -228,6 +239,7 @@ body.document-focus .document-stage { padding-inline: 32px; }
 .boq-table td { overflow-wrap: anywhere; }
 .boq-table .boq-code { text-align: center; white-space: nowrap; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .boq-table .boq-description { text-align: right; white-space: normal; line-height: 1.38; overflow-wrap: anywhere; word-break: normal; }
+.boq-table .description-input { field-sizing: content; min-height: 42px; overflow-y: hidden; resize: none; white-space: pre-wrap; }
 .evidence-marker-wrap { position: relative; display: inline-flex; margin-inline-start: 4px; vertical-align: super; }
 .evidence-marker { display: inline-grid; place-items: center; width: 19px; min-width: 19px; height: 19px; min-height: 19px; padding: 0; color: #fff; background: var(--blue); border: 1px solid #174aa8; border-radius: 999px; box-shadow: 0 1px 3px rgba(20, 55, 110, .22); cursor: pointer; font-size: 9px; font-weight: 800; line-height: 1; }
 .evidence-marker.evidence-inference { color: #4d3100; background: #ffd875; border-color: #9a6500; }
@@ -258,6 +270,20 @@ body.document-focus .document-stage { padding-inline: 32px; }
 .estimate-support-column { min-width: 0; }
 .estimate-notes-section { margin-bottom: 10px; }
 .estimate-notes-section ul { padding-right: 22px; }
+.unpriced-boq-notice { display: flex; flex-direction: column; gap: 3px; margin-top: 7px; padding: 7px 9px; color: #6d4600; background: #fff8e6; border: 1px solid #d5a94b; border-right: 4px solid #b77900; font-size: 10px; line-height: 1.45; }
+.unpriced-boq-notice strong { font-size: 10.5px; }
+.schedule-timeline { margin-top: 7px; padding: 8px 10px 9px; background: #fbfcfe; border: 1px solid #aeb7c4; }
+.schedule-timeline.empty { min-height: 72px; display: grid; place-items: center; color: #5d6775; }
+.schedule-scale { position: relative; height: 16px; margin: 0 31% 1px 2%; color: #4b5563; border-bottom: 1px solid #aeb7c4; font-size: 8px; }
+.schedule-scale span { position: absolute; bottom: 3px; transform: translateX(50%); white-space: nowrap; }
+.schedule-phase { display: grid; grid-template-columns: minmax(155px, 29%) minmax(0, 1fr); gap: 10px; min-height: 31px; padding: 2px 0; border-bottom: 1px solid #e0e4e9; }
+.schedule-phase:last-child { border-bottom: 0; }
+.schedule-phase-label { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.schedule-phase-label strong { font-size: 10.5px; line-height: 1.25; }
+.schedule-phase-label small { display: -webkit-box; overflow: hidden; color: #5d6775; font-size: 8.5px; line-height: 1.25; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.schedule-track { position: relative; align-self: center; height: 20px; overflow: hidden; background: repeating-linear-gradient(to left, transparent 0, transparent calc(12.5% - 1px), #dce2e9 calc(12.5% - 1px), #dce2e9 12.5%); border-block: 1px solid #d1d7df; }
+.schedule-bar { position: absolute; top: 3px; right: var(--schedule-right); width: var(--schedule-width); min-width: 26px; height: 15px; display: grid; place-items: center; color: #fff; background: #2f64c9; border: 1px solid #204b9e; border-radius: 2px; box-shadow: 0 1px 2px rgba(22, 52, 105, .2); }
+.schedule-bar b { overflow: hidden; padding-inline: 4px; font-size: 8px; font-weight: 800; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .narrative-page-three .logic-box { display: grid; grid-template-columns: 115px 1fr; align-items: start; gap: 12px; margin-top: 12px; padding: 10px 13px; }
 .narrative-page-three .logic-box h3 { margin: 2px 0 0; }
 .narrative-page-three .logic-box ol { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 18px; padding-right: 20px; font-size: 11px; }
@@ -605,6 +631,11 @@ body.document-focus .document-stage { padding-inline: 32px; }
   .estimate-table { font-size: 8.2pt; line-height: 1.12; }
   .estimate-table th, .estimate-table td { padding: 1.25mm 1.1mm; }
   .estimate-notes-section { margin-bottom: 2mm; }
+  .unpriced-boq-notice { margin-top: 1.5mm; padding: 1.5mm 2mm; font-size: 7.6pt; }
+  .schedule-timeline { margin-top: 1.5mm; padding: 1.5mm 2mm; break-inside: avoid; page-break-inside: avoid; }
+  .schedule-phase { min-height: 6mm; padding-block: .35mm; }
+  .schedule-phase-label strong { font-size: 7.8pt; }
+  .schedule-phase-label small { font-size: 6.5pt; }
   .narrative-page-two > .page-content > .document-section { margin-top: 2.5mm; }
   .narrative-page-three .official-table td { height: 14mm; }
   .narrative-page-three .logic-box { grid-template-columns: 28mm 1fr; gap: 3mm; margin-top: 2mm; padding: 2.5mm 3mm; }
