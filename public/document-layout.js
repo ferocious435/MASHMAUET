@@ -1,4 +1,4 @@
-export const BOQ_PAGE_CAPACITY = 50;
+export const BOQ_PAGE_CAPACITY = 42;
 export const BOQ_TOTALS_RESERVE = 9;
 
 export function boqRowWeight(row) {

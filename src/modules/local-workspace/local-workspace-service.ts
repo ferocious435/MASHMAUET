@@ -120,7 +120,7 @@ export class LocalWorkspaceService {
         throw new LocalWorkspaceError(409, "processing_document_changed", "Документ проекта изменился во время обработки");
       }
       const processedSourceFingerprint = await sourceFingerprint(snapshot);
-      const instruction = "ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ из всех прочитанных материалов. Весь текст итогового документа пиши на иврите. На этом этапе верни proposedChanges для всех полей документа, кроме evidenceNotes: subject, background, objective, scope, estimateNotes, scheduleRows, scheduleNotes, riskRows, additionalNotes и полный boqRows без демонстрационных строк. Формат scheduleRows строго: {stage, duration, notes}; формат riskRows строго: {risk, response, owner}; не добавляй в них id или другие поля. Каждая строка boqRows обязана иметь только поля {id, code, description, unit, quantity, unitPrice, category}; используй category, а не chapter. evidenceNotes оставь пустым. До проверки DEKEL оставь code пустым и unitPrice 0. Формируй כתב כמויות по ОТДЕЛЬНО ОПЛАЧИВАЕМЫМ видам работ и ожидаемому составу расценок DEKEL: не дроби одну комплексную расценку на искусственные строки поставки, монтажа, крепежа, подрезки, проверки или пуска, если эти операции обычно входят в цену одной работы. Но обязательно разделяй реально разные סעיפי DEKEL: например, электрическую точку и сам светильник; основное оборудование кондиционирования и отдельно измеряемые питание, дренаж или трубопровод; вентилятор и воздуховоды; огнетушитель и знак выхода. Не объединяй несколько разных единиц измерения в одну строку קומפלט. Площадные работы задавай в מ״ר, линейные — в מ׳, оборудование — в יח׳, вывоз отходов — в מ״ק; для вывоза при отсутствии измерения допустимо консервативно принять минимальный оплачиваемый объём DEKEL и пометить допущение. Работы по стали и антикоррозионной окраске измеряй площадью поверхности, а не строкой קומפלט. Не добавляй строки проектирования, управления, надзора или контроля: они уже рассчитываются надбавками 7.4%, 5.4% и 2.7% после НДС. Стремись к профессионально достаточному, но компактному כתב כמויות примерно из 15–35 строк, а не к механическому перечислению каждого действия. Описание каждой строки должно быть ПОЛНЫМ: укажи ключевые материал, способ выполнения, размер/мощность и все известные включённые операции, чтобы строку можно было точно сопоставить с סעיף DEKEL и показать без сокращения. Количество должно следовать измерениям из материалов; если точной спецификации не хватает, выбери консервативное типовое исполнение как явно помеченное профессиональное допущение, не задавая владельцу вопрос.";
+      const instruction = "ПОСТРОЙ ПОЛНЫЙ РАБОЧИЙ ДОКУМЕНТ из всех прочитанных материалов. Весь текст итогового документа пиши на иврите. На этом этапе верни proposedChanges для всех полей документа, кроме evidenceNotes: subject, background, objective, scope, estimateNotes, scheduleRows, scheduleNotes, riskRows, additionalNotes и полный boqRows без демонстрационных строк. Формат scheduleRows строго: {stage, duration, notes}; формат riskRows строго: {risk, response, owner}; не добавляй в них id или другие поля. Каждая строка boqRows обязана иметь только поля {id, code, description, unit, quantity, unitPrice, category}; используй category, а не chapter. evidenceNotes оставь пустым. До проверки DEKEL оставь code пустым и unitPrice 0. Формируй כתב כמויות по ОТДЕЛЬНО ОПЛАЧИВАЕМЫМ видам работ и ожидаемому составу расценок DEKEL: не дроби одну комплексную расценку на искусственные строки поставки, монтажа, крепежа, подрезки, проверки или пуска, если эти операции обычно входят в цену одной работы. Но обязательно разделяй реально разные סעיפי DEKEL: например, электрическую точку и сам светильник; основное оборудование кондиционирования и отдельно измеряемые питание, дренаж или трубопровод; вентилятор и воздуховоды; огнетушитель и знак выхода. Не объединяй несколько разных единиц измерения в одну строку קומפלט. Нельзя объединять одним סעיף и одним количеством: розетки/выключатели с кабелями/лотками; окраску металлической двери с ремонтом замка и часами слесаря; механизмы окна с погонным уплотнением; ремонт электрощита с маркировкой цепей, балансировкой фаз и заменой УЗО; взаимоисключающие сценарии «ремонт или замена». В таких случаях выбери профессиональный базовый сценарий и создай отдельную строку на каждый реально оплачиваемый סעיף DEKEL. Площадные работы задавай в מ״ר, линейные — в מ׳, оборудование — в יח׳, почасовые работы — в שעה, вывоз отходов — в מ״ק; для вывоза при отсутствии измерения допустимо консервативно принять минимальный оплачиваемый объём DEKEL и пометить допущение. Работы по стали и антикоррозионной окраске измеряй площадью поверхности, а не строкой קומפלט. Не добавляй строки проектирования, управления, надзора или контроля: они уже рассчитываются надбавками 7.4%, 5.4% и 2.7% после НДС. Стремись к профессионально достаточному, но компактному כתב כמויות примерно из 15–45 строк, а не к механическому перечислению каждого действия. Описание каждой строки должно быть ПОЛНЫМ: укажи ключевые материал, способ выполнения, размер/мощность и все известные включённые операции, чтобы строку можно было точно сопоставить с סעיף DEKEL и показать без сокращения. Количество должно следовать измерениям из материалов; если точной спецификации не хватает, выбери консервативное типовое исполнение как явно помеченное профессиональное допущение, не задавая владельцу вопрос.";
       const promptSnapshot = { ...snapshot, document: synthesisPromptDocument(snapshot) };
       const built = await this.buildPrompt(promptSnapshot, instruction, randomUUID());
       const documentThreadId = await this.codex.startThread(this.store.projectPath(projectId));
@@ -138,7 +138,7 @@ export class LocalWorkspaceService {
         if (!requiredDocumentPaths.includes(change.path)) continue;
         candidate[change.path] = JSON.parse(change.valueJson);
       }
-      const documentDraft = normalizeGeneratedDocument(candidate);
+      const documentDraft = expandCompositeBoqRowsForDekel(normalizeGeneratedDocument(candidate));
       const draftRows = documentDraft.boqRows as Array<Record<string, unknown>>;
       if (draftRows.length === 0 || draftRows.some((row) => String(row.id ?? "").startsWith("boq-example-"))) {
         throw new LocalWorkspaceError(409, "generated_boq_invalid", "Анализ не сформировал рабочий כתב כמויות без демонстрационных строк");
@@ -764,7 +764,9 @@ export class LocalWorkspaceService {
         review.sourceBoqFingerprint = fingerprintBoq(project.document.boqRows as Array<Record<string, unknown>>);
       }
       project.dekelReview = review;
-      invalidateProcessing(project, "dekel_review_changed");
+      const fullyVerified = review.financialAudit.valid && review.lines.every((line) => line.included && Boolean(line.selectedCode));
+      if (fullyVerified) markProcessingReadyAfterDekel(project, project.materials.length ? await sourceFingerprint(project) : project.processing.sourceFingerprint);
+      else invalidateProcessing(project, "dekel_review_changed");
       await this.store.save(project);
       await this.logger.write("info", "dekel_review_created", { projectId, reviewId: review.id, lineCount: review.lines.length, warnings: review.warnings.length });
       return { project: toPublicProject(project), review };
@@ -811,9 +813,9 @@ export class LocalWorkspaceService {
         included: includedByDefault,
         ownerExcluded: false,
         ownerConfirmed: false,
-        selectionMethod: professionalDefault ? "codex_constrained" : automaticallyVerified ? "lexical_exact" : undefined,
-        semanticConfidence: professionalDefault ? "medium" : undefined,
-        selectionReason: professionalDefault ? professionalDefault.reason : automaticallyVerified ? "קוד DEKEL הקיים בשורה אומת מול המחירון הגלובלי" : undefined,
+        selectionMethod: automaticallyVerified ? "lexical_exact" : professionalDefault ? "codex_constrained" : undefined,
+        semanticConfidence: automaticallyVerified ? "high" : professionalDefault ? "medium" : undefined,
+        selectionReason: automaticallyVerified ? "קוד DEKEL הקיים בשורה אומת מול המחירון הגלובלי" : professionalDefault ? professionalDefault.reason : undefined,
         selectedCode: selectedByDefault?.code ?? null,
         candidates,
       };
@@ -940,7 +942,7 @@ export class LocalWorkspaceService {
       project.versions.push({ id: randomUUID(), label: "גרסה לפני החלת DEKEL", createdAt: new Date().toISOString(), document: structuredClone(project.document) });
       project.document = applyDekelReviewToDocument(project.document, review);
       const appliedRows = review.lines.filter((line) => line.included).length;
-      invalidateProcessing(project, "dekel_review_changed");
+      markProcessingReadyAfterDekel(project, project.materials.length ? await sourceFingerprint(project) : project.processing.sourceFingerprint);
       await this.store.save(project);
       await this.logger.write("info", "dekel_review_applied", { projectId, reviewId: review.id, appliedRows });
       return { project: toPublicProject(project), review, appliedRows };
@@ -1166,6 +1168,22 @@ function buildDekelSearchQueries(description: string): string[] {
     [/פתח.*מבודד|מילוי קשיח מבודד/u, ["סיכוך קירות חוץ בפנל מבודד"]],
     [/חלונ/u, ["שיפוץ חלונות"]],
     [/דלת.*דו[־ -]?כנפ|כניסות מתכת/u, ["דלת פלדה דו כנפית"]],
+    [/פירוק בתי תקע/u, ["פירוק בית תקע מכל סוג שהוא"]],
+    [/פירוק מפסקי זרם|פירוק.*לחצני מאור/u, ["פירוק מפסק זרם או לחצן למאור"]],
+    [/פירוק תעלות כבלים/u, ["פירוק תעלות כבלים מפח או פלסטיק בגודל עד 60X80"]],
+    [/פירוק כבלי נחושת|פירוק כבלי אלומיניום/u, ["פירוק כבל נחושת או אלומיניום בחתך עד 5X2.5"]],
+    [/ציפוי פולימרי.*גג|חיבורי גג[־-]קיר/u, ["איטום קירות בציפוי פולימרי גמיש דו רכיבי"]],
+    [/מסגר מקצועי|עבודת מסגר/u, ["מסגר מרכיב מקצועי"]],
+    [/רתך מקצועי|עבודת רתך/u, ["רתך מקצועי לרבות רתכת ואלקטרודות"]],
+    [/חידוש צבע.*דלתות פח/u, ["חידוש צבע על משטחי פלדה וסככות"]],
+    [/מנעול.*צילינדר.*פרפר/u, ["מנעול צילינדר פרפר חדש בדלת פח קיימת"]],
+    [/מנגנוני פתיחה ונעילה.*חלונות/u, ["החלפת מנגנוני פתיחה ונעילה וידיות לחלונות הזזה"]],
+    [/סרגלים.*פס אטימה|מברשת.*משקופי החלון/u, ["החלפת סרגלים עם פס אטימה או מברשת"]],
+    [/איטום סיליקון.*משקופי החלונות/u, ["החלפת איטום עם סיליקון סביב משקופי החלון"]],
+    [/שיפוץ לוח.*36/u, ["שיפוץ בלבד של לוח חשמל עד 36 מאמתים"]],
+    [/מיון מעגלים.*לוח חשמל/u, ["מיון מעגלים בלוח חשמל קיים"]],
+    [/איזון פאזות/u, ["ביצוע איזון פזות בלוח חשמל"]],
+    [/ממסר פחת.*4[×xX]40/u, ["ממסר פחת חדש 4X40 אמפר רגישות 30 מיליאמפר"]],
     [/קורוז|חלודה|קונסטרוקציית הפלדה/u, ["חידוש צבע על משטחי פלדה וסככות קיימים"]],
     [/גג|קירוי/u, ["איטום על גבי גג קיים"]],
     [/נקודת תאורה|גוף LED|גוף תאורת|גוף תאורה/u, ["גוף תאורה תעשייתי לתקרה גבוהה", "נקודת מאור"]],
@@ -1195,13 +1213,30 @@ function buildDomainFallbackDekelItems(description: string, items: PricebookItem
     [/פתח.*מבודד|מילוי קשיח מבודד/u, (item) => /^95\.19\.30\./u.test(item.code) && item.description.includes("סיכוך קירות חוץ בפנל מבודד")],
     [/חלונ/u, (item) => /^95\.06\.60\./u.test(item.code) && item.description.includes("שיפוץ חלונות")],
     [/דלת.*דו[־ -]?כנפ|כניסות מתכת/u, (item) => /^95\.06\./u.test(item.code) && item.description.includes("דלת פלדה דו כנפית")],
+    [/פירוק בתי תקע/u, (item) => item.code === "95.08.60.0056"],
+    [/פירוק מפסקי זרם|פירוק.*לחצני מאור/u, (item) => item.code === "95.08.60.0058"],
+    [/פירוק תעלות כבלים/u, (item) => item.code === "95.08.60.0005"],
+    [/פירוק כבלי נחושת|פירוק כבלי אלומיניום/u, (item) => item.code === "95.08.60.0007"],
+    [/פירוק.*(?:סוגרים|תושבות|קונזול|עוגנים)/u, (item) => item.code === "95.08.60.0099"],
+    [/ציפוי פולימרי.*גג|חיבורי גג[־-]קיר/u, (item) => item.code === "95.05.04.0033"],
+    [/מסגר מקצועי|עבודת מסגר/u, (item) => item.code === "95.60.10.0018"],
+    [/רתך מקצועי|עבודת רתך/u, (item) => item.code === "95.60.10.0020"],
+    [/חידוש צבע.*דלתות פח/u, (item) => item.code === "95.11.60.0080"],
+    [/מנעול.*צילינדר.*פרפר/u, (item) => item.code === "95.06.60.0073"],
+    [/מנגנוני פתיחה ונעילה.*חלונות/u, (item) => item.code === "95.12.60.0006"],
+    [/סרגלים.*פס אטימה|מברשת.*משקופי החלון/u, (item) => item.code === "95.12.60.0007"],
+    [/איטום סיליקון.*משקופי החלונות/u, (item) => item.code === "95.12.60.0008"],
+    [/שיפוץ לוח.*36/u, (item) => item.code === "95.08.63.0023"],
+    [/מיון מעגלים.*לוח חשמל/u, (item) => item.code === "95.08.80.0031"],
+    [/איזון פאזות/u, (item) => item.code === "95.08.63.0015"],
+    [/ממסר פחת.*4[×xX]40/u, (item) => item.code === "95.08.63.0031"],
     [/פירוק.*(?:רפפות|רשתות).*פתחים|פירוק.*(?:רפפות|רשתות).*מפתחים/u, (item) => ["95.06.60.0103", "95.06.60.0104", "95.12.60.0066"].includes(item.code)],
     [/קורוז|חלודה|קונסטרוקציית הפלדה/u, (item) => ["95.11.60.0080", "95.11.60.0094"].includes(item.code)],
     [/גג|קירוי/u, (item) => ["95.05.60.0015", "95.05.60.0035"].includes(item.code)],
     [/נקודת תאורה|גוף LED|גוף תאורת|גוף תאורה/u, (item) => /^95\.08\.42\.(?:019[5-9]|020[0-3])$/u.test(item.code) || item.code === "95.08.50.0140"],
     [/תאורת חירום|שלט יציאה/u, (item) => ["95.08.42.0060", "95.08.42.0061", "95.08.42.0065", "95.08.42.0066"].includes(item.code)],
     [/נקודת כוח|שקע מוגן|שקע כוח/u, (item) => ["95.08.50.0122", "95.08.40.0016"].includes(item.code)],
-    [/לוח חשמל ראשי|שיקום.*לוח חשמל/u, (item) => item.code === "95.08.63.0014"],
+    [/לוח חשמל ראשי|שיקום.*לוח חשמל/u, (item) => ["95.08.63.0014", "95.08.63.0023", "95.08.68.0002"].includes(item.code)],
     [/40[,.]?000\s*BTU|40000\s*BTU/iu, (item) => ["95.15.25.0089", "95.15.25.0110"].includes(item.code)],
     [/60[,.]?000\s*BTU|60000\s*BTU/iu, (item) => item.code === "95.15.25.0071"],
     [/צינורות נחושת|צנרת גז וחשמל למזגן/u, (item) => ["95.15.25.0124", "95.15.25.0125"].includes(item.code)],
@@ -1235,7 +1270,40 @@ function evidenceConfidence(score: number): "high" | "medium" | "low" {
   return "low";
 }
 
+export function buildPricedBoqDescription(workDescription: string, dekelDescription: string, dekelCode: string): string {
+  const scope = workDescription.trim();
+  const source = dekelDescription.trim();
+  if (!scope) return source;
+  if (!source || normalizeEvidenceText(scope) === normalizeEvidenceText(source) || scope.includes(source)) return scope;
+  if (/תכולת סעיף DEKEL/u.test(scope)) return scope;
+  return `${scope}\nתכולת סעיף DEKEL ${dekelCode}: ${source}`;
+}
+
+export function refreshEstimateNotesAfterDekel(document: Record<string, unknown>, pricedRows: number, estimateRows: number): void {
+  const current = Array.isArray(document.estimateNotes) ? document.estimateNotes.map(String) : [];
+  const preserved = current.filter((note) => ![
+    /כל קודי DEKEL/u,
+    /מחירי היחידה.*(?:נקבעו ל[־-]?0|אפס).*בדיקת DEKEL/u,
+    /פירוט האומדן יוצג לאחר בדיקת DEKEL/u,
+    /בדיקת DEKEL הושלמה עבור/u,
+    /פירוט האומדן מוצג ב[־-]/u,
+  ].some((pattern) => pattern.test(note)));
+  document.estimateNotes = [
+    `בדיקת DEKEL הושלמה עבור ${pricedRows} שורות כתב הכמויות. הקוד, תיאור המקור, יחידת המידה ומחיר היחידה בכל שורה נלקחו ממחירון DEKEL הגלובלי; מחירי היחידה והסכומים נשמרים ללא מע״מ.`,
+    `פירוט האומדן מוצג ב־${estimateRows} קבוצות עבודה מרכזיות ומחושב ישירות מכל שורות כתב הכמויות המתומחרות, כולל מע״מ כנדרש.`,
+    ...preserved,
+  ];
+}
+
+function upsertDekelEvidenceNote(notes: Array<Record<string, unknown>>, anchorId: string, note: Record<string, unknown>): void {
+  for (let index = notes.length - 1; index >= 0; index -= 1) {
+    if (String(notes[index].anchorId ?? "") === anchorId && String(notes[index].title ?? "") === "מחיר ושורה ממחירון דקל") notes.splice(index, 1);
+  }
+  notes.push(note);
+}
+
 function buildCandidateFromItem(item: PricebookItem, score: number, matchReason: string, originalUnit: string, explicitCode: string): LocalDekelCandidate {
+  const normalizedOriginalUnit = normalizeFinancialUnit(originalUnit);
   return {
     code: item.code,
     description: item.description,
@@ -1247,7 +1315,7 @@ function buildCandidateFromItem(item: PricebookItem, score: number, matchReason:
     sourceActivityNumber: item.metadataJson.dekel_activity_number?.trim() || null,
     sourceChapterCode: item.metadataJson.dekel_chapter_code?.trim() || null,
     priceIncludesVat: false,
-    unitCompatibility: item.code === "95.07.10.0235" && normalizeFinancialUnit(originalUnit) === "m"
+    unitCompatibility: item.code === "95.07.10.0235" && normalizedOriginalUnit === "m"
       ? "compatible"
       : compareDekelUnits(originalUnit, item.unit, explicitCode === item.code),
   };
@@ -1255,6 +1323,7 @@ function buildCandidateFromItem(item: PricebookItem, score: number, matchReason:
 
 function isHardSpecificationCompatible(workDescription: string, candidate: LocalDekelCandidate): boolean {
   if (/חלונ/u.test(workDescription) && !/עץ/u.test(workDescription) && /חל(?:ון|ונות) עץ/u.test(candidate.description)) return false;
+  if (/דלת/u.test(workDescription) && !/(?:אש|חסינת אש|מילוט)/u.test(workDescription) && /חסינת אש/u.test(candidate.description)) return false;
   if (/שיקום או החלפת לוח חשמל/u.test(workDescription) && candidate.code === "95.08.63.0014") return false;
   if (/40[,.]?000\s*BTU|40000\s*BTU/iu.test(workDescription)) {
     const btu = [...candidate.description.matchAll(/([0-9][0-9,. ]{2,})\s*BTU/giu)]
@@ -1275,6 +1344,23 @@ function findProfessionalDefaultDekelCandidate(workDescription: string, candidat
     [/צינורות נחושת|צנרת גז וחשמל למזגן/u, "95.15.25.0125", "נבחרה צנרת גז וחשמל מבודדת בקטרים המתאימים בקירוב למערכת 40,000 BTU; הקטרים יאומתו מול היצרן"],
     [/ניקוז מי עיבוי|צינור ניקוז.*32/u, "95.07.10.0235", "האורך הומר לנקודות ניקוז DEKEL של עד 4 מ׳ לנקודה, ללא עצירת העבודה לצורך שאלה"],
     [/תעלות אוויר.*פח מגולוון|תעלות אויר.*פח מגולוון/u, "95.15.35.0020", "נבחרה תעלת ספירקל טיפוסית בקוטר 16 אינץ׳ כאומדן מקצועי התואם בקירוב לספיקת המפוחים; הקוטר הסופי ייקבע בחישוב אוויר"],
+    [/פירוק בתי תקע/u, "95.08.60.0056", "נבחר סעיף הפירוק המדויק לבתי תקע; הכמות מוצגת בנפרד ממפסקים ומעבודות לינאריות"],
+    [/פירוק מפסקי זרם|פירוק.*לחצני מאור/u, "95.08.60.0058", "נבחר סעיף הפירוק המדויק למפסקי זרם או לחצני מאור"],
+    [/פירוק תעלות כבלים/u, "95.08.60.0005", "נבחר סעיף DEKEL לתעלות כבלים עד 60×80 מ״מ; האורך האומדני מתועד בהערת ההנחה"],
+    [/פירוק כבלי נחושת|פירוק כבלי אלומיניום/u, "95.08.60.0007", "נבחר סעיף DEKEL לכבל עד 5×2.5 מ״מ; האורך האומדני מתועד בהערת ההנחה"],
+    [/פירוק.*(?:סוגרים|תושבות|קונזול|עוגנים)/u, "95.08.60.0099", "נבחר סעיף פירוק קונזולה לרבות אביזרי העיגון כהתאמה הטיפוסית הקרובה ביותר לסוגרים ולתושבות הנראים בתיעוד"],
+    [/ציפוי פולימרי.*גג|חיבורי גג[־-]קיר/u, "95.05.04.0033", "נבחר ציפוי פולימרי גמיש עמיד UV המתאים גם לאיסכורית; הכמות היא רצועה ברוחב 0.30 מ׳ ולא איטום מלא של הגג"],
+    [/מסגר מקצועי|עבודת מסגר/u, "95.60.10.0018", "נבחר תעריף שעת עבודה של מסגר מרכיב מקצועי מתוך DEKEL לעבודות היישור, העיגון והכיוון שאינן מכוסות בסעיף מוצר תקני"],
+    [/רתך מקצועי|עבודת רתך/u, "95.60.10.0020", "נבחר תעריף רתך מקצועי הכולל רתכת ואלקטרודות לתיקוני החיבור המקומיים"],
+    [/חידוש צבע.*דלתות פח/u, "95.11.60.0080", "הצביעה נמדדת במ״ר ומשולמת בנפרד מעבודות המסגרות, לפי שני צדי הדלתות המתועדות"],
+    [/מנעול.*צילינדר.*פרפר/u, "95.06.60.0073", "נבחר סעיף החלפת צילינדר פרפר בדלת פח קיימת לרבות פירוק הקיים"],
+    [/מנגנוני פתיחה ונעילה.*חלונות/u, "95.12.60.0006", "נבחר סעיף תיקון פרזול מדויק לחלונות הזזה קיימים, ללא הנחת החלפת חלון מלאה"],
+    [/סרגלים.*פס אטימה|מברשת.*משקופי החלון/u, "95.12.60.0007", "נבחר סעיף החלפת סרגלי אטימה והכמות חושבה לפי היקף החלונות"],
+    [/איטום סיליקון.*משקופי החלונות/u, "95.12.60.0008", "נבחר סעיף החלפת איטום סיליקון והכמות חושבה לפי היקף החלונות"],
+    [/שיפוץ לוח.*36/u, "95.08.63.0023", "נבחר תרחיש ברירת המחדל של שיפוץ הלוח הקיים עד 36 מאמ״תים ולא החלפה מלאה ללא נתוני הספק"],
+    [/מיון מעגלים.*לוח חשמל/u, "95.08.80.0031", "זיהוי, סימון ורישום המעגלים נמדדים בנפרד לכל מעגל; הכמות האומדנית מתועדת"],
+    [/איזון פאזות/u, "95.08.63.0015", "נבחר סעיף איזון פאזות ללוח עד 3×100A כבדיקה ועבודה נפרדת"],
+    [/ממסר פחת.*4[×xX]40/u, "95.08.63.0031", "נבחר סעיף החלפת ממסר פחת 4×40A/30mA דגם A כברירת מחדל בטיחותית מתועדת"],
   ];
   for (const [pattern, code, reason] of rules) {
     if (!pattern.test(workDescription)) continue;
@@ -1324,6 +1410,7 @@ function applyDekelBillingQuantityRule(line: LocalDekelReviewLine, candidate: Lo
     line.quantity = Math.max(1, Math.ceil(documentedLength / 4));
     line.quantitySource = "material";
     line.quantitySourceReason = `אורך מתועד של ${documentedLength} מ׳ הומר ל־${line.quantity} נקודות ניקוז, עד 4 מ׳ לנקודה לפי תיאור סעיף DEKEL`;
+    return;
   }
 }
 
@@ -1372,13 +1459,13 @@ function applyVerifiedDekelSelectionsToDocument(document: Record<string, unknown
     if (!row) continue;
     Object.assign(row, {
       code: candidate.code,
-      description: candidate.description,
+      description: buildPricedBoqDescription(line.workDescription, candidate.description, candidate.code),
       unit: candidate.unit,
       quantity: line.quantity,
       unitPrice: candidate.unitPrice,
       category: line.category,
     });
-    const noteId = `evidence-dekel-${line.id}`;
+    const noteId = `evidence-dekel-${line.sourceBoqRowId}`;
     const note = {
       id: noteId,
       anchorType: "boqRow",
@@ -1391,10 +1478,9 @@ function applyVerifiedDekelSelectionsToDocument(document: Record<string, unknown
       confidence: line.semanticConfidence || evidenceConfidence(candidate.score),
       source: { fileName: review.workbookFileName, location: `קוד ${candidate.code}${candidate.sourceRow ? ` · שורה ${candidate.sourceRow}` : ""}`, excerpt: candidate.description },
     };
-    const noteIndex = notes.findIndex((item) => item.id === noteId);
-    if (noteIndex >= 0) notes[noteIndex] = note;
-    else notes.push(note);
+    upsertDekelEvidenceNote(notes, line.sourceBoqRowId, note);
   }
+  refreshEstimateNotesAfterDekel(output, review.lines.filter((line) => line.included && Boolean(line.selectedCode)).length, review.financialAudit.estimateRows);
   return output;
 }
 
@@ -1421,10 +1507,10 @@ function applyDekelReviewToDocument(document: Record<string, unknown>, review: L
     const row = appliedRows.find((item) => item.id === line.sourceBoqRowId);
     if (!row) throw new LocalWorkspaceError(409, "dekel_source_row_missing", "Исходная строка כתב כמויות отсутствует; применение DEKEL остановлено");
     Object.assign(row, {
-      code: candidate.code, description: candidate.description, unit: candidate.unit,
+      code: candidate.code, description: buildPricedBoqDescription(line.workDescription, candidate.description, candidate.code), unit: candidate.unit,
       quantity: line.quantity, unitPrice: candidate.unitPrice, category: line.category,
     });
-    const noteId = `evidence-dekel-${line.id}`;
+    const noteId = `evidence-dekel-${line.sourceBoqRowId}`;
     const note = {
       id: noteId, anchorType: "boqRow", anchorId: line.sourceBoqRowId, kind: "source",
       title: "מחיר ושורה ממחירון דקל",
@@ -1433,13 +1519,12 @@ function applyDekelReviewToDocument(document: Record<string, unknown>, review: L
       confidence: evidenceConfidence(candidate.score),
       source: { fileName: review.workbookFileName, location: `קוד ${candidate.code}${candidate.sourceRow ? ` · שורה ${candidate.sourceRow}` : ""}`, excerpt: candidate.description },
     };
-    const noteIndex = notes.findIndex((item) => item.id === noteId);
-    if (noteIndex >= 0) notes[noteIndex] = note;
-    else notes.push(note);
+    upsertDekelEvidenceNote(notes, line.sourceBoqRowId, note);
   }
   const finalAudit = financialAuditFromRows(appliedRows);
   if (!finalAudit.valid) throw new LocalWorkspaceError(500, "financial_audit_failed", "Итоговая финансовая сверка DEKEL не прошла", false);
   review.financialAudit = finalAudit;
+  refreshEstimateNotesAfterDekel(output, selected.length, finalAudit.estimateRows);
   review.status = "applied";
   review.appliedAt = new Date().toISOString();
   return output;
@@ -1678,6 +1763,26 @@ function invalidateProcessing(project: LocalProject, reason: "document_changed" 
   };
 }
 
+function markProcessingReadyAfterDekel(project: LocalProject, verifiedSourceFingerprint: string | null): void {
+  const now = new Date().toISOString();
+  const documentFingerprint = fingerprintDocument(project.document);
+  project.processing = {
+    ...project.processing,
+    runId: null,
+    status: "ready",
+    stage: "complete",
+    readyForExport: true,
+    progressPercent: 100,
+    sourceFingerprint: verifiedSourceFingerprint,
+    baseDocumentFingerprint: documentFingerprint,
+    validatedDocumentFingerprint: documentFingerprint,
+    completedAt: now,
+    updatedAt: now,
+    warningCodes: project.processing.warningCodes.filter((code) => !["dekel_matches_require_review", "dekel_review_required", "dekel_review_changed", "document_changed"].includes(code)),
+    error: undefined,
+  };
+}
+
 async function sourceInputFingerprint(project: LocalProject): Promise<string> {
   return await projectSourceFingerprint(project, false);
 }
@@ -1791,6 +1896,82 @@ async function sanitizeGeneratedEvidenceSources(document: Record<string, unknown
 
 function normalizeEvidenceText(value: string): string {
   return value.normalize("NFKC").toLocaleLowerCase().replace(/\s+/gu, " ").trim();
+}
+
+export function expandCompositeBoqRowsForDekel(document: Record<string, unknown>): Record<string, unknown> {
+  const output = structuredClone(document);
+  const rows = Array.isArray(output.boqRows) ? output.boqRows as Array<Record<string, unknown>> : [];
+  const replacedIds = new Set<string>();
+  const expanded = rows.flatMap((row) => {
+    const id = String(row.id ?? `boq-${randomUUID()}`);
+    const description = String(row.description ?? "").trim();
+    const category = String(row.category ?? "עבודות כלליות");
+    const quantity = Number(row.quantity) || 1;
+    const blank = (suffix: string, workDescription: string, unit: string, workQuantity: number) => ({
+      id: `${id}-${suffix}`, code: "", description: workDescription, unit,
+      quantity: Math.round(workQuantity * 100) / 100, unitPrice: 0, category,
+    });
+
+    if (/פירוק/u.test(description) && /(?:נקודות|בתי תקע|מפסקים)/u.test(description) && /כבל/u.test(description) && /תעל/u.test(description)) {
+      replacedIds.add(id);
+      const deviceCount = Math.max(2, Math.round(quantity));
+      const sockets = Math.ceil(deviceCount / 2);
+      const switches = Math.max(1, deviceCount - sockets);
+      return [
+        blank("sockets", "פירוק בתי תקע קיימים מכל סוג, לאחר ניתוק בטוח ובדיקת העדר מתח, לרבות פינוי האביזרים והשארת המוליכים במצב בטוח", "יח׳", sockets),
+        blank("switches", "פירוק מפסקי זרם או לחצני מאור קיימים, לאחר ניתוק בטוח ובדיקת העדר מתח, לרבות פינוי האביזרים והשארת המוליכים במצב בטוח", "יח׳", switches),
+        blank("cable-trays", "פירוק תעלות כבלים קיימות מפח או מפלסטיק עד 60×80 מ״מ, לרבות תושבות וחיבורי קצה ופינוי מן האתר; אורך אומדני", "מ׳", Math.max(10, deviceCount * 1.5)),
+        blank("cables", "פירוק כבלי נחושת או אלומיניום קיימים עד חתך 5×2.5 מ״מ, לאחר ניתוק וזיהוי המעגלים ובמצב בטוח; אורך אומדני", "מ׳", Math.max(20, deviceCount * 3)),
+      ];
+    }
+
+    if (/שיקום.*חלונ/u.test(description) && /(?:פרזול|מנגנוני|איטום)/u.test(description)) {
+      replacedIds.add(id);
+      const count = Math.max(1, Math.round(quantity));
+      const dimensions = description.match(/([0-9]+(?:\.[0-9]+)?)\s*[×xX]\s*([0-9]+(?:\.[0-9]+)?)/u);
+      const perimeter = dimensions ? 2 * (Number(dimensions[1]) + Number(dimensions[2])) * count : 7.42 * count;
+      return [
+        blank("hardware", "החלפת מנגנוני פתיחה ונעילה וידיות בחלונות ההזזה הקיימים, לרבות פירוק הפרזול הפגום, התאמה, כיוון ובדיקת פעולה", "יח׳", count),
+        blank("pressure-seals", "החלפת סרגלים עם פס אטימה או מברשת סביב משקופי החלונות הקיימים וחיזוקם; הכמות מחושבת לפי היקף ארבעת החלונות", "מ׳", perimeter),
+        blank("silicone", "החלפת איטום סיליקון סביב משקופי החלונות הקיימים, לרבות הסרת חומר רופף, ניקוי התשתית ומילוי מחדש; הכמות לפי היקף החלונות", "מ׳", perimeter),
+      ];
+    }
+
+    if (/שיקום.*דלת.*דו[־ -]?כנפ/u.test(description) && /(?:יישור|פרזול|קורוז|אטימ)/u.test(description)) {
+      replacedIds.add(id);
+      const count = Math.max(1, Math.round(quantity));
+      const dimensions = description.match(/([0-9]+(?:\.[0-9]+)?)\s*[×xX]\s*([0-9]+(?:\.[0-9]+)?)/u);
+      const paintedArea = dimensions ? Number(dimensions[1]) * Number(dimensions[2]) * count * 2 : 10.92 * count;
+      return [
+        blank("metal-fitting", "עבודת מסגר מקצועי ליישור כנפי דלתות הכניסה הדו־כנפיות והמשקופים, חיזוק עיגונים, התאמת פרזול וכיוון פתיחה וסגירה; הונחו 6 שעות לכל פתח", "שעה", count * 6),
+        blank("welding", "עבודת רתך מקצועי לרבות רתכת ואלקטרודות לתיקוני חיבור וחיזוק מקומיים בדלתות הכניסה הקיימות; הונחו 2 שעות לכל פתח", "שעה", count * 2),
+        blank("paint", "חידוש צבע על דלתות הפח והמשקופים הקיימים, לרבות הסרת חלודה וצבע רופף, הכנת שטח, צבע יסוד ושתי שכבות גמר; המדידה לשני צדי הדלתות", "מ״ר", paintedArea),
+        blank("cylinders", "החלפת מנעולי צילינדר פרפר בדלתות הפח הקיימות, לרבות פירוק המנעולים הקיימים, התקנה, התאמה ובדיקת פעולה", "יח׳", count),
+      ];
+    }
+
+    if (/איטום מקומי/u.test(description) && /(?:גג|איסכורית|גג־קיר|גג-קיר)/u.test(description) && normalizeFinancialUnit(String(row.unit ?? "")) === "m") {
+      replacedIds.add(id);
+      return [blank("polymer-seal", "איטום מקומי של חיבורי גג־קיר וקצוות איסכורית בציפוי פולימרי גמיש דו־רכיבי עמיד UV, לאחר ניקוי והכנת התשתית; רצועה מקצועית ברוחב 0.30 מ׳ ללא איטום מלא של הגג", "מ״ר", quantity * 0.3)];
+    }
+
+    if (/(?:שיקום או החלפת|שיקום).*לוח חשמל ראשי/u.test(description) && /(?:סימון מעגלים|מאמתים|איזון|פחת)/u.test(description)) {
+      replacedIds.add(id);
+      return [
+        blank("repair", "שיפוץ לוח החשמל הראשי הקיים עד 36 מאמ״תים כברירת מחדל מקצועית, לאחר בדיקת חשמלאי וללא החלפה מלאה של הלוח", "יח׳", 1),
+        blank("circuits", "מיון מעגלים בלוח החשמל הקיים, כולל זיהוי, סימון, רישום ועריכת דוח מצב קיים; הונחו 20 מעגלים עד לספירה מאומתת", "יח׳", 20),
+        blank("phase-balance", "ביצוע איזון פאזות בלוח החשמל הראשי הקיים עד 3×100A, לרבות מדידה ובדיקת חלוקת העומסים", "יח׳", 1),
+        blank("rcd", "פירוק ממסר פחת קיים ואספקה והתקנה של ממסר פחת חדש 4×40A ברגישות 30mA דגם A, לרבות חיבור ובדיקת פעולה", "יח׳", 1),
+      ];
+    }
+    return [row];
+  });
+  output.boqRows = expanded;
+  if (replacedIds.size > 0 && Array.isArray(output.evidenceNotes)) {
+    output.evidenceNotes = (output.evidenceNotes as Array<Record<string, unknown>>)
+      .filter((note) => !replacedIds.has(String(note.anchorId ?? "")));
+  }
+  return output;
 }
 
 function normalizeGeneratedDocument(candidate: Record<string, unknown>): Record<string, unknown> {

@@ -5,8 +5,57 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { LocalProjectStore } from "../src/modules/local-workspace/local-project-store.ts";
 import { extractMaterial } from "../src/modules/local-workspace/material-extractor.ts";
-import { createProposals, parseCodexAnswer } from "../src/modules/local-workspace/local-workspace-service.ts";
+import { buildPricedBoqDescription, createProposals, expandCompositeBoqRowsForDekel, parseCodexAnswer, refreshEstimateNotesAfterDekel } from "../src/modules/local-workspace/local-workspace-service.ts";
 import { CodexAppServerClient } from "../src/modules/local-workspace/codex-app-server-client.ts";
+
+test("составные работы разделяются на отдельные измеряемые позиции DEKEL", () => {
+  const document = {
+    subject: "בדיקה", background: "", objective: "", scope: [], estimateNotes: [], scheduleRows: [], scheduleNotes: "", riskRows: [], additionalNotes: "", evidenceNotes: [],
+    boqRows: [
+      { id: "boq-electrical-demolition", code: "", description: "ניתוק בטוח ופירוק של נקודות, כבלים, קופסאות ותעלות חשמל ישנות; כמות אומדנית", unit: "יח׳", quantity: 20, unitPrice: 0, category: "פירוק ופינוי" },
+      { id: "boq-existing-windows", code: "", description: "שיקום ארבעה חלונות הזזה קיימים במידה 3.05×0.66 מ׳, כולל פרזול ואיטום היקפי", unit: "יח׳", quantity: 4, unitPrice: 0, category: "מעטפת ומסגרות" },
+      { id: "boq-main-panel", code: "", description: "שיקום או החלפת לוח חשמל ראשי תלת פאזי כולל סימון מעגלים, איזון פאזות והגנת פחת", unit: "יח׳", quantity: 1, unitPrice: 0, category: "חשמל ובטיחות" },
+    ],
+  };
+
+  const expanded = expandCompositeBoqRowsForDekel(document);
+  const rows = expanded.boqRows as Array<Record<string, unknown>>;
+
+  assert.deepEqual(rows.filter((row) => String(row.id).startsWith("boq-electrical-demolition-")).map((row) => row.unit), ["יח׳", "יח׳", "מ׳", "מ׳"]);
+  assert.deepEqual(rows.filter((row) => String(row.id).startsWith("boq-existing-windows-")).map((row) => row.quantity), [4, 29.68, 29.68]);
+  assert.deepEqual(rows.filter((row) => String(row.id).startsWith("boq-main-panel-")).map((row) => row.quantity), [1, 20, 1, 1]);
+  assert.ok(rows.every((row) => row.code === "" && row.unitPrice === 0));
+});
+
+test("после подбора DEKEL сохраняется полное проектное описание работы", () => {
+  const description = buildPricedBoqDescription(
+    "עבודת מסגר מקצועי ליישור כנפי הדלת, חיזוק עיגונים וכיוון פתיחה וסגירה",
+    "מסגר מרכיב, מקצועי",
+    "95.60.10.0018",
+  );
+
+  assert.match(description, /יישור כנפי הדלת/);
+  assert.match(description, /95\.60\.10\.0018/);
+  assert.match(description, /מסגר מרכיב, מקצועי/);
+  assert.equal(buildPricedBoqDescription("מסגר מרכיב, מקצועי", "מסגר מרכיב, מקצועי", "95.60.10.0018"), "מסגר מרכיב, מקצועי");
+});
+
+test("после расчёта DEKEL удаляются устаревшие заметки о нулевых ценах", () => {
+  const document = {
+    estimateNotes: [
+      "כל קודי DEKEL הושארו ריקים וכל מחירי היחידה נקבעו ל־0 עד לביצוע בדיקת DEKEL.",
+      "פירוט האומדן יוצג לאחר בדיקת DEKEL ב־3–5 קבוצות.",
+      "הערה מקצועית שנשארת במסמך.",
+    ],
+  };
+
+  refreshEstimateNotesAfterDekel(document, 44, 5);
+
+  assert.ok((document.estimateNotes as string[]).some((note) => /44 שורות/.test(note)));
+  assert.ok((document.estimateNotes as string[]).some((note) => /5 קבוצות/.test(note)));
+  assert.ok((document.estimateNotes as string[]).includes("הערה מקצועית שנשארת במסמך."));
+  assert.ok((document.estimateNotes as string[]).every((note) => !/נקבעו ל־0|יוצג לאחר/.test(note)));
+});
 
 test("локальные проекты сохраняются между экземплярами хранилища", async () => {
   const root = await mkdtemp(join(tmpdir(), "mashmauet-store-"));

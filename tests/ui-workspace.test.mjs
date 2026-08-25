@@ -151,6 +151,7 @@ test("כתב כמויות печатается как читаемый A4 с п�
 
 test("לוח הזמנים отображается как графический календарный план, а не обычная таблица", () => {
   assert.match(script, /function renderScheduleTimeline/);
+  assert.match(script, /יום\|ימים\|ימי/);
   assert.match(script, /class="schedule-timeline"/);
   assert.match(script, /class="schedule-bar"/);
   assert.doesNotMatch(script, /<table class="official-table"><thead><tr><th>שלב<\/th><th>משך משוער<\/th><th>הערות<\/th>/);
@@ -175,6 +176,15 @@ test("пагинация כתב כמויות сохраняет каждое п�
   assert.ok(pages.length > 1);
   assert.deepEqual(pages.flat().map((row) => row.description), rows.map((row) => row.description));
   assert.ok(documentLayout.boqPageWeight(pages.at(-1)) <= documentLayout.BOQ_PAGE_CAPACITY - documentLayout.BOQ_TOTALS_RESERVE);
+});
+
+test("страница A4 не перегружается несколькими длинными строками DEKEL", () => {
+  const rows = Array.from({ length: 12 }, (_, index) => ({
+    id: `dense-${index}`,
+    description: `תיאור עבודה מלא ותכולת סעיף DEKEL ${index}: ${"הכנה, אספקה, התקנה ובדיקה מקצועית. ".repeat(8)}`,
+  }));
+  const pages = documentLayout.paginateBoqRows(rows);
+  assert.ok(pages.every((page) => page.length <= 5), "на одной A4 должно оставаться не более пяти столь длинных строк");
 });
 
 test("очень длинная строка כתב כמויות не вытесняет итоги за границы A4", () => {

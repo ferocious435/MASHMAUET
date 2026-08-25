@@ -499,10 +499,19 @@ test("DEKEL проходит полный путь внутри локально
     assert.ok(reviewLine.candidates[0].unitPrice > 0);
     assert.equal(reviewLine.candidates[0].priceIncludesVat, false);
     assert.match(reviewLine.candidates[0].unitCompatibility, /^(exact|compatible|corrected_by_code|unknown)$/);
+    if (reviewLine.originalCode && reviewLine.selectedCode === reviewLine.originalCode) {
+      assert.equal(reviewLine.selectionMethod, "lexical_exact");
+      assert.equal(reviewLine.semanticConfidence, "high");
+      assert.ok(!analyzed.body.review.warnings.some((warning: string) => warning.includes(reviewLine.originalCode) && /אומדן מקצועי שמרני/.test(warning)));
+    }
     assert.equal(analyzed.body.review.financialAudit.valid, true);
     assert.equal(analyzed.body.review.financialAudit.vatRate, 0.18);
     assert.equal(analyzed.body.review.financialAudit.estimateRows <= 5, true);
     assert.deepEqual(analyzed.body.review.financialAudit.fees.map((fee: any) => fee.rate), [0.074, 0.054, 0.027]);
+    if (analyzed.body.review.lines.every((line: any) => line.included && line.selectedCode) && analyzed.body.review.financialAudit.valid) {
+      assert.equal(analyzed.body.project.processing.status, "ready");
+      assert.equal(analyzed.body.project.processing.readyForExport, true);
+    }
 
     const foreignCandidate = analyzed.body.review.lines.flatMap((line: any) => line.candidates).find((candidate: any) => !reviewLine.candidates.some((item: any) => item.code === candidate.code));
     assert.ok(foreignCandidate);
@@ -529,6 +538,8 @@ test("DEKEL проходит полный путь внутри локально
     assert.ok(applied.body.appliedRows >= 1);
     assert.equal(applied.body.review.status, "applied");
     assert.equal(applied.body.review.financialAudit.valid, true);
+    assert.equal(applied.body.project.processing.status, "ready");
+    assert.equal(applied.body.project.processing.readyForExport, true);
     assert.equal(applied.body.review.financialAudit.vat, Math.round(applied.body.review.financialAudit.subtotalNet * 18) / 100);
     assert.equal(applied.body.review.financialAudit.grandTotal, Math.round((applied.body.review.financialAudit.totalWithVat + applied.body.review.financialAudit.feesTotal) * 100) / 100);
     const boqRow = applied.body.project.document.boqRows.find((row: any) => row.id === reviewLine.sourceBoqRowId);
@@ -539,6 +550,11 @@ test("DEKEL проходит полный путь внутри локально
     assert.match(evidence.source.fileName, /\.xlsx$/i);
     assert.match(evidence.source.location, new RegExp(selected.code.replaceAll(".", "\\.")));
     assert.equal(evidence.source.priceIncludesVat, undefined);
+
+    const repeated = await json(fixture.baseUrl, `/local/projects/${project.id}/dekel/analyze`, { method: "POST", body: {} });
+    assert.equal(repeated.response.status, 200);
+    const repeatedNotes = repeated.body.project.document.evidenceNotes.filter((note: any) => note.anchorId === boqRow.id && note.title === "מחיר ושורה ממחירון דקל");
+    assert.equal(repeatedNotes.length, 1, "повторная проверка DEKEL должна обновлять сноску, а не дублировать её");
   } finally { await fixture.close(); }
 });
 

@@ -498,7 +498,7 @@ function scheduleDurationInWeeks(value) {
   const text = String(value || "").replace(/,/gu, ".");
   const numbers = [...text.matchAll(/\d+(?:\.\d+)?/gu)].map((match) => Number(match[0])).filter(Number.isFinite);
   const amount = numbers.length ? Math.max(...numbers) : 1;
-  if (/יום|ימים|day/iu.test(text)) return Math.max(0.2, amount / 5);
+  if (/יום|ימים|ימי(?:\s+עבודה)?|day/iu.test(text)) return Math.max(0.2, amount / 5);
   if (/חודש|months?/iu.test(text)) return amount * 4.3;
   return amount;
 }
