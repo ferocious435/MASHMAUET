@@ -6,10 +6,10 @@
     "semantic_hash": "e4ea7d69ae7f406ef581436955d54cc1"
   },
   "package.json": {
-    "mtime": 1787480670.7132735,
-    "seen": 1787648207.7053213,
-    "ast_hash": "612e7681bd7911d34ca8b109f81e1269",
-    "semantic_hash": "612e7681bd7911d34ca8b109f81e1269"
+    "mtime": 1790661100.6469064,
+    "seen": 1790747369.8761864,
+    "ast_hash": "9b66b2a5f949880234678b94951d0b01",
+    "semantic_hash": ""
   },
   "public/app.js": {
     "mtime": 1787654122.7167368,
@@ -114,16 +114,16 @@
     "semantic_hash": "68738ffa9230d1d5eab97ccdb793f802"
   },
   "src/modules/local-workspace/local-project-store.ts": {
-    "mtime": 1787660773.411958,
-    "seen": 1787660980.5271955,
-    "ast_hash": "d8d598bb9e46b253e496470d95372887",
-    "semantic_hash": "d8d598bb9e46b253e496470d95372887"
+    "mtime": 1788083907.1364415,
+    "seen": 1790747369.8761864,
+    "ast_hash": "6c89d9f5dfcd4b7a4958816de93af466",
+    "semantic_hash": ""
   },
   "src/modules/local-workspace/local-project-types.ts": {
-    "mtime": 1787660757.5864906,
-    "seen": 1787660980.5271955,
-    "ast_hash": "195b2a6f04a23eb2a85c06c454b2cfb2",
-    "semantic_hash": "195b2a6f04a23eb2a85c06c454b2cfb2"
+    "mtime": 1788249579.9736826,
+    "seen": 1790747369.8761864,
+    "ast_hash": "9e52ba2e88456ef02fb03f03a30425c7",
+    "semantic_hash": ""
   },
   "src/modules/local-workspace/local-workspace-controller.ts": {
     "mtime": 1787479111.6822636,
@@ -144,10 +144,10 @@
     "semantic_hash": "4493fec2e65f2649646c320d8ea5b6fc"
   },
   "src/modules/local-workspace/local-workspace-service.ts": {
-    "mtime": 1787661920.7480125,
-    "seen": 1787662155.439422,
-    "ast_hash": "6a9fdd31f9683af74ee6e2b56cf43282",
-    "semantic_hash": "6a9fdd31f9683af74ee6e2b56cf43282"
+    "mtime": 1790747222.556387,
+    "seen": 1790747369.8761864,
+    "ast_hash": "3b8eae38c50cbd7919cb8a2e966381c7",
+    "semantic_hash": ""
   },
   "src/modules/local-workspace/local-workspace-validation.ts": {
     "mtime": 1787659087.0481234,
@@ -228,10 +228,10 @@
     "semantic_hash": "98057ac787661cad7748f3f2d3fb0d6d"
   },
   "src/modules/references/services/dekel-catalog-service.ts": {
-    "mtime": 1787247733.9352303,
-    "seen": 1787294930.815995,
-    "ast_hash": "e57f6f4c03cc6f88dc758c981a580e1f",
-    "semantic_hash": "e57f6f4c03cc6f88dc758c981a580e1f"
+    "mtime": 1788083195.823782,
+    "seen": 1790747369.8761864,
+    "ast_hash": "0a4e568079f3766241ca52d523aa4318",
+    "semantic_hash": ""
   },
   "src/modules/references/services/dekel-estimate-preview.ts": {
     "mtime": 1787144053.2648246,
@@ -240,10 +240,10 @@
     "semantic_hash": "d969db9202f6ee97df9b7f2798931e56"
   },
   "src/modules/references/services/dekel-matching-service.ts": {
-    "mtime": 1787647798.4862168,
-    "seen": 1787648207.7053213,
-    "ast_hash": "6f2366452b54e259dfdbb272862f8839",
-    "semantic_hash": "6f2366452b54e259dfdbb272862f8839"
+    "mtime": 1788083548.1526265,
+    "seen": 1790747369.8761864,
+    "ast_hash": "f78ee9c9549e20dc5e8bcd460e51ea06",
+    "semantic_hash": ""
   },
   "src/modules/references/services/dekel-pricebook-adapter.ts": {
     "mtime": 1787144053.2648246,
@@ -276,10 +276,10 @@
     "semantic_hash": "b35679dfed840e82688c23736bca81ee"
   },
   "src/modules/references/services/professional-knowledge-service.ts": {
-    "mtime": 1787243831.3028474,
-    "seen": 1787294930.815995,
-    "ast_hash": "ad2e50ba3533ffb914178b4b12344d72",
-    "semantic_hash": "ad2e50ba3533ffb914178b4b12344d72"
+    "mtime": 1788420668.0791347,
+    "seen": 1790747369.8761864,
+    "ast_hash": "7672044998ed1ea5f9520784220428e0",
+    "semantic_hash": ""
   },
   "src/modules/skills/services/skill-orchestrator-service.ts": {
     "mtime": 1787234924.1308227,
@@ -306,28 +306,28 @@
     "semantic_hash": "1a6261b1bf006fff44978ebad66b9790"
   },
   "tests/local-workspace-api.test.ts": {
-    "mtime": 1787661811.0670323,
-    "seen": 1787662155.439422,
-    "ast_hash": "0463c4d62531ede4ec3de4cad8fe618f",
-    "semantic_hash": "0463c4d62531ede4ec3de4cad8fe618f"
+    "mtime": 1790747193.9353218,
+    "seen": 1790747369.8761864,
+    "ast_hash": "cce1ebfa8ea0a19b9bc3bf4750c7d654",
+    "semantic_hash": ""
   },
   "tests/local-workspace.test.ts": {
-    "mtime": 1787660805.8229263,
-    "seen": 1787660980.5472083,
-    "ast_hash": "7be9d8cfddad665a00beb72b341fbbeb",
-    "semantic_hash": "7be9d8cfddad665a00beb72b341fbbeb"
+    "mtime": 1790746962.4910982,
+    "seen": 1790747369.8761864,
+    "ast_hash": "230fc25ae8ab6ce8c27718d923c1cfd7",
+    "semantic_hash": ""
   },
   "tests/professional-knowledge.test.ts": {
-    "mtime": 1787243904.839517,
-    "seen": 1787294930.815995,
-    "ast_hash": "e95f0acdd4a66d140a7cd624b661ee24",
-    "semantic_hash": "e95f0acdd4a66d140a7cd624b661ee24"
+    "mtime": 1788420606.929808,
+    "seen": 1790747369.8761864,
+    "ast_hash": "229f831f9d154757025bc9b0a0e2d3e1",
+    "semantic_hash": ""
   },
   "tests/run-tests.ts": {
-    "mtime": 1787646216.6299515,
-    "seen": 1787648207.7053213,
-    "ast_hash": "a5d83af82aca49016841f8a5ca9c8035",
-    "semantic_hash": "a5d83af82aca49016841f8a5ca9c8035"
+    "mtime": 1788083548.156626,
+    "seen": 1790747369.8761864,
+    "ast_hash": "9accffb7edd753da73604de965fd9a3c",
+    "semantic_hash": ""
   },
   "tests/ui-calculations.test.mjs": {
     "mtime": 1787642183.1992283,
@@ -1002,9 +1002,21 @@
     "semantic_hash": "9949eda41c9155b3c638db336b0aa2c2"
   },
   "src/modules/local-workspace/boq-scope-completeness.ts": {
-    "mtime": 1787660647.5585084,
-    "seen": 1787660980.5226405,
-    "ast_hash": "b7b153ad22b03e30226608d0dff08f89",
-    "semantic_hash": "b7b153ad22b03e30226608d0dff08f89"
+    "mtime": 1788422082.0719786,
+    "seen": 1790747369.8761864,
+    "ast_hash": "c352a521b92672abff7c7df704c59750",
+    "semantic_hash": ""
+  },
+  "src/modules/local-workspace/dekel-paid-result-semantics.ts": {
+    "mtime": 1788439368.2206664,
+    "seen": 1790747369.8761864,
+    "ast_hash": "871fb785e890e01fc82228d663367058",
+    "semantic_hash": ""
+  },
+  "src/modules/local-workspace/processing-checkpoint.ts": {
+    "mtime": 1788421055.5347314,
+    "seen": 1790747369.8761864,
+    "ast_hash": "9bac0b7c6e503b952f0f4b1b8f0d2439",
+    "semantic_hash": ""
   }
 }

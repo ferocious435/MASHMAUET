@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -35,6 +36,14 @@ export type ProfessionalKnowledgeContext = {
 
 export interface ProfessionalKnowledgeGateway {
   search(query: string, options?: { limit?: number; routingQuery?: string }): Promise<ProfessionalKnowledgeContext>;
+  verifyExcerpt?(input: {
+    sourceKind: ProfessionalKnowledgeSourceKind;
+    fileName: string;
+    page: number;
+    excerpt: string;
+    expectedChapterCode?: string;
+  }): Promise<boolean>;
+  getContentFingerprint?(): Promise<string>;
 }
 
 type CachedPdf = { fingerprint: string; fileName: string; pages: string[] };
@@ -99,6 +108,7 @@ const CHAPTER_TERMS: Record<string, string[]> = {
 export class ProfessionalKnowledgeService implements ProfessionalKnowledgeGateway {
   private sources?: Promise<ProfessionalKnowledgeSource[]>;
   private readonly memoryCache = new Map<string, Promise<string[]>>();
+  private fingerprintCache?: { metadataSignature: string; fingerprint: string };
   private readonly options: { contractDirectoryPath: string; blueBookDirectoryPath: string; cacheDirectoryPath: string };
 
   constructor(options: { contractDirectoryPath: string; blueBookDirectoryPath: string; cacheDirectoryPath: string }) { this.options = options; }
@@ -128,6 +138,52 @@ export class ProfessionalKnowledgeService implements ProfessionalKnowledgeGatewa
       : [];
 
     return { used: true, policy: "reference_only", results, alerts };
+  }
+
+  async verifyExcerpt(input: {
+    sourceKind: ProfessionalKnowledgeSourceKind;
+    fileName: string;
+    page: number;
+    excerpt: string;
+    expectedChapterCode?: string;
+  }): Promise<boolean> {
+    const excerpt = normalize(input.excerpt);
+    if (excerpt.length < 12 || !Number.isInteger(input.page) || input.page < 1) return false;
+    const source = (await this.discoverSources()).find((item) =>
+      item.kind === input.sourceKind
+      && item.fileName === input.fileName
+      && (!input.expectedChapterCode || item.chapterCode === input.expectedChapterCode)
+    );
+    if (!source) return false;
+    const pages = await this.getPages(source);
+    const pageText = normalize(pages[input.page - 1] ?? "");
+    return Boolean(pageText && pageText.includes(excerpt));
+  }
+
+  async getContentFingerprint(): Promise<string> {
+    const [contractNames, blueBookNames] = await Promise.all([
+      listPdfNames(this.options.contractDirectoryPath),
+      listPdfNames(this.options.blueBookDirectoryPath),
+    ]);
+    const files = [
+      ...contractNames.map((fileName) => join(this.options.contractDirectoryPath, fileName)),
+      ...blueBookNames.map((fileName) => join(this.options.blueBookDirectoryPath, fileName)),
+    ].sort((left, right) => left.localeCompare(right, "en"));
+    const metadata = await Promise.all(files.map(async (filePath) => {
+      const value = await stat(filePath);
+      return { filePath, size: value.size, mtimeMs: Math.floor(value.mtimeMs) };
+    }));
+    const metadataSignature = createHash("sha256").update(JSON.stringify(metadata)).digest("hex");
+    if (this.fingerprintCache?.metadataSignature === metadataSignature) return this.fingerprintCache.fingerprint;
+    const contentHashes: Array<{ filePath: string; sha256: string }> = [];
+    for (const file of metadata) contentHashes.push({ filePath: file.filePath, sha256: await hashFile(file.filePath) });
+    const fingerprint = createHash("sha256").update(JSON.stringify(contentHashes)).digest("hex");
+    if (this.fingerprintCache && this.fingerprintCache.fingerprint !== fingerprint) {
+      this.sources = undefined;
+      this.memoryCache.clear();
+    }
+    this.fingerprintCache = { metadataSignature, fingerprint };
+    return fingerprint;
   }
 
   private async discoverSources(): Promise<ProfessionalKnowledgeSource[]> {
@@ -265,6 +321,16 @@ async function listPdfNames(directoryPath: string): Promise<string[]> {
     const entries = await readdir(directoryPath, { withFileTypes: true });
     return entries.filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".pdf")).map((entry) => entry.name).sort((a, b) => a.localeCompare(b, "he"));
   } catch { return []; }
+}
+
+async function hashFile(filePath: string): Promise<string> {
+  return await new Promise<string>((resolvePromise, rejectPromise) => {
+    const hash = createHash("sha256");
+    const stream = createReadStream(filePath);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("error", rejectPromise);
+    stream.on("end", () => resolvePromise(hash.digest("hex")));
+  });
 }
 
 async function extractPdfPages(filePath: string): Promise<string[]> {

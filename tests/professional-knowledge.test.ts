@@ -35,6 +35,34 @@ test("3210 и Синяя книга извлекаются раздельно и
     ]);
 
     const service = new ProfessionalKnowledgeService({ contractDirectoryPath, blueBookDirectoryPath, cacheDirectoryPath });
+    assert.equal(await service.verifyExcerpt({
+      sourceKind: "blue_book",
+      fileName: "פרק 05 עבודות איטום דצמבר 2019.pdf",
+      page: 1,
+      excerpt: "המחיר כולל חומרים, חפיפות, פרטים ובדיקות כנדרש",
+      expectedChapterCode: "05",
+    }), true);
+    assert.equal(await service.verifyExcerpt({
+      sourceKind: "blue_book",
+      fileName: "פרק 05 עבודות איטום דצמבר 2019.pdf",
+      page: 2,
+      excerpt: "המחיר כולל חומרים, חפיפות, פרטים ובדיקות כנדרש",
+      expectedChapterCode: "05",
+    }), false);
+    assert.equal(await service.verifyExcerpt({
+      sourceKind: "blue_book",
+      fileName: "פרק 05 עבודות איטום דצמבר 2019.pdf",
+      page: 1,
+      excerpt: "המחיר כולל גם רכיב שלא קיים במקור",
+      expectedChapterCode: "05",
+    }), false);
+    assert.equal(await service.verifyExcerpt({
+      sourceKind: "blue_book",
+      fileName: "פרק 05 עבודות איטום דצמבר 2019.pdf",
+      page: 1,
+      excerpt: "המחיר כולל חומרים, חפיפות, פרטים ובדיקות כנדרש",
+      expectedChapterCode: "06",
+    }), false);
     const technical = await service.search("עבודות איטום 95.05.10.0045: מה כלול במחיר ומה נמדד בנפרד?", { limit: 6 });
     assert.equal(technical.used, true);
     assert.ok(technical.results.some((result) => result.chapterCode === "05"));

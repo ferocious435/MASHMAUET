@@ -63,7 +63,8 @@ export type LocalDekelCandidate = {
   sourceActivityNumber: string | null;
   sourceChapterCode: string | null;
   priceIncludesVat: false;
-  unitCompatibility: "exact" | "compatible" | "corrected_by_code" | "mismatch" | "unknown";
+  unitCompatibility: "exact" | "compatible" | "converted_with_evidence" | "corrected_by_code" | "mismatch" | "unknown";
+  paidResultRelation?: "direct_price" | "included_component" | "professional_analogue" | "incompatible" | "unknown";
 };
 
 export type LocalDekelReviewLine = {
@@ -80,7 +81,7 @@ export type LocalDekelReviewLine = {
   included: boolean;
   ownerExcluded?: boolean;
   ownerConfirmed?: boolean;
-  selectionMethod?: "lexical_exact" | "codex_constrained";
+  selectionMethod?: "lexical_exact" | "codex_constrained" | "lexical_fallback";
   semanticConfidence?: "high" | "medium" | "low";
   selectionReason?: string;
   selectedCode: string | null;
@@ -110,6 +111,7 @@ export type LocalDekelReview = {
   workbookRowsCount: number;
   billableRowsCount: number;
   sourceBoqFingerprint: string;
+  semanticRevision?: string;
   lines: LocalDekelReviewLine[];
   warnings: string[];
   financialAudit: LocalFinancialAudit;

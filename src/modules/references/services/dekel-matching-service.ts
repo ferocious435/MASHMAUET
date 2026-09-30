@@ -85,7 +85,7 @@ export function buildDekelCandidateMatches(
     return [];
   }
 
-  return items
+  return candidateItemsForQuery(items, queryTokens)
     .flatMap((item) => {
       const preparedItem = preparePricebookItem(item);
       const itemTokens = preparedItem.tokens;
@@ -834,6 +834,31 @@ type PreparedPricebookItem = {
 };
 
 const preparedPricebookItemCache = new WeakMap<PricebookItem, PreparedPricebookItem>();
+const pricebookTokenIndexCache = new WeakMap<PricebookItem[], Map<string, PricebookItem[]>>();
+
+function candidateItemsForQuery(items: PricebookItem[], queryTokens: string[]): PricebookItem[] {
+  if (items.length < 500) return items;
+  let index = pricebookTokenIndexCache.get(items);
+  if (!index) {
+    index = new Map<string, PricebookItem[]>();
+    for (const item of items) {
+      for (const token of preparePricebookItem(item).tokens) {
+        const bucket = index.get(token);
+        if (bucket) bucket.push(item);
+        else index.set(token, [item]);
+      }
+    }
+    pricebookTokenIndexCache.set(items, index);
+  }
+  const candidates = new Set<PricebookItem>();
+  // The downstream scorer can accept an item that shares any query token when
+  // semantic anchors compensate for low lexical coverage. Therefore the index
+  // must return the exact union of every query-token bucket; limiting the lookup
+  // to high-signal or rare tokens changes results merely because a catalog grew.
+  const lookupTokens = [...new Set(queryTokens)].filter((token) => (index?.get(token)?.length ?? 0) > 0);
+  for (const token of lookupTokens) for (const item of index.get(token) ?? []) candidates.add(item);
+  return [...candidates];
+}
 
 function preparePricebookItem(item: PricebookItem): PreparedPricebookItem {
   const cached = preparedPricebookItemCache.get(item);

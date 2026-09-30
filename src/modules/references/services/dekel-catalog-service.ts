@@ -1,5 +1,6 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 
 import type { PricebookItem } from "../domain/reference-schemas.ts";
 import { buildDekelPricebookItems } from "./dekel-pricebook-adapter.ts";
@@ -80,6 +81,17 @@ export class DekelCatalogService {
     }
 
     return [...(await this.loadSnapshot(workbookPath)).items];
+  }
+
+  public async getContentFingerprint(): Promise<string> {
+    const workbookPath = await this.resolveWorkbookPath();
+    if (!workbookPath) return "dekel-missing";
+    try {
+      const bytes = await readFile(workbookPath);
+      return createHash("sha256").update(bytes).digest("hex");
+    } catch {
+      return "dekel-unreadable";
+    }
   }
 
   public async getEstimatePreview(

@@ -1265,6 +1265,30 @@ function testDekelMatchingKeepsPipeCandidateInsideExpandedIntermediatePool(): vo
   assert.equal(candidates.some((candidate) => candidate.code === "95.57.30.0043"), true);
 }
 
+function testDekelLargeCatalogIndexPreservesFullSearchResults(): void {
+  const item = (index: number, description: string): PricebookItem => ({
+    itemId: `index-item-${index}`,
+    pricebookId: "dekel-live",
+    code: index === 1 ? "95.1" : `99.${index}`,
+    description,
+    normalizedDescription: description,
+    unit: "unit",
+    unitPrice: index,
+    section: "95",
+    subsection: "test",
+    tagsJson: [],
+    synonymsJson: [],
+    activeFlag: true,
+    metadataJson: { dekel_chapter_code: "95" },
+  });
+  const target = item(1, "תיקון ניקוי");
+  const noise = Array.from({ length: 499 }, (_, index) => item(index + 2, `עבודה זרה מספר ${index + 2}`));
+  const belowThreshold = buildDekelCandidateMatches("תיקון ניקיון", [target, ...noise.slice(0, 498)], 5).map((candidate) => candidate.code);
+  const indexed = buildDekelCandidateMatches("תיקון ניקיון", [target, ...noise], 5).map((candidate) => candidate.code);
+  assert.deepEqual(indexed, belowThreshold);
+  assert.ok(indexed.includes("95.1"));
+}
+
 function testDekelMatchingRejectsSemanticallyWrongConstructionItems(): void {
   const item = (
     code: string,
@@ -4258,6 +4282,8 @@ async function main(): Promise<void> {
   console.log("PASS testDekelRoutingHints");
   await testDekelMatchingService();
   console.log("PASS testDekelMatchingService");
+  testDekelLargeCatalogIndexPreservesFullSearchResults();
+  console.log("PASS testDekelLargeCatalogIndexPreservesFullSearchResults");
   testDekelMatchingChapterPreference();
   console.log("PASS testDekelMatchingChapterPreference");
   testDekelMatchingDownweightsThresholdNoise();

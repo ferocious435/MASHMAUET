@@ -2,6 +2,7 @@ import { access, copyFile, cp, mkdir, readFile, readdir, rename, rm, writeFile }
 import { basename, join, resolve, sep } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { LocalBackupManifest, LocalProject } from "./local-project-types.ts";
+import { parseProcessingCheckpoint, type FullProcessingCheckpoint } from "./processing-checkpoint.ts";
 import { documentSchema } from "./local-workspace-validation.ts";
 import { LocalWorkspaceError } from "./local-workspace-error.ts";
 import { auditScopeIntegrity, sanitizeScopeInventory, sanitizeScopeResolutions, type ScopeCompletenessAudit } from "./boq-scope-completeness.ts";
@@ -151,7 +152,7 @@ export class LocalProjectStore {
         updatedAt: new Date().toISOString(),
         error: {
           code: "processing_interrupted",
-          message: "Обработка была прервана остановкой приложения. Исходные материалы и последний подтверждённый документ сохранены; запуск можно повторить.",
+          message: "Обработка была прервана остановкой приложения. Исходные материалы, последний подтверждённый документ и завершённые AI-этапы сохранены; повторный запуск продолжит с ближайшей проверенной точки.",
           retryable: true,
         },
       };
@@ -162,6 +163,21 @@ export class LocalProjectStore {
   projectPath(id: string): string { this.assertId(id); return join(this.projectsPath(), id); }
   materialsPath(id: string): string { return join(this.projectPath(id), "materials"); }
   derivedPath(id: string): string { return join(this.projectPath(id), "derived"); }
+  processingCheckpointPath(id: string): string { this.assertId(id); return join(this.projectPath(id), "processing-checkpoint.json"); }
+  async readProcessingCheckpoint(id: string): Promise<FullProcessingCheckpoint | null> {
+    this.assertId(id);
+    try { return parseProcessingCheckpoint(JSON.parse(await readFile(this.processingCheckpointPath(id), "utf8"))); }
+    catch { return null; }
+  }
+  async replaceProcessingCheckpoint(id: string, checkpoint: FullProcessingCheckpoint): Promise<void> {
+    this.assertId(id);
+    if (checkpoint.projectId !== id) throw new Error("Контрольная точка относится к другому проекту");
+    await this.writeJsonAtomic(this.processingCheckpointPath(id), checkpoint);
+  }
+  async removeProcessingCheckpoint(id: string): Promise<void> {
+    this.assertId(id);
+    await rm(this.processingCheckpointPath(id), { force: true });
+  }
   materialPath(projectId: string, materialId: string, originalName: string): string {
     this.assertId(materialId);
     const safeName = basename(originalName).replace(/[<>:"/\\|?*\x00-\x1f]/g, "-").slice(0, 180) || "material";
