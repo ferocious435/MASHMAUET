@@ -223,6 +223,13 @@ function inferObject(core: string): PaidResultObject | null {
 }
 
 function inferAction(core: string, object: PaidResultObject | null): PaidResultAction {
+  // In a noun-led item, "with ... testing/measurement" describes its
+  // attributes and included completion work, not a separately paid test.
+  // Only remove that qualifier after the paid object has already appeared:
+  // an actual leading "test the item with ..." must remain a test.
+  const qualifierIndex = core.search(/\s+עמ\s+/u);
+  const head = qualifierIndex >= 0 ? core.slice(0, qualifierIndex) : core;
+  const actionClause = object && inferObject(head) === object ? head : core;
   const actionPatterns: Array<[PaidResultAction, RegExp]> = [
     ["demolish", /פ(?:י)?רוק|הריס|ניתוק\s+ופ(?:י)?רוק|הסר(?:ה|ת)[^.]{0,80}(?:ריצופ|חיפוי|שטיח|פרקט|יריעות|לוחות|מערכת|מתקנ)/u],
     ["test", /בדיק|בחינ|איזונ|הפעלה\s+ובדיקה/u],
@@ -239,7 +246,7 @@ function inferAction(core: string, object: PaidResultObject | null): PaidResultA
     ["clean", /ניקיונ|נקיונ|ניקוי|שטיפה/u],
   ];
   const explicit = actionPatterns
-    .map(([action, pattern], order) => ({ action, index: core.search(pattern), order }))
+    .map(([action, pattern], order) => ({ action, index: actionClause.search(pattern), order }))
     .filter((match) => match.index >= 0 && (match.action !== "dispose" || object === "waste"))
     .sort((left, right) => left.index - right.index || left.order - right.order)[0];
   if (explicit) return explicit.action;

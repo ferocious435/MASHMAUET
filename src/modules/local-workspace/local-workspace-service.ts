@@ -368,7 +368,7 @@ export class LocalWorkspaceService {
       await assertGeneratedDocument(finalDocument, snapshot.materials, new Set([review.workbookFileName]));
 
       await this.updateProcessingStage(projectId, runId, "validating", 92);
-      await this.dataMutex.run("__data__", async () => {
+      const readyForExport = await this.dataMutex.run("__data__", async () => {
         const current = await this.store.get(projectId);
         if (current.processing.runId !== runId) throw new LocalWorkspaceError(409, "processing_run_replaced", "Запуск обработки был заменён новым");
         if (await sourceInputFingerprint(current) !== expectedInputFingerprint || await sourceFingerprint(current) !== processedSourceFingerprint) {
@@ -400,8 +400,11 @@ export class LocalWorkspaceService {
           error: undefined,
         };
         await this.store.save(current);
+        return current.processing.readyForExport;
       });
-      await this.store.removeProcessingCheckpoint(projectId);
+      // A completed draft is not necessarily an accepted result. Preserve its
+      // expensive intermediate work while scope/pricing/evidence still need repair.
+      if (readyForExport) await this.store.removeProcessingCheckpoint(projectId);
       await this.logger.write("info", "project_processing_completed", { projectId, runId });
     } catch (error) {
       await this.dataMutex.run("__data__", async () => {
@@ -2910,7 +2913,6 @@ function upsertDekelEvidenceNote(notes: Array<Record<string, unknown>>, anchorId
 }
 
 function buildCandidateFromItem(item: PricebookItem, score: number, matchReason: string, originalUnit: string, explicitCode: string): LocalDekelCandidate {
-  const normalizedOriginalUnit = normalizeFinancialUnit(originalUnit);
   const billingUnit = inferDekelBillingUnit(item.unit, item.description);
   return {
     code: item.code,
@@ -2925,8 +2927,6 @@ function buildCandidateFromItem(item: PricebookItem, score: number, matchReason:
     priceIncludesVat: false,
     unitCompatibility: item.code === "95.51.10.0001" && dominantPrimaryWorkIntent(item.description) === "waste"
       ? "corrected_by_code"
-      : item.code === "95.07.10.0235" && normalizedOriginalUnit === "m"
-      ? "compatible"
       : unitCompatibilityAfterSemanticSearch(originalUnit, billingUnit, explicitCode === item.code),
   };
 }
@@ -2968,6 +2968,16 @@ export function isHardSpecificationCompatible(workDescription: string, candidate
   if (workPaidResult.object === "door_threshold" && /מתכת|פלדה|אלומיניום|פח/u.test(work) && !/מתכת|פלדה|אלומיניום|פח/u.test(item)) return false;
   if (workPaidResult.object === "painting" && /סביב[^.]{0,80}חלונ|לאחר תיקוני טיח/u.test(work) && /צביע[^.]{0,50}(?:חלונ|משקופ)|(?:חלונ|משקופ)[^.]{0,50}צביע/u.test(item)) return false;
   if (workPaidResult.object === "roof_work" && /מבודד/u.test(work) && (!/פנל[^.]{0,80}מבודד|לוחות[^.]{0,80}מבודד/u.test(item) || /תוספת/u.test(item))) return false;
+  if (workPaidResult.object === "electrical_fixture" && /חירום/u.test(work)) {
+    // Emergency operation is a required purpose, not an optional size/model
+    // variant. Apply before ranking/truncation so ordinary high-overlap lights
+    // cannot crowd the emergency items out of the semantic selection input.
+    if (!/חירום/u.test(paidResultCoreText(item))) return false;
+    const autonomous = /עצמאי|עצמאית|אוטונומ/u.test(work);
+    const excludesLocalBattery = /(?:ללא|לא כולל|אינו כולל|אינה כוללת)[^.]{0,30}(?:סוללה|מצבר)/u.test(item);
+    const centralOnly = /(?:הזנה|גיבוי)[^.]{0,50}מרכזי[^.]{0,20}בלבד/u.test(item);
+    if (autonomous && (excludesLocalBattery || centralOnly)) return false;
+  }
   if (workPaidResult.object === "electrical_panel") {
     const panelComponentPatterns = [
       /(?:מבנה|ארונ|גופ)[^.]{0,24}לוח|לוח חשמל/u,
@@ -3003,8 +3013,11 @@ export function isHardSpecificationCompatible(workDescription: string, candidate
     const itemDoorLeafText = item.split(/משקוף/u, 1)[0] ?? item;
     const itemIsMetalDoor = /דלת[^.]{0,120}(?:פלדה|מתכת|מפח(?=\s)|פח(?=\s|[,.)]))/u.test(itemDoorLeafText) || /כנף[^.]{0,100}(?:לוחות פלדה|מפח(?=\s)|פח(?=\s|[,.)]))|מעטפת הדלת[^.]{0,80}(?:פלדה|מפח(?=\s)|פח(?=\s|[,.)]))/u.test(item);
     const itemIsWoodDoor = /דלת[^.]{0,120}(?:עץ|לבודה)/u.test(itemDoorLeafText) || /מעטפת הדלת[^.]{0,80}(?:מזונית|סיבית)|מילוי[^.]{0,80}עץ/u.test(item);
-    if (workRequiresMetal && !itemIsMetalDoor) return false;
-    if (workRequiresWood && !itemIsWoodDoor) return false;
+    // Leaf material constrains a complete door, not the separately priced
+    // closer/lock/hinge fitted to it. Its host may be steel without the
+    // component's own catalog description repeating that host material.
+    if (workPaidResult.object === "door_system" && workRequiresMetal && !itemIsMetalDoor) return false;
+    if (workPaidResult.object === "door_system" && workRequiresWood && !itemIsWoodDoor) return false;
 
     const workChoosesReplacement = /החלפ(?:ה|ת)\s+(?:של\s+)?(?:דלת|משקוף)|(?:דלת|משקוף)[^.]{0,100}חדש|אספקה והתקנת (?:דלת|משקוף)/u.test(work);
     const workChoosesRepair = !workChoosesReplacement && /שיקום|תיקון|חיזוק|חידוש|ציפוי/u.test(work);
@@ -3296,7 +3309,7 @@ export function findProfessionalDefaultDekelCandidate(workDescription: string, c
     [/גוף תאורת LED תעשייתי.*100W|100W.*גוף תאורת LED/u, "95.08.42.0198", "נבחר גוף תעשייתי לתקרה גבוהה IP65 בעוצמת 16,250 לומן כחלופה טיפוסית למפרט האומדני 100W; חישוב תאורה סופי יקבע את ההספק"],
     [/40[,.]?000\s*BTU|40000\s*BTU/iu, "95.15.25.0089", "נבחר מזגן מיני־מרכזי 41,000 BTU/HR — ההתאמה המספרית הקרובה ביותר ל־40,000 BTU המבוקשים"],
     [/צינורות נחושת|צנרת גז וחשמל למזגן/u, "95.15.25.0125", "נבחרה צנרת גז וחשמל מבודדת בקטרים המתאימים בקירוב למערכת 40,000 BTU; הקטרים יאומתו מול היצרן"],
-    [/ניקוז מי עיבוי|צינור ניקוז.*32/u, "95.07.10.0235", "האורך הומר לנקודות ניקוז DEKEL של עד 4 מ׳ לנקודה, ללא עצירת העבודה לצורך שאלה"],
+    [/ניקוז מי עיבוי|צינור ניקוז.*32/u, "95.07.10.0235", "נבחר סעיף לנקודת ניקוז; מספר הנקודות ואורך הצנרת העודף נבדקים בנפרד ואינם נגזרים זה מזה"],
     [/תעלות אוויר.*פח מגולוון|תעלות אויר.*פח מגולוון/u, "95.15.35.0020", "נבחרה תעלת ספירקל טיפוסית בקוטר 16 אינץ׳ כאומדן מקצועי התואם בקירוב לספיקת המפוחים; הקוטר הסופי ייקבע בחישוב אוויר"],
     [/פירוק בתי תקע/u, "95.08.60.0056", "נבחר סעיף הפירוק המדויק לבתי תקע; הכמות מוצגת בנפרד ממפסקים ומעבודות לינאריות"],
     [/פירוק מפסקי זרם|פירוק.*לחצני מאור/u, "95.08.60.0058", "נבחר סעיף הפירוק המדויק למפסקי זרם או לחצני מאור"],
@@ -3429,11 +3442,15 @@ function applyDekelBillingQuantityRule(line: LocalDekelReviewLine, candidate: Lo
       : `המדידה המקורית ${originalQuantity} ${originalUnit} אינה יחידת החיוב של DEKEL; נשמר מינימום החיוב המפורש של 10 מ״ק כהנחה מקצועית מתועדת`;
     return;
   }
-  if (candidate.code === "95.07.10.0235" && normalizeFinancialUnit(line.originalUnit) === "m") {
-    const documentedLength = line.quantity;
-    line.quantity = Math.max(1, Math.ceil(documentedLength / 4));
-    line.quantitySource = "material";
-    line.quantitySourceReason = `אורך מתועד של ${documentedLength} מ׳ הומר ל־${line.quantity} נקודות ניקוז, עד 4 מ׳ לנקודה לפי תיאור סעיף DEKEL`;
+  if (normalizeFinancialUnit(line.originalUnit) === "m"
+    && ["unit", "complete"].includes(normalizeFinancialUnit(candidate.unit) ?? "")) {
+    // An included length describes a package's scope, not a conversion from metres to package count.
+    candidate.unitCompatibility = "mismatch";
+    line.included = false;
+    line.selectedCode = null;
+    line.selectionMethod = undefined;
+    line.semanticConfidence = "low";
+    line.selectionReason = "אורך צנרת אינו קובע את מספר הנקודות או היחידות. נדרשת כמות נקודות מתועדת והפרדה של אורך נוסף לפני תמחור לפי יחידה או קומפלט.";
     return;
   }
 }

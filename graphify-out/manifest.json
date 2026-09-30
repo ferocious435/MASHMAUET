@@ -144,9 +144,9 @@
     "semantic_hash": "4493fec2e65f2649646c320d8ea5b6fc"
   },
   "src/modules/local-workspace/local-workspace-service.ts": {
-    "mtime": 1790747222.556387,
-    "seen": 1790747369.8761864,
-    "ast_hash": "3b8eae38c50cbd7919cb8a2e966381c7",
+    "mtime": 1790748508.6920195,
+    "seen": 1790748588.2772942,
+    "ast_hash": "b60ae7a5283d61f81af14b2e029595e1",
     "semantic_hash": ""
   },
   "src/modules/local-workspace/local-workspace-validation.ts": {
@@ -306,15 +306,15 @@
     "semantic_hash": "1a6261b1bf006fff44978ebad66b9790"
   },
   "tests/local-workspace-api.test.ts": {
-    "mtime": 1790747193.9353218,
-    "seen": 1790747369.8761864,
-    "ast_hash": "cce1ebfa8ea0a19b9bc3bf4750c7d654",
+    "mtime": 1790748079.055741,
+    "seen": 1790748588.2772942,
+    "ast_hash": "86f6df019b276326d349f4e666c58e30",
     "semantic_hash": ""
   },
   "tests/local-workspace.test.ts": {
-    "mtime": 1790746962.4910982,
-    "seen": 1790747369.8761864,
-    "ast_hash": "230fc25ae8ab6ce8c27718d923c1cfd7",
+    "mtime": 1790748473.612481,
+    "seen": 1790748588.2772942,
+    "ast_hash": "536a205b844b42872186038d76571382",
     "semantic_hash": ""
   },
   "tests/professional-knowledge.test.ts": {
@@ -1008,9 +1008,9 @@
     "semantic_hash": ""
   },
   "src/modules/local-workspace/dekel-paid-result-semantics.ts": {
-    "mtime": 1788439368.2206664,
-    "seen": 1790747369.8761864,
-    "ast_hash": "871fb785e890e01fc82228d663367058",
+    "mtime": 1790748353.828614,
+    "seen": 1790748588.2772942,
+    "ast_hash": "791e21a200f8dd0d6b48b82951f59244",
     "semantic_hash": ""
   },
   "src/modules/local-workspace/processing-checkpoint.ts": {

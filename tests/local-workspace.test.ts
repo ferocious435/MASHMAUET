@@ -64,6 +64,63 @@ test("повторный подбор DEKEL не самоподтверждае�
   );
 });
 
+test("подбор DEKEL не считает метраж совместимым с ценой за точку дренажа", () => {
+  const work = "צנרת ניקוז מי עיבוי";
+  const candidates = buildLocalDekelCandidates(work, "95.07.10.0235", "מ׳", [
+    testDekelItem("95.07.10.0235", "צנרת ניקוז מי עיבוי, כולל צינור באורך עד 4 מ׳ לנקודה", "יח׳", 350),
+  ] as never, 14);
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].unitCompatibility, "mismatch");
+  assert.equal(findProfessionalDefaultDekelCandidate(work, candidates), undefined);
+});
+
+for (const [code, unit, includedLength, quantity] of [
+  ["95.07.10.0235", "יח׳", 4, 14],
+  ["95.07.10.0235", "נק׳", 4, 0.5],
+  ["95.drain-package", "קומפ׳", 6, 31],
+] as const) {
+  test(`включённая длина ${includedLength} м не преобразует ${quantity} м в количество ${unit} (${code})`, () => {
+    const work = `צנרת ניקוז מי עיבוי, כולל צינור באורך עד ${includedLength} מ׳ לנקודה`;
+    const review = { lines: [{
+      workDescription: work, originalUnit: "מ׳", quantity,
+      quantitySource: "document", quantitySourceReason: "אורך מתועד בתכנית",
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [{ code, description: work, unit, score: 1, unitCompatibility: "compatible" }],
+    }] } as never;
+
+    applyClosestDekelFallbacks(review);
+
+    const line = (review as { lines: Array<Record<string, unknown>> }).lines[0];
+    assert.equal(line.quantity, quantity, "сохранён исходный метраж, без деления на включённую длину");
+    assert.equal(line.quantitySource, "document", "расчёт не выдаётся за измеренное количество точек");
+    assert.equal(line.quantitySourceReason, "אורך מתועד בתכנית");
+    assert.equal(line.included, false, "метры не могут быть оплачены как комплекты");
+    assert.equal(line.selectedCode, null);
+    assert.equal((line.candidates as Array<{ unitCompatibility: string }>)[0].unitCompatibility, "mismatch");
+    assert.match(String(line.selectionReason), /כמות.*(?:נקודות|יחידות)|מספר.*(?:נקודות|יחידות)/u);
+  });
+}
+
+test("дренаж сохраняет документированное число точек и линейный метраж при совпадающих единицах", () => {
+  for (const unit of ["מ׳", "נק׳", "קומפ׳"]) {
+    const work = "צנרת ניקוז מי עיבוי, כולל צינור באורך עד 4 מ׳ לנקודה";
+    const review = { lines: [{
+      workDescription: work, originalUnit: unit, quantity: 7,
+      quantitySource: "document", quantitySourceReason: "כמות מתועדת",
+      included: false, selectedCode: null, ownerExcluded: false, ownerConfirmed: false,
+      candidates: [{ code: "95.07.10.0235", description: work, unit, score: 1, unitCompatibility: "exact" }],
+    }] } as never;
+
+    applyClosestDekelFallbacks(review);
+
+    const line = (review as { lines: Array<Record<string, unknown>> }).lines[0];
+    assert.equal(line.quantity, 7);
+    assert.equal(line.quantitySource, "document");
+    assert.equal(line.included, true);
+    assert.equal(line.selectedCode, "95.07.10.0235");
+  }
+});
+
 test("чужой существующий код DEKEL повторно проверяется по смыслу и исключается", () => {
   const item = {
     itemId: "foreign", pricebookId: "dekel-live", code: "95.08.57.0057",
@@ -1922,3 +1979,59 @@ test("временное error-уведомление Codex не заверша�
 function material(name: string, type: string) {
   return { id: "material-1", name, size: 1, type, addedAt: new Date().toISOString(), status: "processing" as const };
 }
+
+test("второстепенная проверка поставляемого изделия не превращает его в испытание существующего", () => {
+  const examples = [
+    ["גוף תאורת חירום LED עצמאי עם סוללה, מטען ובדיקת תפקוד, כולל התקנה וחיבור לנקודת חשמל", "גוף תאורת חירום LED להתקנה גלויה בתקרה"],
+    ["גלאי עשן עם בסיס ובדיקת תפקוד, כולל התקנה וחיבור", "גלאי עשן אופטי כולל בסיס"],
+    ["מפוח אוורור חדש עם מנוע, בדיקת תפקוד ומדידת ספיקה, כולל התקנה", "מפוח אוורור צירי חדש כולל מנוע"],
+  ];
+  for (const [work, item] of examples) {
+    assert.equal(paidResultSignature(work).action, "supply_install", work);
+    assert.notEqual(paidResultSignature(work).scenario, "test_existing", work);
+    assert.ok(["direct_price", "professional_analogue"].includes(paidResultRelation(work, item)), work);
+    assert.ok(buildLocalDekelCandidates(work, "", "יח׳", [testDekelItem("95.88.01.0001", item, "unit", 100)], 1).length > 0, work);
+  }
+});
+
+test("самостоятельное испытание изделия остаётся испытанием, а не поставкой", () => {
+  const work = "בדיקת תפקוד גוף תאורת חירום קיים עם סוללה ומטען";
+  assert.equal(paidResultSignature(work).action, "test");
+  assert.equal(paidResultSignature(work).scenario, "test_existing");
+  assert.equal(paidResultRelation(work, "גוף תאורת חירום LED כולל סוללה ומטען"), "incompatible");
+});
+
+test("материал дверного полотна не требуется в расценке отдельного доводчика", () => {
+  const work = "מחזיר הידראולי מתאים לכנף דלת פלדה חיצונית, כולל זרוע, קיבוע, כיוון מהירות ובדיקת סגירה";
+  const item = testDekelItem("95.88.02.0001", "מחזיר שמן עליון הדראולי לדלת חיצונית ברוחב עד 107 ס״מ, דירוג כח סגירה ברמה 4", "unit", 400);
+  const candidates = buildLocalDekelCandidates(work, "", "יח׳", [item], 4);
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].code, item.code);
+});
+
+test("материал самой двери остаётся обязательным при подборе полного дверного блока", () => {
+  const work = "אספקה והתקנה של דלת פלדה חדשה כולל משקוף ופרזול";
+  const steel = testDekelItem("95.88.03.0001", "דלת פלדה חד כנפית חדשה כולל משקוף ופרזול", "unit", 3000);
+  const wood = testDekelItem("95.88.03.0002", "דלת עץ חד כנפית חדשה כולל משקוף ופרזול", "unit", 1000);
+  const candidates = buildLocalDekelCandidates(work, "", "יח׳", [steel, wood], 1);
+  assert.ok(candidates.some((item) => item.code === steel.code));
+  assert.equal(candidates.some((item) => item.code === wood.code), false);
+});
+
+test("аварийное назначение светильника сохраняется до ограничения списка кандидатов", () => {
+  const work = "גוף תאורת חירום LED עצמאי עם סוללה, מטען ובדיקת תפקוד, כולל התקנה וחיבור לנקודת חשמל";
+  const ordinary = Array.from({ length: 20 }, (_, index) => testDekelItem(`95.88.04.${index}`, "גוף תאורה LED עצמאי עם מטען ובדיקת תפקוד, כולל התקנה וחיבור לנקודת חשמל", "unit", 100));
+  const emergency = testDekelItem("95.emergency", "גוף תאורת חירום לפי תקן ישראלי, חד תכליתי, תאורת מולטי לד 27 LED להתקנה גלויה לתקרה, קיבולת 2 שעות", "unit", 500);
+  const candidates = buildLocalDekelCandidates(work, "", "יח׳", [...ordinary, emergency], 1);
+  assert.equal(candidates.length, 1, "совпадение общих слов не допускает обычный светильник вместо аварийного");
+  assert.equal(candidates[0].code, emergency.code, "нужный аварийный светильник не отрезается более высокими generic scores");
+});
+
+test("автономный аварийный светильник не подменяется устройством только центрального питания", () => {
+  const work = "גוף תאורת חירום עצמאי עם סוללה ומטען";
+  const central = testDekelItem("95.central", "גוף תאורת חירום בהזנה ממערכת גיבוי מרכזית בלבד ללא סוללה עצמאית", "unit", 100);
+  const autonomous = testDekelItem("95.autonomous", "גוף תאורת חירום עצמאי עם סוללה ומטען", "unit", 300);
+  const candidates = buildLocalDekelCandidates(work, "", "יח׳", [central, autonomous], 1);
+  assert.ok(candidates.some((item) => item.code === autonomous.code));
+  assert.equal(candidates.some((item) => item.code === central.code), false);
+});

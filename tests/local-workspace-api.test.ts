@@ -603,6 +603,9 @@ test("полная обработка сводит замечания крити
     assert.notEqual(current.processing.error?.code, "scope_inventory_unverified");
     assert.equal(current.processing.status, "needs_review");
     assert.ok(current.scopeCompleteness.inventory.some((operation: any) => operation.id === "waste-removal"));
+    const checkpoint = JSON.parse(await readFile(join(fixture.dataRoot, "projects", project.id, "processing-checkpoint.json"), "utf8"));
+    assert.ok(Object.values(checkpoint.entries).some((entry: any) => entry.stage === "document-synthesis"),
+      "результат с незакрытыми замечаниями должен сохранять завершённые AI-этапы для дальнейшего исправления");
     assert.ok(!current.scopeCompleteness.inventory.some((operation: any) => operation.id === "cleaning-curing-detail"));
     const cleaning = current.scopeCompleteness.inventory.find((operation: any) => operation.id === "cleaning-primary");
     assert.deepEqual(cleaning.includedRequirements, ["המתנה לייבוש חומרי הניקוי לפני בדיקת המסירה"]);
